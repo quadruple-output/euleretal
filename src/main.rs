@@ -2,6 +2,9 @@
   bevy_egui example: https://github.com/mvlabat/bevy_egui/blob/main/examples/ui.rs
 */
 
+mod canvas;
+mod coordinates;
+mod scenario;
 mod ui;
 
 use bevy::input::system::exit_on_esc_system;
@@ -17,6 +20,7 @@ fn main() {
         .add_plugin(EguiPlugin)
         .add_system(update_ui_scale_factor.system())
         .add_plugin(ui::Plugin)
+        .add_plugin(coordinates::Plugin)
         .run();
 }
 
