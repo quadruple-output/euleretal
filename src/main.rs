@@ -2,6 +2,7 @@
   bevy_egui example: https://github.com/mvlabat/bevy_egui/blob/main/examples/ui.rs
 */
 
+mod acceleration;
 mod canvas;
 mod coordinates;
 mod scenario;

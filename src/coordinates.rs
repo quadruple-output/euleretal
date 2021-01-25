@@ -1,6 +1,6 @@
 use crate::canvas::Canvas;
 use bevy::prelude::*;
-use egui::{Pos2, Rgba, Stroke};
+use egui::{Rgba, Stroke};
 
 pub struct Plugin;
 
@@ -19,16 +19,23 @@ fn display_coordinates(canvas: Res<Canvas>) {
     let max = canvas.max();
     for step in ((min.x - 1.) as i32)..=((max.x + 1.) as i32) {
         canvas.line_segment(
-            Pos2::new(step as f32, -0.05),
-            Pos2::new(step as f32, 0.05),
+            Vec3::new(step as f32, -0.05, 0.),
+            Vec3::new(step as f32, 0.05, 0.),
             coord_stroke,
         );
     }
     for step in ((min.y - 1.) as i32)..=((max.y + 1.) as i32) {
         canvas.line_segment(
-            Pos2::new(-0.05, step as f32),
-            Pos2::new(0.05, step as f32),
+            Vec3::new(-0.05, step as f32, 1.),
+            Vec3::new(0.05, step as f32, 1.),
             coord_stroke,
         );
     }
+    canvas.on_hover_ui(|ui, mouse_pos| {
+        ui.label(format!("X: {:+.4}", mouse_pos.x));
+        ui.label(format!("Y: {:+.4}", mouse_pos.y));
+        if mouse_pos.z != 0. {
+            ui.label(format!("Y: {:+.4}", mouse_pos.z));
+        }
+    });
 }
