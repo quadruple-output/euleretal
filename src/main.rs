@@ -4,7 +4,7 @@
 
 mod acceleration;
 mod canvas;
-mod coordinates;
+mod layers;
 mod scenario;
 mod ui;
 
@@ -21,7 +21,8 @@ fn main() {
         .add_plugin(EguiPlugin)
         .add_system(update_ui_scale_factor.system())
         .add_plugin(ui::Plugin)
-        .add_plugin(coordinates::Plugin)
+        .add_plugin(layers::coordinates::Plugin)
+        .add_plugin(layers::acceleration_field::Plugin)
         .run();
 }
 

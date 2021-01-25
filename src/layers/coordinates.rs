@@ -1,4 +1,4 @@
-use crate::canvas::Canvas;
+use crate::{canvas::Canvas, ui::UIState};
 use bevy::prelude::*;
 use egui::{Rgba, Stroke};
 
@@ -10,9 +10,12 @@ impl bevy::prelude::Plugin for Plugin {
     }
 }
 
-fn display_coordinates(canvas: Res<Canvas>) {
-    let coord_stroke = Stroke::new(1., Rgba::from_rgb(0., 0.5, 0.) * 0.3);
+fn display_coordinates(canvas: Res<Canvas>, ui_state: Res<UIState>) {
+    if !ui_state.layers.coordinates {
+        return;
+    }
 
+    let coord_stroke = Stroke::new(1., Rgba::from_rgb(0., 0.5, 0.) * 0.3);
     canvas.hline(0., coord_stroke);
     canvas.vline(0., coord_stroke);
     let min = canvas.min();
@@ -32,8 +35,8 @@ fn display_coordinates(canvas: Res<Canvas>) {
         );
     }
     canvas.on_hover_ui(|ui, mouse_pos| {
-        ui.label(format!("X: {:+.4}", mouse_pos.x));
-        ui.label(format!("Y: {:+.4}", mouse_pos.y));
+        ui.label(format!("X: {:+.3}", mouse_pos.x));
+        ui.label(format!("Y: {:+.3}", mouse_pos.y));
         if mouse_pos.z != 0. {
             ui.label(format!("Y: {:+.4}", mouse_pos.z));
         }

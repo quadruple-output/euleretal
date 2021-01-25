@@ -1,13 +1,27 @@
-use crate::{canvas::Canvas, scenario::Scenario};
+use crate::canvas::Canvas;
 use bevy::prelude::*;
 use bevy_egui::EguiContext;
 use egui::{CentralPanel, Sense, SidePanel};
 
 pub struct Plugin;
 
+pub struct LayerFlags {
+    pub coordinates: bool,
+    pub acceleration_field: bool,
+}
+
+impl Default for LayerFlags {
+    fn default() -> Self {
+        Self {
+            coordinates: true,
+            acceleration_field: true,
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct UIState {
-    scenario: Scenario,
+    pub layers: LayerFlags,
 }
 
 impl bevy::prelude::Plugin for Plugin {
@@ -23,15 +37,10 @@ pub fn system(_world: &mut World, resources: &mut Resources) {
         let ctx = &resources.get::<EguiContext>().unwrap().ctx;
         let mut state = resources.get_mut::<UIState>().unwrap();
         SidePanel::left("side_panel", 200.0).show(ctx, |ui| {
-            ui.heading("Controls");
+            ui.heading("Layers");
             ui.vertical(|ui| {
-                ui.label("Scenario");
-                ui.radio_value(
-                    &mut state.scenario,
-                    Scenario::LinearAccel,
-                    "Uniform acceleration",
-                );
-                ui.radio_value(&mut state.scenario, Scenario::Rotation, "Rotation");
+                ui.checkbox(&mut state.layers.coordinates, "Coordinates");
+                ui.checkbox(&mut state.layers.acceleration_field, "Accelerometer");
             })
         });
 
