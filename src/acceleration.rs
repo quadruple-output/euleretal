@@ -1,7 +1,5 @@
 use bevy::math::Vec3;
 
-pub trait Acceleration {
-    fn value_at(_pos: Vec3) -> Vec3 {
-        Default::default()
-    }
+pub trait Acceleration: Send + Sync {
+    fn value_at(&self, pos: Vec3) -> Option<Vec3>;
 }
