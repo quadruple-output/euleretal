@@ -1,5 +1,5 @@
 use bevy::math::Vec3;
-use egui::{Painter, Pos2, Response, Stroke, Ui, Vec2};
+use egui::{Painter, Pos2, Response, Shape, Stroke, Ui, Vec2};
 
 pub struct Canvas {
     response: Response,
@@ -36,6 +36,28 @@ impl Canvas {
             [self.user_to_screen(start), self.user_to_screen(end)],
             stroke,
         )
+    }
+
+    #[allow(clippy::vec_init_then_push)]
+    pub fn vector(&self, start: Vec3, end: Vec3, stroke: Stroke) {
+        let start = self.user_to_screen(start);
+        let end = self.user_to_screen(end);
+        self.painter.line_segment([start, end], stroke);
+        let direction = end - start;
+        let direction_normalized =
+            direction / (direction.x * direction.x + direction.y * direction.y).sqrt();
+        let mut tail = [Pos2::new(0., -2.), Pos2::new(0., 2.)];
+        // the vec![] macro does not work here...
+        let mut tip = Vec::with_capacity(3);
+        tip.push(Pos2::zero());
+        tip.push(Pos2::new(-6., -2.));
+        tip.push(Pos2::new(-6., 2.));
+        rotate(&mut tail, direction_normalized);
+        rotate(&mut tip, direction_normalized);
+        move_to(&mut tail, start);
+        move_to(&mut tip, end);
+        self.painter.add(Shape::polygon(tip, stroke.color, stroke));
+        self.painter.line_segment(tail, stroke)
     }
 
     pub fn hline(&self, y: f32, stroke: Stroke) {
@@ -82,6 +104,22 @@ impl Canvas {
 
     fn screen_to_user(&self, pos: Pos2) -> Vec3 {
         (pos.to_vec3() - self.translation) / self.scale
+    }
+}
+
+fn move_to(positions: &mut [Pos2], translation: Pos2) {
+    for mut p in positions {
+        p.x += translation.x;
+        p.y += translation.y;
+    }
+}
+
+fn rotate(positions: &mut [Pos2], direction_normalized: Vec2) {
+    let dir = direction_normalized;
+    for mut p in positions {
+        let tmp_x = p.x * dir.x - p.y * dir.y;
+        p.y = p.x * dir.y + p.y * dir.x;
+        p.x = tmp_x;
     }
 }
 
