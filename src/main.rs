@@ -38,12 +38,17 @@ fn update_ui_scale_factor(mut egui_settings: ResMut<EguiSettings>, windows: Res<
     }
 }
 
-fn initialize_scenario(commands: &mut Commands) {
-    commands.spawn((Scenario {
+fn initialize_scenario(commands: &mut Commands, mut ui_state: ResMut<UIState>) {
+    let scenario = Scenario {
         acceleration: Box::new(CenterMass),
         start_position: Vec3::new(0., 1., 0.),
         start_velocity: Vec3::new(1.2, 0., 0.),
         dt: 1.,
         draw_t: 2. * TAU,
-    },));
+    };
+    ui_state
+        .canvas
+        .set_focus(scenario.start_position)
+        .set_visible_units(6.);
+    commands.spawn((scenario,));
 }

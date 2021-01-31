@@ -12,9 +12,7 @@ impl bevy::prelude::Plugin for Plugin {
 
 // UIState must be requested as Mut, or else it panics when other systems use it in parallel
 pub fn render(ui_state: ResMut<UIState>, scenarios: Query<&Scenario>) {
-    if let Some(canvas) = ui_state.canvas.as_ref() {
-        for scenario in scenarios.iter() {
-            scenario.draw_on(canvas);
-        }
+    for scenario in scenarios.iter() {
+        scenario.draw_on(&ui_state.canvas);
     }
 }

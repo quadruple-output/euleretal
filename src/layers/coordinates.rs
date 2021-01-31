@@ -14,10 +14,10 @@ fn display_coordinates(
     // UIState must be requested as Mut, or else it panics when other systems use it in parallel
     ui_state: ResMut<UIState>,
 ) {
-    if !ui_state.layerflags.coordinates || ui_state.canvas.is_none() {
+    if !ui_state.layerflags.coordinates {
         return;
     }
-    let canvas = ui_state.canvas.as_ref().unwrap();
+    let canvas = &ui_state.canvas;
 
     let coord_stroke = Stroke::new(1., Rgba::from_rgb(0., 0.5, 0.) * 0.3);
     canvas.hline(0., coord_stroke);

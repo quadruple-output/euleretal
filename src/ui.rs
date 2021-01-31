@@ -1,14 +1,14 @@
 use crate::canvas::Canvas;
 use bevy::prelude::*;
 use bevy_egui::EguiContext;
-use egui::{CentralPanel, Color32, Rgba, Sense, SidePanel, Stroke};
+use egui::{CentralPanel, Color32, Rgba, SidePanel, Stroke};
 
 pub struct Plugin;
 
 #[derive(Default)]
 pub struct UIState {
     pub layerflags: LayerFlags,
-    pub canvas: Option<Canvas>,
+    pub canvas: Canvas,
 }
 
 pub struct LayerFlags {
@@ -55,10 +55,9 @@ pub fn render(context: Res<EguiContext>, mut state: ResMut<UIState>) {
     });
 
     CentralPanel::default().show(ctx, |ui| {
-        state.canvas = Some(Canvas::new(
-            ui.allocate_painter(ui.available_size_before_wrap_finite(), Sense::click()),
-            8.,
-        ));
+        state
+            .canvas
+            .allocate_painter(ui, ui.available_size_before_wrap_finite());
     });
 }
 

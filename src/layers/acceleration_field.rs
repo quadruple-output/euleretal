@@ -17,11 +17,11 @@ pub fn render_layer(
     scenarios: Query<&Scenario>,
 ) {
     //pub fn render_layer(ui_state: ResMut<UIState>) {
-    if !ui_state.layerflags.acceleration_field || ui_state.canvas.is_none() {
+    if !ui_state.layerflags.acceleration_field {
         return;
     }
 
-    let canvas = ui_state.canvas.as_ref().unwrap();
+    let canvas = &ui_state.canvas;
     let accel_stroke = Stroke::new(1., Rgba::from_rgb(0.3, 0.3, 0.8));
     scenarios.iter().for_each(|scenario| {
         let min = canvas.min();

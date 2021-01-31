@@ -26,8 +26,8 @@ impl Scenario {
         let mut t = 0.;
         while t < self.draw_t {
             let a0 = self.acceleration.value_at(s0);
-            let s1 = s0 + v0 * h + 0.5 * a0 * h * h;
-            //let s1 = s0 + v0 * h + a0 * h * h;
+            // let s1 = s0 + v0 * h + a0 * h * h;  // std. Euler.  Good for circles
+            let s1 = s0 + v0 * h + 0.5 * a0 * h * h; // Exact for uniform acceleration
             let v1 = v0 + a0 * h;
             canvas.line_segment(s0, s1, stroke);
             s0 = s1;
