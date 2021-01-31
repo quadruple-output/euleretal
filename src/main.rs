@@ -44,7 +44,7 @@ fn initialize_scenario(commands: &mut Commands, mut ui_state: ResMut<UIState>) {
         start_position: Vec3::new(0., 1., 0.),
         start_velocity: Vec3::new(1.2, 0., 0.),
         dt: 1.,
-        draw_t: 2. * TAU,
+        draw_t: 3. * TAU,
     };
     ui_state
         .canvas
