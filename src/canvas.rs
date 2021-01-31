@@ -1,5 +1,5 @@
 use bevy::math::Vec3;
-use egui::{Painter, Pos2, Response, Sense, Shape, Stroke, Ui, Vec2};
+use egui::{clamp, Painter, Pos2, Response, Sense, Shape, Stroke, Ui, Vec2};
 
 pub struct Canvas {
     allocated_painter: Option<(Response, Painter)>,
@@ -29,18 +29,35 @@ impl Canvas {
 
     pub fn set_visible_units(&mut self, units: f32) -> &mut Self {
         self.visible_units = units;
+        self.adjust_scale_and_center();
+        self
+    }
+
+    fn adjust_scale_and_center(&mut self) {
         if let Some((ref response, _)) = self.allocated_painter {
             let area = response.rect;
             let scale = f32::min(area.width(), area.height()) / self.visible_units;
             self.scale = Vec3::new(scale, -scale, 1.);
             self.area_center = area.center();
         }
-        self
     }
 
     pub fn allocate_painter(&mut self, ui: &mut Ui, size: Vec2) {
-        self.allocated_painter = Some(ui.allocate_painter(size, Sense::click()));
-        self.set_visible_units(self.visible_units);
+        let (response, painter) = ui.allocate_painter(size, Sense::click_and_drag());
+        if response.hovered {
+            let input = ui.input();
+            if input.modifiers.command {
+                let Vec2 { x: _, y: scroll_y } = input.mouse.delta;
+                self.visible_units =
+                    clamp(self.visible_units * 1.01f32.powf(dbg!(scroll_y)), 0.1..=20.);
+            } else if input.mouse.down {
+                let mouse_delta = ui.input().mouse.delta;
+                let screen_focus = self.user_to_screen(self.focus);
+                self.focus = self.screen_to_user(screen_focus - mouse_delta);
+            }
+        }
+        self.allocated_painter = Some((response, painter));
+        self.adjust_scale_and_center();
     }
 
     pub fn on_hover_ui(&self, add_contents: impl FnOnce(&mut Ui, Vec3)) {
