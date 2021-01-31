@@ -23,10 +23,10 @@ impl Canvas {
         }
     }
 
-    pub fn on_hover_ui(&self, f: impl FnOnce(&mut Ui, Vec3)) {
+    pub fn on_hover_ui(&self, add_contents: impl FnOnce(&mut Ui, Vec3)) {
         self.response.clone().on_hover_ui(|ui| {
             if let Some(mouse_pos) = ui.input().mouse.pos {
-                f(ui, self.screen_to_user(mouse_pos));
+                add_contents(ui, self.screen_to_user(mouse_pos));
             }
         });
     }

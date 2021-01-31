@@ -8,10 +8,13 @@ mod layers;
 mod scenarios;
 mod ui;
 
+use std::f32::consts::TAU;
+
 use bevy::input::system::exit_on_esc_system;
 use bevy::prelude::*;
 use bevy_egui::{EguiPlugin, EguiSettings};
 use scenarios::{center_mass::CenterMass, Scenario};
+use ui::UIState;
 
 fn main() {
     App::build()
@@ -24,6 +27,7 @@ fn main() {
         .add_plugin(ui::Plugin)
         .add_plugin(layers::coordinates::Plugin)
         .add_plugin(layers::acceleration_field::Plugin)
+        .add_plugin(layers::exact_path::Plugin)
         .add_startup_system(initialize_scenario.system())
         .run();
 }
@@ -37,5 +41,9 @@ fn update_ui_scale_factor(mut egui_settings: ResMut<EguiSettings>, windows: Res<
 fn initialize_scenario(commands: &mut Commands) {
     commands.spawn((Scenario {
         acceleration: Box::new(CenterMass),
+        start_position: Vec3::new(0., 1., 0.),
+        start_velocity: Vec3::new(1.2, 0., 0.),
+        dt: 1.,
+        draw_t: 2. * TAU,
     },));
 }

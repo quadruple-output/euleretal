@@ -45,6 +45,5 @@ fn display_coordinates(
         if mouse_pos.z != 0. {
             ui.label(format!("Z: {:+.3}", mouse_pos.z));
         }
-        ui.label(format!("Y: {:+.3}", mouse_pos.y));
     });
 }
