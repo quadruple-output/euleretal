@@ -31,6 +31,7 @@ impl bevy::prelude::Plugin for Plugin {
         style.visuals.widgets.noninteractive.fg_stroke =
             //Stroke::new(1., Rgba::from_rgb(1., 191. / 255., 0.)); // amber
             Stroke::new(1., Rgba::from_rgb(1., 126. / 255., 0.)); // SAE/ECE amber
+        style.spacing.tooltip_width = 100.; // minimum distance of tooltip from right border (default:400)
         ctx.set_style(style);
     }
 }

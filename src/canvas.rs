@@ -48,8 +48,7 @@ impl Canvas {
             let input = ui.input();
             if input.modifiers.command {
                 let Vec2 { x: _, y: scroll_y } = input.mouse.delta;
-                self.visible_units =
-                    clamp(self.visible_units * 1.01f32.powf(dbg!(scroll_y)), 0.1..=20.);
+                self.visible_units = clamp(self.visible_units * 1.01f32.powf(scroll_y), 0.1..=20.);
             } else if input.mouse.down {
                 let mouse_delta = ui.input().mouse.delta;
                 let screen_focus = self.user_to_screen(self.focus);
