@@ -1,5 +1,5 @@
 use bevy::math::Vec3;
-use egui::{clamp, Painter, Pos2, Response, Sense, Shape, Stroke, Ui, Vec2};
+use egui::{clamp, Color32, Painter, Pos2, Response, Sense, Shape, Stroke, Ui, Vec2};
 
 pub struct Canvas {
     allocated_painter: Option<(Response, Painter)>,
@@ -44,6 +44,12 @@ impl Canvas {
 
     pub fn allocate_painter(&mut self, ui: &mut Ui, size: Vec2) {
         let (response, painter) = ui.allocate_painter(size, Sense::click_and_drag());
+        self.interact(ui, &response);
+        self.allocated_painter = Some((response, painter));
+        self.adjust_scale_and_center();
+    }
+
+    fn interact(&mut self, ui: &Ui, response: &Response) {
         if response.hovered {
             let input = ui.input();
             if input.modifiers.command {
@@ -55,8 +61,6 @@ impl Canvas {
                 self.focus = self.screen_to_user(screen_focus - mouse_delta);
             }
         }
-        self.allocated_painter = Some((response, painter));
-        self.adjust_scale_and_center();
     }
 
     pub fn on_hover_ui(&self, add_contents: impl FnOnce(&mut Ui, Vec3)) {
@@ -99,6 +103,12 @@ impl Canvas {
             move_to(&mut tip, end);
             painter.add(Shape::polygon(tip, stroke.color, stroke));
             painter.line_segment(tail, stroke)
+        }
+    }
+
+    pub fn dot(&self, pos: Vec3, color: Color32) {
+        if let Some((_, ref painter)) = self.allocated_painter {
+            painter.circle_filled(self.user_to_screen(pos), 2.5, color);
         }
     }
 

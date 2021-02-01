@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use bevy::math::Vec3;
 use egui::{Color32, Stroke};
 
@@ -5,34 +7,116 @@ use crate::{acceleration::Acceleration, canvas::Canvas};
 
 pub mod center_mass;
 
+struct Sample {
+    /// Position
+    s: Vec3,
+    /// Velocity
+    v: Vec3,
+    /// Time
+    t: f32,
+}
+
+impl From<(Vec3, Vec3, f32)> for Sample {
+    fn from(tuple: (Vec3, Vec3, f32)) -> Self {
+        Self {
+            s: tuple.0,
+            v: tuple.1,
+            t: tuple.2,
+        }
+    }
+}
+
 pub struct Scenario {
-    pub acceleration: Box<dyn Acceleration>,
-    pub start_position: Vec3,
-    pub start_velocity: Vec3,
+    accel: Box<dyn Acceleration>,
+    start_pos: Vec3,
+    start_velocity: Vec3,
     /// delta t (single time step duration)
-    pub dt: f32,
+    step_duration: f32,
     /// simulation duration (for drawing exact solution)
-    pub draw_t: f32,
+    num_steps: usize,
+    trajectory: Vec<Sample>,
+    exact_step_samples: Vec<Sample>,
 }
 
 impl Scenario {
-    pub fn draw_on(&self, canvas: &Canvas) {
-        const STEPS_PER_DT: usize = 1000;
-        let stroke = Stroke::new(1., Color32::WHITE);
-        let h = self.dt / STEPS_PER_DT as f32;
+    const STEPS_PER_DT: usize = 100;
 
-        let mut s0 = self.start_position;
+    pub fn new(
+        acceleration: Box<dyn Acceleration>,
+        start_position: Vec3,
+        start_velocity: Vec3,
+        step_duration: f32,
+        num_steps: usize,
+    ) -> Self {
+        let mut instance = Self {
+            accel: acceleration,
+            start_pos: start_position,
+            start_velocity,
+            step_duration,
+            num_steps,
+            trajectory: Vec::with_capacity(Self::STEPS_PER_DT * num_steps),
+            exact_step_samples: Vec::with_capacity(num_steps + 1),
+        };
+        instance.calculate_trajectory();
+        instance
+    }
+
+    pub fn acceleration(&self) -> &dyn Acceleration {
+        self.accel.deref()
+    }
+
+    pub fn start_position(&self) -> Vec3 {
+        self.start_pos
+    }
+
+    pub fn draw_on(&self, canvas: &Canvas) {
+        let stroke = Stroke::new(1., Color32::WHITE);
+        let color = Color32::YELLOW;
+
+        // fold_first is unstable. might be renamed to "reduce"
+        // https://github.com/rust-lang/rust/pull/79805
+        self.trajectory.iter().fold_first(|sample0, sample1| {
+            canvas.line_segment(sample0.s, sample1.s, stroke);
+            sample1
+        });
+        self.exact_step_samples
+            .iter()
+            .for_each(|sample| canvas.dot(sample.s, color));
+    }
+
+    fn calculate_trajectory(&mut self) {
+        self.trajectory.clear();
+        self.exact_step_samples.clear();
+
+        let mut t0 = 0f32;
+        let mut s0 = self.start_pos;
         let mut v0 = self.start_velocity;
-        let mut t = 0.;
-        while t < self.draw_t {
-            let a0 = self.acceleration.value_at(s0);
-            // let s1 = s0 + v0 * h + a0 * h * h;  // std. Euler.  Good for circles
-            let s1 = s0 + v0 * h + 0.5 * a0 * h * h; // Exact for uniform acceleration
-            let v1 = v0 + a0 * h;
-            canvas.line_segment(s0, s1, stroke);
-            s0 = s1;
-            v0 = v1;
-            t += h;
+        self.trajectory.push((s0, v0, t0).into());
+        self.exact_step_samples.push((s0, v0, t0).into());
+
+        for step in 1..=self.num_steps {
+            let t1 = step as f32 * self.step_duration;
+            let mut ti0 = t0;
+            for istep in 1..=Self::STEPS_PER_DT {
+                let ti1 = t0 * ((Self::STEPS_PER_DT - istep) as f32 / Self::STEPS_PER_DT as f32)
+                    + t1 * (istep as f32 / Self::STEPS_PER_DT as f32);
+                let h = ti1 - ti0;
+
+                let a0 = self.accel.value_at(s0);
+                // let v1_tmp = v0 + a0 * h;
+                // let s1_tmp = s0 + v0 * h + a0 * h * h; // std. Euler.  Good for circles
+                let s1_tmp = s0 + v0 * h + 0.5 * a0 * h * h; // Exact for uniform acceleration
+                let a1 = self.accel.value_at(s1_tmp);
+                let v1 = v0 + 0.5 * (a0 + a1) * h;
+                let s1 = s0 + v0 * h + (2. * a0 + a1) / 6. * h * h;
+
+                s0 = s1;
+                v0 = v1;
+                ti0 = ti1;
+                self.trajectory.push((s0, v0, ti0).into());
+            }
+            t0 = t1;
+            self.exact_step_samples.push((s0, v0, t0).into());
         }
     }
 }
