@@ -83,10 +83,10 @@ impl Canvas {
     }
 
     #[allow(clippy::vec_init_then_push)]
-    pub fn vector(&self, start: Vec3, end: Vec3, stroke: Stroke) {
+    pub fn vector(&self, start: Vec3, vec: Vec3, stroke: Stroke) {
         if let Some((_, ref painter)) = self.allocated_painter {
+            let end = self.user_to_screen(start + vec);
             let start = self.user_to_screen(start);
-            let end = self.user_to_screen(end);
             painter.line_segment([start, end], stroke);
             let direction = end - start;
             let direction_normalized =

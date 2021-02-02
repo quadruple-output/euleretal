@@ -3,28 +3,9 @@ use std::ops::Deref;
 use bevy::math::Vec3;
 use egui::{Color32, Stroke};
 
-use crate::{acceleration::Acceleration, canvas::Canvas};
+use crate::{acceleration::Acceleration, canvas::Canvas, sample::Sample};
 
 pub mod center_mass;
-
-struct Sample {
-    /// Position
-    s: Vec3,
-    /// Velocity
-    v: Vec3,
-    /// Time
-    t: f32,
-}
-
-impl From<(Vec3, Vec3, f32)> for Sample {
-    fn from(tuple: (Vec3, Vec3, f32)) -> Self {
-        Self {
-            s: tuple.0,
-            v: tuple.1,
-            t: tuple.2,
-        }
-    }
-}
 
 pub struct Scenario {
     accel: Box<dyn Acceleration>,
@@ -69,10 +50,11 @@ impl Scenario {
         self.start_pos
     }
 
-    pub fn draw_on(&self, canvas: &Canvas) {
-        let stroke = Stroke::new(1., Color32::WHITE);
-        let color = Color32::YELLOW;
+    pub fn step_duration(&self) -> f32 {
+        self.step_duration
+    }
 
+    pub fn draw_on(&self, canvas: &Canvas, stroke: Stroke, sample_color: Color32) {
         // fold_first is unstable. might be renamed to "reduce"
         // https://github.com/rust-lang/rust/pull/79805
         self.trajectory.iter().fold_first(|sample0, sample1| {
@@ -81,7 +63,16 @@ impl Scenario {
         });
         self.exact_step_samples
             .iter()
-            .for_each(|sample| canvas.dot(sample.s, color));
+            .for_each(|sample| canvas.dot(sample.s, sample_color));
+    }
+
+    pub fn closest_sample(&self, pos: Vec3) -> Option<Sample> {
+        self.exact_step_samples
+            .iter()
+            .fold_first(|closest_so_far, next_sample| {
+                closer_sample(closest_so_far, next_sample, pos)
+            })
+            .cloned()
     }
 
     fn calculate_trajectory(&mut self) {
@@ -118,5 +109,13 @@ impl Scenario {
             t0 = t1;
             self.exact_step_samples.push((s0, v0, t0).into());
         }
+    }
+}
+
+fn closer_sample<'t>(s1: &'t Sample, s2: &'t Sample, pos: Vec3) -> &'t Sample {
+    if (s1.s - pos).length() < (s2.s - pos).length() {
+        s1
+    } else {
+        s2
     }
 }

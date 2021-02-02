@@ -9,11 +9,8 @@ pub struct Plugin;
 pub struct UIState {
     pub layerflags: LayerFlags,
     pub canvas: Canvas,
-}
-
-pub struct LayerFlags {
-    pub coordinates: bool,
-    pub acceleration_field: bool,
+    pub strokes: Strokes,
+    pub colors: Colors,
 }
 
 impl bevy::prelude::Plugin for Plugin {
@@ -52,7 +49,8 @@ pub fn render(context: Res<EguiContext>, mut state: ResMut<UIState>) {
         ui.vertical(|ui| {
             ui.checkbox(&mut state.layerflags.coordinates, "Coordinates");
             ui.checkbox(&mut state.layerflags.acceleration_field, "Accelerometer");
-        })
+        });
+        ui.heading("Colors");
     });
 
     CentralPanel::default().show(ctx, |ui| {
@@ -62,11 +60,50 @@ pub fn render(context: Res<EguiContext>, mut state: ResMut<UIState>) {
     });
 }
 
+pub struct LayerFlags {
+    pub coordinates: bool,
+    pub acceleration_field: bool,
+}
+
 impl Default for LayerFlags {
     fn default() -> Self {
         Self {
             coordinates: true,
             acceleration_field: true,
+        }
+    }
+}
+
+pub struct Strokes {
+    pub trajectory: Stroke,
+    pub acceleration: Stroke,
+    pub coordinates: Stroke,
+    pub focussed_velocity: Stroke,
+    pub focussed_acceleration: Stroke,
+}
+
+impl Default for Strokes {
+    fn default() -> Self {
+        let col_accel = Rgba::from_rgb(0.3, 0.3, 0.8);
+        let col_velo = Rgba::from(Color32::WHITE);
+        Self {
+            trajectory: Stroke::new(1., col_velo * 0.25),
+            focussed_velocity: Stroke::new(1., col_velo * 1.),
+            acceleration: Stroke::new(1., col_accel * 0.25),
+            focussed_acceleration: Stroke::new(1., col_accel * 1.),
+            coordinates: Stroke::new(1., Rgba::from_rgb(0., 0.5, 0.) * 0.3),
+        }
+    }
+}
+
+pub struct Colors {
+    pub exact_sample: Color32,
+}
+
+impl Default for Colors {
+    fn default() -> Self {
+        Self {
+            exact_sample: Color32::YELLOW,
         }
     }
 }

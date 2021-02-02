@@ -7,6 +7,7 @@
 mod acceleration;
 mod canvas;
 mod layers;
+mod sample;
 mod scenarios;
 mod ui;
 
@@ -30,6 +31,7 @@ fn main() {
         .add_plugin(layers::coordinates::Plugin)
         .add_plugin(layers::acceleration_field::Plugin)
         .add_plugin(layers::exact_path::Plugin)
+        .add_plugin(layers::selector::Plugin)
         .add_startup_system(initialize_scenario.system())
         .run();
 }
