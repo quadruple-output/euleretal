@@ -5,16 +5,15 @@ pub struct Plugin;
 
 impl bevy::prelude::Plugin for Plugin {
     fn build(&self, app: &mut bevy::prelude::AppBuilder) {
-        app.add_system(selector.system());
+        app.add_system(inspector.system());
     }
 }
 
-pub fn selector(ui_state: ResMut<UIState>, scenarios: Query<&Scenario>) {
+pub fn inspector(ui_state: ResMut<UIState>, scenarios: Query<&Scenario>) {
     let canvas = &ui_state.canvas;
     for scenario in scenarios.iter() {
         canvas.on_hover_ui(|ui, mouse_pos| {
             if let Some(sample) = scenario.closest_sample(mouse_pos) {
-                ui.label(format!("t: {:.3}", sample.t));
                 canvas.vector(
                     sample.s,
                     sample.v * scenario.step_duration(),
@@ -26,6 +25,10 @@ pub fn selector(ui_state: ResMut<UIState>, scenarios: Query<&Scenario>) {
                     a * scenario.step_duration(),
                     ui_state.strokes.focussed_acceleration,
                 );
+
+                ui.label("Inspector");
+                ui.separator();
+                ui.label(format!("t: {}", ui_state.format_f32(sample.t)));
             }
         });
     }

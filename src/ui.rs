@@ -1,19 +1,36 @@
+use core::fmt;
+
 use crate::canvas::Canvas;
 use bevy::prelude::*;
 use bevy_egui::EguiContext;
 use color_picker::{color_edit_button_hsva, Alpha};
 use egui::{
-    color::Hsva, color_picker, stroke_ui, CentralPanel, Color32, Rgba, SidePanel, Stroke, Ui,
+    color::Hsva,
+    color_picker, stroke_ui,
+    widgets::{self, Slider},
+    CentralPanel, Color32, Rgba, SidePanel, Stroke, Ui,
 };
 
 pub struct Plugin;
 
-#[derive(Default)]
 pub struct UIState {
     pub layerflags: LayerFlags,
     pub canvas: Canvas,
     pub strokes: Strokes,
     pub colors: Colors,
+    pub format_precision: usize,
+}
+
+impl Default for UIState {
+    fn default() -> Self {
+        Self {
+            layerflags: Default::default(),
+            canvas: Default::default(),
+            strokes: Default::default(),
+            colors: Default::default(),
+            format_precision: 4,
+        }
+    }
 }
 
 impl bevy::prelude::Plugin for Plugin {
@@ -56,6 +73,11 @@ pub fn render(context: Res<EguiContext>, mut ui_state: ResMut<UIState>) {
                 "Acceleration Field",
             );
         });
+        ui.horizontal(|ui| {
+            ui.label("Display Decimals");
+            ui.add(Slider::usize(&mut ui_state.format_precision, 0..=8));
+            ui.label(format!("{}", ui_state.format_precision));
+        });
 
         ui.heading("Colors");
         ui.vertical(|mut ui| {
@@ -69,6 +91,26 @@ pub fn render(context: Res<EguiContext>, mut ui_state: ResMut<UIState>) {
             .canvas
             .allocate_painter(ui, ui.available_size_before_wrap_finite());
     });
+}
+
+impl UIState {
+    pub fn format_f32(&self, n: f32) -> FormatterF32 {
+        FormatterF32 {
+            precision: self.format_precision,
+            n,
+        }
+    }
+}
+
+pub struct FormatterF32 {
+    precision: usize,
+    n: f32,
+}
+
+impl fmt::Display for FormatterF32 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:.*}", self.precision, self.n)
+    }
 }
 
 pub struct LayerFlags {

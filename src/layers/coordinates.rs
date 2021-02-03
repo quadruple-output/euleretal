@@ -36,14 +36,4 @@ fn display_coordinates(
             ui_state.strokes.coordinates,
         );
     }
-
-    /*
-    canvas.on_hover_ui(|ui, mouse_pos| {
-        ui.label(format!("X: {:+.3}", mouse_pos.x));
-        ui.label(format!("Y: {:+.3}", mouse_pos.y));
-        if mouse_pos.z != 0. {
-            ui.label(format!("Z: {:+.3}", mouse_pos.z));
-        }
-    });
-    */
 }
