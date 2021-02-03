@@ -1,7 +1,10 @@
 use crate::canvas::Canvas;
 use bevy::prelude::*;
 use bevy_egui::EguiContext;
-use egui::{CentralPanel, Color32, Rgba, SidePanel, Stroke};
+use color_picker::{color_edit_button_hsva, Alpha};
+use egui::{
+    color::Hsva, color_picker, stroke_ui, CentralPanel, Color32, Rgba, SidePanel, Stroke, Ui,
+};
 
 pub struct Plugin;
 
@@ -33,7 +36,7 @@ impl bevy::prelude::Plugin for Plugin {
     }
 }
 
-pub fn render(context: Res<EguiContext>, mut state: ResMut<UIState>) {
+pub fn render(context: Res<EguiContext>, mut ui_state: ResMut<UIState>) {
     let ctx = &context.ctx;
 
     /*     let mut style = (*ctx.style()).clone();
@@ -47,14 +50,22 @@ pub fn render(context: Res<EguiContext>, mut state: ResMut<UIState>) {
     SidePanel::left("side_panel", 200.0).show(ctx, |ui| {
         ui.heading("Layer Visibility");
         ui.vertical(|ui| {
-            ui.checkbox(&mut state.layerflags.coordinates, "Coordinates");
-            ui.checkbox(&mut state.layerflags.acceleration_field, "Accelerometer");
+            ui.checkbox(&mut ui_state.layerflags.coordinates, "Coordinates");
+            ui.checkbox(
+                &mut ui_state.layerflags.acceleration_field,
+                "Acceleration Field",
+            );
         });
+
         ui.heading("Colors");
+        ui.vertical(|mut ui| {
+            ui_state.colors.show_controls(&mut ui);
+            ui_state.strokes.show_controls(&mut ui);
+        });
     });
 
     CentralPanel::default().show(ctx, |ui| {
-        state
+        ui_state
             .canvas
             .allocate_painter(ui, ui.available_size_before_wrap_finite());
     });
@@ -96,14 +107,32 @@ impl Default for Strokes {
     }
 }
 
+impl Strokes {
+    fn show_controls(&mut self, ui: &mut Ui) {
+        stroke_ui(ui, &mut self.trajectory, "Exact Trajectory");
+        stroke_ui(ui, &mut self.acceleration, "Acceleration (Field)");
+        stroke_ui(ui, &mut self.coordinates, "Coordinates");
+        stroke_ui(ui, &mut self.focussed_acceleration, "Acceleration");
+        stroke_ui(ui, &mut self.focussed_velocity, "Velocity");
+    }
+}
 pub struct Colors {
-    pub exact_sample: Color32,
+    pub exact_sample: Hsva,
 }
 
 impl Default for Colors {
     fn default() -> Self {
         Self {
-            exact_sample: Color32::YELLOW,
+            exact_sample: Hsva::from(Color32::YELLOW),
         }
+    }
+}
+
+impl Colors {
+    fn show_controls(&mut self, ui: &mut Ui) {
+        ui.horizontal(|mut ui| {
+            color_edit_button_hsva(&mut ui, &mut self.exact_sample, Alpha::BlendOrAdditive);
+            ui.label("Exact Sample Points");
+        });
     }
 }

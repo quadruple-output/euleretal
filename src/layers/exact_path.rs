@@ -16,7 +16,7 @@ pub fn render(ui_state: ResMut<UIState>, scenarios: Query<&Scenario>) {
         scenario.draw_on(
             &ui_state.canvas,
             ui_state.strokes.trajectory,
-            ui_state.colors.exact_sample,
+            ui_state.colors.exact_sample.into(),
         );
     }
 }
