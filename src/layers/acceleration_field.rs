@@ -36,7 +36,7 @@ pub fn render_layer(
             let a = scenario.acceleration().value_at(mouse_pos);
             ui.label("Field");
             ui.separator();
-            ui.label(format!("|a|: {}", ui_state.format_f32(a.length())));
+            ui.label(format!("|a| = {}", ui_state.format_f32(a.length())));
             canvas.vector(mouse_pos, a, ui_state.strokes.acceleration)
         })
     });

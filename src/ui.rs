@@ -3,11 +3,11 @@ use core::fmt;
 use crate::canvas::Canvas;
 use bevy::prelude::*;
 use bevy_egui::EguiContext;
-use color_picker::{color_edit_button_hsva, Alpha};
 use egui::{
     color::Hsva,
-    color_picker, stroke_ui,
-    widgets::{self, Slider},
+    color_picker::{color_edit_button_hsva, Alpha},
+    stroke_ui,
+    widgets::Slider,
     CentralPanel, Color32, Rgba, SidePanel, Stroke, Ui,
 };
 
@@ -28,7 +28,7 @@ impl Default for UIState {
             canvas: Default::default(),
             strokes: Default::default(),
             colors: Default::default(),
-            format_precision: 4,
+            format_precision: 3,
         }
     }
 }
@@ -72,10 +72,11 @@ pub fn render(context: Res<EguiContext>, mut ui_state: ResMut<UIState>) {
                 &mut ui_state.layerflags.acceleration_field,
                 "Acceleration Field",
             );
+            ui.checkbox(&mut ui_state.layerflags.inspector, "Inspector");
         });
         ui.horizontal(|ui| {
             ui.label("Display Decimals");
-            ui.add(Slider::usize(&mut ui_state.format_precision, 0..=8));
+            ui.add(Slider::usize(&mut ui_state.format_precision, 0..=12));
             ui.label(format!("{}", ui_state.format_precision));
         });
 
@@ -116,6 +117,7 @@ impl fmt::Display for FormatterF32 {
 pub struct LayerFlags {
     pub coordinates: bool,
     pub acceleration_field: bool,
+    pub inspector: bool,
 }
 
 impl Default for LayerFlags {
@@ -123,6 +125,7 @@ impl Default for LayerFlags {
         Self {
             coordinates: true,
             acceleration_field: true,
+            inspector: true,
         }
     }
 }

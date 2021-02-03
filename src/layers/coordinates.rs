@@ -36,4 +36,9 @@ fn display_coordinates(
             ui_state.strokes.coordinates,
         );
     }
+
+    canvas.on_hover_ui(|ui, pos| {
+        ui.label(format!("x = {}", ui_state.format_f32(pos.x)));
+        ui.label(format!("y = {}", ui_state.format_f32(pos.y)));
+    });
 }

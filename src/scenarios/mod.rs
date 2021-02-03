@@ -15,7 +15,7 @@ pub struct Scenario {
     step_duration: f32,
     /// simulation duration (for drawing exact solution)
     num_steps: usize,
-    trajectory: Vec<Sample>,
+    trajectory: Vec<Vec3>,
     exact_step_samples: Vec<Sample>,
 }
 
@@ -46,19 +46,21 @@ impl Scenario {
         self.accel.deref()
     }
 
-    pub fn start_position(&self) -> Vec3 {
-        self.start_pos
-    }
-
     pub fn step_duration(&self) -> f32 {
         self.step_duration
+    }
+
+    pub fn sample_bounding_box(&self) -> BoundingBox {
+        let mut bbox = BoundingBox::default();
+        self.trajectory.iter().for_each(|&s| bbox.expand_to(s));
+        bbox
     }
 
     pub fn draw_on(&self, canvas: &Canvas, stroke: Stroke, sample_color: Color32) {
         // fold_first is unstable. might be renamed to "reduce"
         // https://github.com/rust-lang/rust/pull/79805
         self.trajectory.iter().fold_first(|sample0, sample1| {
-            canvas.line_segment(sample0.s, sample1.s, stroke);
+            canvas.line_segment(*sample0, *sample1, stroke);
             sample1
         });
         self.exact_step_samples
@@ -82,8 +84,8 @@ impl Scenario {
         let mut t0 = 0f32;
         let mut s0 = self.start_pos;
         let mut v0 = self.start_velocity;
-        self.trajectory.push((s0, v0, t0).into());
-        self.exact_step_samples.push((s0, v0, t0).into());
+        self.trajectory.push(s0);
+        self.exact_step_samples.push((0, t0, s0, v0).into());
 
         for step in 1..=self.num_steps {
             let t1 = step as f32 * self.step_duration;
@@ -104,10 +106,10 @@ impl Scenario {
                 s0 = s1;
                 v0 = v1;
                 ti0 = ti1;
-                self.trajectory.push((s0, v0, ti0).into());
+                self.trajectory.push(s0);
             }
             t0 = t1;
-            self.exact_step_samples.push((s0, v0, t0).into());
+            self.exact_step_samples.push((step, ti0, s0, v0).into());
         }
     }
 }
@@ -117,5 +119,32 @@ fn closer_sample<'t>(s1: &'t Sample, s2: &'t Sample, pos: Vec3) -> &'t Sample {
         s1
     } else {
         s2
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct BoundingBox {
+    pub min: Vec3,
+    pub max: Vec3,
+}
+
+impl BoundingBox {
+    pub fn expand_to(&mut self, s: Vec3) {
+        self.min.x = self.min.x.min(s.x);
+        self.min.y = self.min.y.min(s.y);
+        self.min.z = self.min.z.min(s.z);
+        self.max.x = self.max.x.max(s.x);
+        self.max.y = self.max.y.max(s.y);
+        self.max.z = self.max.z.max(s.z);
+    }
+
+    pub fn center(&self) -> Vec3 {
+        0.5 * (self.max + self.min)
+    }
+
+    pub fn diameter(&self) -> f32 {
+        (self.max.x - self.min.x)
+            .max(self.max.y - self.min.y)
+            .max(self.max.z - self.min.z)
     }
 }

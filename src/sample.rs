@@ -2,20 +2,23 @@ use bevy::math::Vec3;
 
 #[derive(Clone, Copy)]
 pub struct Sample {
+    /// Step Number
+    pub n: usize,
+    /// Time
+    pub t: f32,
     /// Position
     pub s: Vec3,
     /// Velocity
     pub v: Vec3,
-    /// Time
-    pub t: f32,
 }
 
-impl From<(Vec3, Vec3, f32)> for Sample {
-    fn from(tuple: (Vec3, Vec3, f32)) -> Self {
+impl From<(usize, f32, Vec3, Vec3)> for Sample {
+    fn from(tuple: (usize, f32, Vec3, Vec3)) -> Self {
         Self {
-            s: tuple.0,
-            v: tuple.1,
-            t: tuple.2,
+            n: tuple.0,
+            t: tuple.1,
+            s: tuple.2,
+            v: tuple.3,
         }
     }
 }

@@ -10,6 +10,9 @@ impl bevy::prelude::Plugin for Plugin {
 }
 
 pub fn inspector(ui_state: ResMut<UIState>, scenarios: Query<&Scenario>) {
+    if !ui_state.layerflags.inspector {
+        return;
+    }
     let canvas = &ui_state.canvas;
     for scenario in scenarios.iter() {
         canvas.on_hover_ui(|ui, mouse_pos| {
@@ -28,7 +31,11 @@ pub fn inspector(ui_state: ResMut<UIState>, scenarios: Query<&Scenario>) {
 
                 ui.label("Inspector");
                 ui.separator();
-                ui.label(format!("t: {}", ui_state.format_f32(sample.t)));
+                ui.label(format!(
+                    "#{}: t = {}",
+                    sample.n,
+                    ui_state.format_f32(sample.t)
+                ));
             }
         });
     }
