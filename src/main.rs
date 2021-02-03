@@ -51,7 +51,7 @@ fn initialize_scenario(commands: &mut Commands, mut ui_state: ResMut<UIState>) {
     let bbox = scenario.sample_bounding_box();
     ui_state
         .canvas
-        .set_focus(dbg!(bbox.center()))
+        .set_focus(bbox.center())
         .set_visible_units(bbox.diameter() * 1.2);
     commands.spawn((scenario,));
 }
