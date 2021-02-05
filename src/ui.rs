@@ -15,7 +15,6 @@ pub struct Plugin;
 
 pub struct UIState {
     pub layerflags: LayerFlags,
-    pub canvas: Canvas,
     pub strokes: Strokes,
     pub colors: Colors,
     pub format_precision: usize,
@@ -25,7 +24,6 @@ impl Default for UIState {
     fn default() -> Self {
         Self {
             layerflags: Default::default(),
-            canvas: Default::default(),
             strokes: Default::default(),
             colors: Default::default(),
             format_precision: 3,
@@ -53,7 +51,11 @@ impl bevy::prelude::Plugin for Plugin {
     }
 }
 
-pub fn render(context: Res<EguiContext>, mut ui_state: ResMut<UIState>) {
+pub fn render(
+    context: Res<EguiContext>,
+    mut ui_state: ResMut<UIState>,
+    mut canvases: Query<&mut Canvas>,
+) {
     let ctx = &context.ctx;
 
     /*     let mut style = (*ctx.style()).clone();
@@ -88,9 +90,9 @@ pub fn render(context: Res<EguiContext>, mut ui_state: ResMut<UIState>) {
     });
 
     CentralPanel::default().show(ctx, |ui| {
-        ui_state
-            .canvas
-            .allocate_painter(ui, ui.available_size_before_wrap_finite());
+        for mut canvas in canvases.iter_mut() {
+            canvas.allocate_painter(ui, ui.available_size_before_wrap_finite());
+        }
     });
 }
 

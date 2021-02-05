@@ -6,15 +6,21 @@
 
 mod acceleration;
 mod canvas;
+mod integrators;
 mod layers;
 mod sample;
 mod scenarios;
 mod ui;
+mod view;
 
+use acceleration::Acceleration;
 use bevy::input::system::exit_on_esc_system;
 use bevy::prelude::*;
 use bevy_egui::{EguiPlugin, EguiSettings};
-use scenarios::{center_mass::CenterMass, Scenario};
+use canvas::{Canvas, CanvasId};
+use integrators::{ImplicitEuler, IntegrationParameters, IntegratorId};
+use sample::Sample;
+use scenarios::{center_mass::CenterMass, Scenario, ScenarioId};
 use ui::UIState;
 
 fn main() {
@@ -40,18 +46,29 @@ fn update_ui_scale_factor(mut egui_settings: ResMut<EguiSettings>, windows: Res<
     }
 }
 
-fn initialize_scenario(commands: &mut Commands, mut ui_state: ResMut<UIState>) {
-    let scenario = Scenario::new(
+fn initialize_scenario(commands: &mut Commands) {
+    let mut scenario = Scenario::new(
         Box::new(CenterMass),
         Vec3::new(0., 0.8, 0.),
         Vec3::new(1.4, 0.3, 0.),
-        1.5,
-        14,
     );
-    let bbox = scenario.sample_bounding_box();
-    ui_state
-        .canvas
+    let parameters = IntegrationParameters {
+        step_duration: 1.5,
+        num_steps: 14,
+    };
+    let bbox = scenario.sample_bounding_box(&parameters);
+    let mut canvas = Canvas::default();
+    canvas
         .set_focus(bbox.center())
         .set_visible_units(bbox.diameter() * 1.2);
-    commands.spawn((scenario,));
+    let scenario_id = ScenarioId(commands.spawn((scenario,)).current_entity().unwrap());
+    let canvas_id = CanvasId(commands.spawn((canvas,)).current_entity().unwrap());
+    let integrator_id = IntegratorId(commands.spawn((ImplicitEuler,)).current_entity().unwrap());
+    commands.spawn(view::IntegrationViewBundle {
+        scenario_id,
+        integrator_id,
+        parameters,
+        ui_state: Default::default(),
+        canvas_id,
+    });
 }

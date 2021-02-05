@@ -1,27 +1,29 @@
+use crate::{Canvas, CanvasId, Scenario, ScenarioId, UIState};
 use bevy::prelude::*;
-
-use crate::{scenarios::Scenario, ui::UIState};
 
 pub struct Plugin;
 
 impl bevy::prelude::Plugin for Plugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_system(render_layer.system());
+        app.add_system(render_acceleration.system());
     }
 }
 
-pub fn render_layer(
+pub fn render_acceleration(
     // UIState must be requested as Mut, or else it panics when other systems use it in parallel
     ui_state: ResMut<UIState>,
-    scenarios: Query<&Scenario>,
+    integration_views: Query<(&ScenarioId, &CanvasId)>,
+    mut scenarios: Query<&mut Scenario>,
+    mut canvases: Query<&mut Canvas>,
 ) {
-    //pub fn render_layer(ui_state: ResMut<UIState>) {
     if !ui_state.layerflags.acceleration_field {
         return;
     }
 
-    let canvas = &ui_state.canvas;
-    scenarios.iter().for_each(|scenario| {
+    for (scenario_id, canvas_id) in integration_views.iter() {
+        let scenario = scenarios.get_mut(scenario_id.0).unwrap();
+        let canvas = canvases.get_mut(canvas_id.0).unwrap();
+
         let min = canvas.min();
         let max = canvas.max();
         for x in ((min.x - 1.) as i32)..=((max.x + 1.) as i32) {
@@ -39,5 +41,5 @@ pub fn render_layer(
             ui.label(format!("|a| = {}", ui_state.format_f32(a.length())));
             canvas.vector(mouse_pos, a, ui_state.strokes.acceleration)
         })
-    });
+    }
 }

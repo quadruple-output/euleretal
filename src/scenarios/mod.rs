@@ -1,9 +1,7 @@
-use std::ops::Deref;
-
-use bevy::math::Vec3;
+use crate::{Acceleration, Canvas, IntegrationParameters, Sample};
+use bevy::{ecs::Entity, math::Vec3};
 use egui::{Color32, Stroke};
-
-use crate::{acceleration::Acceleration, canvas::Canvas, sample::Sample};
+use std::ops::Deref;
 
 pub mod center_mass;
 
@@ -11,13 +9,12 @@ pub struct Scenario {
     accel: Box<dyn Acceleration>,
     start_pos: Vec3,
     start_velocity: Vec3,
-    /// delta t (single time step duration)
-    step_duration: f32,
-    /// simulation duration (for drawing exact solution)
-    num_steps: usize,
+    last_params: IntegrationParameters,
     trajectory: Vec<Vec3>,
     exact_step_samples: Vec<Sample>,
 }
+
+pub struct ScenarioId(pub Entity);
 
 impl Scenario {
     const STEPS_PER_DT: usize = 100;
@@ -26,37 +23,40 @@ impl Scenario {
         acceleration: Box<dyn Acceleration>,
         start_position: Vec3,
         start_velocity: Vec3,
-        step_duration: f32,
-        num_steps: usize,
     ) -> Self {
-        let mut instance = Self {
+        Self {
             accel: acceleration,
             start_pos: start_position,
             start_velocity,
-            step_duration,
-            num_steps,
-            trajectory: Vec::with_capacity(Self::STEPS_PER_DT * num_steps),
-            exact_step_samples: Vec::with_capacity(num_steps + 1),
-        };
-        instance.calculate_trajectory();
-        instance
+            last_params: IntegrationParameters {
+                num_steps: 0,
+                step_duration: 0.,
+            },
+            trajectory: Vec::new(),
+            exact_step_samples: Vec::new(),
+        }
     }
 
     pub fn acceleration(&self) -> &dyn Acceleration {
         self.accel.deref()
     }
 
-    pub fn step_duration(&self) -> f32 {
-        self.step_duration
-    }
-
-    pub fn sample_bounding_box(&self) -> BoundingBox {
+    pub fn sample_bounding_box(&mut self, params: &IntegrationParameters) -> BoundingBox {
+        self.calculate_trajectory(params);
         let mut bbox = BoundingBox::default();
         self.trajectory.iter().for_each(|&s| bbox.expand_to(s));
         bbox
     }
 
-    pub fn draw_on(&self, canvas: &Canvas, stroke: Stroke, sample_color: Color32) {
+    pub fn draw_on(
+        &mut self,
+        canvas: &mut Canvas,
+        params: &IntegrationParameters,
+        stroke: Stroke,
+        sample_color: Color32,
+    ) {
+        self.calculate_trajectory(params);
+
         // fold_first is unstable. might be renamed to "reduce"
         // https://github.com/rust-lang/rust/pull/79805
         self.trajectory.iter().fold_first(|sample0, sample1| {
@@ -77,18 +77,24 @@ impl Scenario {
             .cloned()
     }
 
-    fn calculate_trajectory(&mut self) {
-        self.trajectory.clear();
-        self.exact_step_samples.clear();
+    fn calculate_trajectory(&mut self, params: &IntegrationParameters) {
+        if self.last_params == *params {
+            return;
+        }
+        self.last_params = *params;
+        self.trajectory = Vec::with_capacity(Self::STEPS_PER_DT * params.num_steps);
+        self.exact_step_samples = Vec::with_capacity(params.num_steps + 1);
 
         let mut t0 = 0f32;
         let mut s0 = self.start_pos;
         let mut v0 = self.start_velocity;
+        let a0 = self.accel.value_at(s0);
         self.trajectory.push(s0);
-        self.exact_step_samples.push((0, t0, s0, v0).into());
+        self.exact_step_samples
+            .push((0, t0, params.step_duration, s0, v0, a0).into());
 
-        for step in 1..=self.num_steps {
-            let t1 = step as f32 * self.step_duration;
+        for step in 1..=params.num_steps {
+            let t1 = step as f32 * params.step_duration;
             let mut ti0 = t0;
             for istep in 1..=Self::STEPS_PER_DT {
                 let ti1 = t0 * ((Self::STEPS_PER_DT - istep) as f32 / Self::STEPS_PER_DT as f32)
@@ -109,7 +115,8 @@ impl Scenario {
                 self.trajectory.push(s0);
             }
             t0 = t1;
-            self.exact_step_samples.push((step, ti0, s0, v0).into());
+            self.exact_step_samples
+                .push((step, ti0, params.step_duration, s0, v0, a0).into());
         }
     }
 }

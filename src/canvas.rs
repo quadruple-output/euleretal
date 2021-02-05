@@ -1,4 +1,4 @@
-use bevy::math::Vec3;
+use bevy::{ecs::Entity, math::Vec3};
 use egui::{clamp, Color32, Painter, Pos2, Response, Sense, Shape, Stroke, Ui, Vec2};
 
 pub struct Canvas {
@@ -8,6 +8,8 @@ pub struct Canvas {
     area_center: Pos2,
     scale: Vec3,
 }
+
+pub struct CanvasId(pub Entity);
 
 impl Default for Canvas {
     fn default() -> Self {
@@ -73,7 +75,7 @@ impl Canvas {
         }
     }
 
-    pub fn line_segment(&self, start: Vec3, end: Vec3, stroke: Stroke) {
+    pub fn line_segment(&mut self, start: Vec3, end: Vec3, stroke: Stroke) {
         if let Some((_, ref painter)) = self.allocated_painter {
             painter.line_segment(
                 [self.user_to_screen(start), self.user_to_screen(end)],
@@ -106,13 +108,13 @@ impl Canvas {
         }
     }
 
-    pub fn dot(&self, pos: Vec3, color: Color32) {
+    pub fn dot(&mut self, pos: Vec3, color: Color32) {
         if let Some((_, ref painter)) = self.allocated_painter {
             painter.circle_filled(self.user_to_screen(pos), 2.5, color);
         }
     }
 
-    pub fn hline(&self, y: f32, stroke: Stroke) {
+    pub fn hline(&mut self, y: f32, stroke: Stroke) {
         if let Some((ref response, ref painter)) = self.allocated_painter {
             let area = response.rect;
             let transformed_y = self.user_to_screen(Vec3::new(0., y, 0.)).y;
@@ -126,7 +128,7 @@ impl Canvas {
         }
     }
 
-    pub fn vline(&self, x: f32, stroke: Stroke) {
+    pub fn vline(&mut self, x: f32, stroke: Stroke) {
         if let Some((ref response, ref painter)) = self.allocated_painter {
             let area = response.rect;
             let transformed_x = self.user_to_screen(Vec3::new(x, 0., 0.)).x;
