@@ -17,7 +17,7 @@ fn display_coordinates(
     if !ui_state.layerflags.coordinates {
         return;
     }
-    for mut canvas in canvases.iter_mut() {
+    for canvas in canvases.iter_mut() {
         canvas.hline(0., ui_state.strokes.coordinates);
         canvas.vline(0., ui_state.strokes.coordinates);
         let min = canvas.min();

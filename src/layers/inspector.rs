@@ -1,4 +1,4 @@
-use crate::{Canvas, CanvasId, Scenario, ScenarioId, UIState};
+use crate::{Canvas, Integration, UIState};
 use bevy::prelude::*;
 
 pub struct Plugin;
@@ -11,27 +11,24 @@ impl bevy::prelude::Plugin for Plugin {
 
 pub fn inspector(
     ui_state: ResMut<UIState>,
-    integration_views: Query<(&ScenarioId, &CanvasId)>,
-    mut scenarios: Query<&mut Scenario>,
+    integrations: Query<&Integration>,
     mut canvases: Query<&mut Canvas>,
 ) {
     if !ui_state.layerflags.inspector {
         return;
     }
-    for (scenario_id, canvas_id) in integration_views.iter() {
-        let scenario = scenarios.get_mut(scenario_id.0).unwrap();
-        let canvas = canvases.get_mut(canvas_id.0).unwrap();
+    for integration in integrations.iter() {
+        let canvas = canvases.get_mut(integration.get_canvas_id()).unwrap();
         canvas.on_hover_ui(|ui, mouse_pos| {
-            if let Some(sample) = scenario.closest_sample(mouse_pos) {
+            if let Some(sample) = integration.closest_sample(mouse_pos) {
                 canvas.vector(
                     sample.s,
                     sample.v * sample.dt,
                     ui_state.strokes.focussed_velocity,
                 );
-                let a = scenario.acceleration().value_at(sample.s);
                 canvas.vector(
                     sample.s,
-                    a * sample.dt,
+                    sample.a * sample.dt,
                     ui_state.strokes.focussed_acceleration,
                 );
 

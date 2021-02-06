@@ -1,38 +1,50 @@
-use bevy::{ecs::Entity, math::Vec3};
+use bevy::{
+    ecs::{Entity, Query},
+    math::Vec3,
+};
 use egui::{clamp, Color32, Painter, Pos2, Response, Sense, Shape, Stroke, Ui, Vec2};
+
+use crate::Scenario;
 
 pub struct Canvas {
     allocated_painter: Option<(Response, Painter)>,
     visible_units: f32,
     focus: Vec3,
-    area_center: Pos2,
     scale: Vec3,
-}
-
-pub struct CanvasId(pub Entity);
-
-impl Default for Canvas {
-    fn default() -> Self {
-        Self {
-            allocated_painter: None,
-            visible_units: 2., // one unit in each direction
-            focus: Vec3::zero(),
-            area_center: Default::default(),
-            scale: Default::default(),
-        }
-    }
+    area_center: Pos2,
+    scenario_id: Entity,
+    trajectory: Vec<Vec3>,
 }
 
 impl Canvas {
-    pub fn set_focus(&mut self, focus: Vec3) -> &mut Self {
-        self.focus = focus;
-        self
+    pub fn new(trajectory: Vec<Vec3>, scenario_id: Entity) -> Self {
+        let mut bbox = BoundingBox::default();
+        trajectory.iter().for_each(|&s| bbox.expand_to(s));
+        Self {
+            allocated_painter: None,
+            visible_units: bbox.diameter() * 1.2,
+            focus: bbox.center(),
+            scenario_id,
+            trajectory,
+            scale: Default::default(),
+            area_center: Default::default(),
+        }
     }
 
-    pub fn set_visible_units(&mut self, units: f32) -> &mut Self {
-        self.visible_units = units;
-        self.adjust_scale_and_center();
-        self
+    pub fn get_scenario<'a>(
+        &self,
+        query: &'a Query<&Scenario>,
+    ) -> Result<&'a Scenario, bevy::ecs::QueryError> {
+        query.get(self.scenario_id)
+    }
+
+    pub fn draw_trajectory(&mut self, stroke: Stroke) {
+        // fold_first is unstable. might be renamed to "reduce"
+        // https://github.com/rust-lang/rust/pull/79805
+        self.trajectory.iter().fold_first(|sample0, sample1| {
+            self.line_segment(*sample0, *sample1, stroke);
+            sample1
+        });
     }
 
     fn adjust_scale_and_center(&mut self) {
@@ -75,7 +87,7 @@ impl Canvas {
         }
     }
 
-    pub fn line_segment(&mut self, start: Vec3, end: Vec3, stroke: Stroke) {
+    pub fn line_segment(&self, start: Vec3, end: Vec3, stroke: Stroke) {
         if let Some((_, ref painter)) = self.allocated_painter {
             painter.line_segment(
                 [self.user_to_screen(start), self.user_to_screen(end)],
@@ -108,13 +120,13 @@ impl Canvas {
         }
     }
 
-    pub fn dot(&mut self, pos: Vec3, color: Color32) {
+    pub fn dot(&self, pos: Vec3, color: Color32) {
         if let Some((_, ref painter)) = self.allocated_painter {
             painter.circle_filled(self.user_to_screen(pos), 2.5, color);
         }
     }
 
-    pub fn hline(&mut self, y: f32, stroke: Stroke) {
+    pub fn hline(&self, y: f32, stroke: Stroke) {
         if let Some((ref response, ref painter)) = self.allocated_painter {
             let area = response.rect;
             let transformed_y = self.user_to_screen(Vec3::new(0., y, 0.)).y;
@@ -128,7 +140,7 @@ impl Canvas {
         }
     }
 
-    pub fn vline(&mut self, x: f32, stroke: Stroke) {
+    pub fn vline(&self, x: f32, stroke: Stroke) {
         if let Some((ref response, ref painter)) = self.allocated_painter {
             let area = response.rect;
             let transformed_x = self.user_to_screen(Vec3::new(x, 0., 0.)).x;
@@ -206,5 +218,32 @@ impl ToVec3 for Vec2 {
 impl ToPos2 for Vec3 {
     fn to_pos2(&self) -> Pos2 {
         Pos2::new(self.x, self.y)
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct BoundingBox {
+    pub min: Vec3,
+    pub max: Vec3,
+}
+
+impl BoundingBox {
+    pub fn expand_to(&mut self, s: Vec3) {
+        self.min.x = self.min.x.min(s.x);
+        self.min.y = self.min.y.min(s.y);
+        self.min.z = self.min.z.min(s.z);
+        self.max.x = self.max.x.max(s.x);
+        self.max.y = self.max.y.max(s.y);
+        self.max.z = self.max.z.max(s.z);
+    }
+
+    pub fn center(&self) -> Vec3 {
+        0.5 * (self.max + self.min)
+    }
+
+    pub fn diameter(&self) -> f32 {
+        (self.max.x - self.min.x)
+            .max(self.max.y - self.min.y)
+            .max(self.max.z - self.min.z)
     }
 }

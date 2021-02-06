@@ -1,4 +1,4 @@
-use crate::{Canvas, CanvasId, Scenario, ScenarioId, UIState};
+use crate::{Canvas, Scenario, UIState};
 use bevy::prelude::*;
 
 pub struct Plugin;
@@ -10,19 +10,16 @@ impl bevy::prelude::Plugin for Plugin {
 }
 
 pub fn render_acceleration(
-    // UIState must be requested as Mut, or else it panics when other systems use it in parallel
-    ui_state: ResMut<UIState>,
-    integration_views: Query<(&ScenarioId, &CanvasId)>,
-    mut scenarios: Query<&mut Scenario>,
-    mut canvases: Query<&mut Canvas>,
+    ui_state: Res<UIState>,
+    scenarios: Query<&Scenario>,
+    mut canvases: Query<&mut Canvas>, // always request canvases with 'mut'
 ) {
     if !ui_state.layerflags.acceleration_field {
         return;
     }
 
-    for (scenario_id, canvas_id) in integration_views.iter() {
-        let scenario = scenarios.get_mut(scenario_id.0).unwrap();
-        let canvas = canvases.get_mut(canvas_id.0).unwrap();
+    for canvas in canvases.iter_mut() {
+        let scenario = canvas.get_scenario(&scenarios).unwrap();
 
         let min = canvas.min();
         let max = canvas.max();
