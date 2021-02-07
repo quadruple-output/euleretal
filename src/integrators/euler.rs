@@ -22,6 +22,6 @@ impl Integrator for ImplicitEuler {
     }
 
     fn label(&self) -> String {
-        "implicit Euler".to_string()
+        "Implicit Euler".to_string()
     }
 }

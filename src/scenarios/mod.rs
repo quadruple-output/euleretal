@@ -1,5 +1,6 @@
 use crate::{Acceleration, Sample};
 use bevy::math::Vec3;
+use egui::{Slider, Ui};
 use std::ops::Deref;
 
 mod center_mass;
@@ -28,6 +29,19 @@ impl Scenario {
             start_velocity,
             duration,
         }
+    }
+
+    pub fn show_controls(&mut self, ui: &mut Ui) {
+        ui.horizontal(|ui| {
+            ui.label(self.acceleration().label());
+            ui.vertical(|ui| {
+                ui.add(
+                    Slider::f32(&mut self.duration, 0.1..=50.)
+                        .logarithmic(true)
+                        .text("duration"),
+                );
+            });
+        });
     }
 
     pub fn acceleration(&self) -> &dyn Acceleration {

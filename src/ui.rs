@@ -1,6 +1,6 @@
 use core::fmt;
 
-use crate::{integrators::ConfiguredIntegrator, Canvas, StepSize};
+use crate::{Canvas, ConfiguredIntegrator, Scenario, StepSize};
 use bevy::prelude::*;
 use bevy_egui::EguiContext;
 use egui::{stroke_ui, widgets::Slider, CentralPanel, Color32, Rgba, SidePanel, Stroke, Ui};
@@ -49,6 +49,7 @@ pub fn render(
     mut canvases: Query<&mut Canvas>,
     mut step_sizes: Query<&mut StepSize>,
     mut integrators: Query<&mut ConfiguredIntegrator>,
+    mut scenarios: Query<&mut Scenario>,
 ) {
     let ctx = &context.ctx;
 
@@ -80,13 +81,20 @@ pub fn render(
         ui.vertical(|mut ui| {
             ui_state.strokes.show_controls(&mut ui);
         });
+
         ui.heading("Step Sizes");
         for mut step_size in step_sizes.iter_mut() {
             step_size.show_controls(ui);
         }
+
         ui.heading("Integrators");
         for mut integrator in integrators.iter_mut() {
             integrator.show_controls(ui);
+        }
+
+        ui.heading("Scenarios");
+        for mut scenario in scenarios.iter_mut() {
+            scenario.show_controls(ui);
         }
     });
 

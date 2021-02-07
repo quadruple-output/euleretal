@@ -21,7 +21,7 @@ use bevy::input::system::exit_on_esc_system;
 use bevy::prelude::*;
 use bevy_egui::{EguiPlugin, EguiSettings};
 use canvas::Canvas;
-use egui::{color::Hsva, Color32};
+use egui::{color::Hsva, Color32, Stroke};
 use integration::Integration;
 use integrators::{ConfiguredIntegrator, ImplicitEuler};
 use sample::Sample;
@@ -62,6 +62,7 @@ fn initialize_scenario(commands: &mut Commands) {
     );
     let integrator = ConfiguredIntegrator {
         integrator: Box::new(ImplicitEuler),
+        stroke: Stroke::new(1., Hsva::from(Color32::RED)),
     };
     let step_size = StepSize::new("long", 0.5, Hsva::from(Color32::YELLOW));
     let scenario_id = commands.spawn((scenario,)).current_entity().unwrap();
@@ -69,11 +70,6 @@ fn initialize_scenario(commands: &mut Commands) {
     let canvas_id = commands.spawn((canvas,)).current_entity().unwrap();
     let integrator_id = commands.spawn((integrator,)).current_entity().unwrap();
     let step_size_id = commands.spawn((step_size,)).current_entity().unwrap();
-    let integration = Integration::new(
-        step_size_id,
-        canvas_id,
-        integrator_id,
-        Hsva::from(Color32::RED),
-    );
+    let integration = Integration::new(step_size_id, canvas_id, integrator_id);
     commands.spawn((integration,));
 }

@@ -1,6 +1,6 @@
 use crate::{Canvas, Sample};
 use bevy::prelude::*;
-use egui::{color::Hsva, Color32};
+use egui::{Color32, Stroke};
 
 pub struct Integration {
     step_size_id: Entity,
@@ -8,23 +8,16 @@ pub struct Integration {
     integrator_id: Entity,
     samples: Vec<Sample>,
     reference_samples: Vec<Sample>,
-    pub color: Hsva,
 }
 
 impl Integration {
-    pub fn new(
-        step_size_id: Entity,
-        canvas_id: Entity,
-        integrator_id: Entity,
-        color: Hsva,
-    ) -> Self {
+    pub fn new(step_size_id: Entity, canvas_id: Entity, integrator_id: Entity) -> Self {
         Self {
             step_size_id,
             canvas_id,
             integrator_id,
             samples: Default::default(),
             reference_samples: Default::default(),
-            color,
         }
     }
 
@@ -77,12 +70,16 @@ impl Integration {
             })
     }
 
-    pub fn draw_on(&self, canvas: &Canvas, reference_color: Color32, sample_color: Color32) {
+    pub fn draw_on(&self, canvas: &Canvas, dot_color: Color32, stroke: Stroke) {
         self.reference_samples
             .iter()
-            .for_each(|sample| canvas.dot(sample.s, reference_color));
+            .for_each(|sample| canvas.dot(sample.s, dot_color));
         self.samples
             .iter()
-            .for_each(|sample| canvas.dot(sample.s, sample_color));
+            .for_each(|sample| canvas.dot(sample.s, dot_color));
+        self.samples.iter().fold_first(|s0, s1| {
+            canvas.line_segment(s0.s, s1.s, stroke);
+            s1
+        });
     }
 }

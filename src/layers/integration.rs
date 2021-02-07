@@ -26,10 +26,6 @@ pub fn render_integration(
         let reference_samples = scenario.calculate_reference_samples(step_size.dt);
         integration.set_reference_samples(reference_samples);
         integration.set_integration_steps(integration_steps);
-        integration.draw_on(
-            &canvas,
-            Color32::from(step_size.color),
-            Color32::from(integration.color),
-        );
+        integration.draw_on(&canvas, Color32::from(step_size.color), integrator.stroke);
     }
 }

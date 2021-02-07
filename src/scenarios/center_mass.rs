@@ -16,4 +16,8 @@ impl Acceleration for CenterMass {
             Vec3::zero()
         }
     }
+
+    fn label(&self) -> String {
+        "Gravity".to_string()
+    }
 }

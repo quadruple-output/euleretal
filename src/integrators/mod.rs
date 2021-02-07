@@ -1,11 +1,12 @@
 use crate::{Acceleration, Sample, Scenario};
-use egui::Ui;
+use egui::{stroke_ui, Stroke, Ui};
 pub use euler::*;
 
 mod euler;
 
 pub struct ConfiguredIntegrator {
     pub integrator: Box<dyn Integrator>,
+    pub stroke: Stroke,
 }
 
 impl ConfiguredIntegrator {
@@ -14,7 +15,7 @@ impl ConfiguredIntegrator {
     }
 
     pub fn show_controls(&mut self, ui: &mut Ui) {
-        ui.label(self.integrator.label());
+        stroke_ui(ui, &mut self.stroke, &(*self.integrator.label()));
     }
 }
 
