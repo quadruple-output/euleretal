@@ -52,12 +52,22 @@ impl Canvas {
     }
 
     pub fn draw_trajectory(&mut self, stroke: Stroke) {
-        // fold_first is unstable. might be renamed to "reduce"
-        // https://github.com/rust-lang/rust/pull/79805
-        self.trajectory.iter().fold_first(|sample0, sample1| {
-            self.line_segment(*sample0, *sample1, stroke);
-            sample1
-        });
+        if let Some((_, ref painter)) = self.allocated_painter {
+            self.trajectory
+                .iter()
+                .map(|s| self.user_to_screen(*s))
+                // fold_first is unstable. might be renamed to "reduce"
+                // https://github.com/rust-lang/rust/pull/79805
+                .fold_first(|u0, u1| {
+                    // avoid drawing extremely short line segments:
+                    if (u0.x - u1.x).abs() > 2. || (u0.y - u1.y).abs() > 2. {
+                        painter.line_segment([u0, u1], stroke);
+                        u1
+                    } else {
+                        u0
+                    }
+                });
+        }
     }
 
     fn adjust_scale_and_center(&mut self) {

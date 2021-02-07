@@ -63,7 +63,7 @@ fn initialize_scenario(commands: &mut Commands) {
     let integrator = ConfiguredIntegrator {
         integrator: Box::new(ImplicitEuler),
     };
-    let step_size = StepSize::new("long", 1.5, Hsva::from(Color32::YELLOW));
+    let step_size = StepSize::new("long", 0.5, Hsva::from(Color32::YELLOW));
     let scenario_id = commands.spawn((scenario,)).current_entity().unwrap();
     let canvas = Canvas::new(scenario_id);
     let canvas_id = commands.spawn((canvas,)).current_entity().unwrap();
