@@ -21,6 +21,7 @@ use bevy::input::system::exit_on_esc_system;
 use bevy::prelude::*;
 use bevy_egui::{EguiPlugin, EguiSettings};
 use canvas::Canvas;
+use egui::{color::Hsva, Color32};
 use integration::Integration;
 use integrators::ImplicitEuler;
 use sample::Sample;
@@ -59,7 +60,7 @@ fn initialize_scenario(commands: &mut Commands) {
         Vec3::new(1.4, 0.3, 0.),
         TAU,
     );
-    let step_size = StepSize::new("long", 1.5);
+    let step_size = StepSize::new("long", 1.5, Hsva::from(Color32::YELLOW));
     let trajectory = scenario.calculate_trajectory(step_size.dt);
     let reference_samples = scenario.calculate_reference_samples(step_size.dt);
     let scenario_id = commands.spawn((scenario,)).current_entity().unwrap();

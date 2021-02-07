@@ -1,22 +1,15 @@
 use core::fmt;
 
-use crate::canvas::Canvas;
+use crate::{Canvas, StepSize};
 use bevy::prelude::*;
 use bevy_egui::EguiContext;
-use egui::{
-    color::Hsva,
-    color_picker::{color_edit_button_hsva, Alpha},
-    stroke_ui,
-    widgets::Slider,
-    CentralPanel, Color32, Rgba, SidePanel, Stroke, Ui,
-};
+use egui::{stroke_ui, widgets::Slider, CentralPanel, Color32, Rgba, SidePanel, Stroke, Ui};
 
 pub struct Plugin;
 
 pub struct UIState {
     pub layerflags: LayerFlags,
     pub strokes: Strokes,
-    pub colors: Colors,
     pub format_precision: usize,
 }
 
@@ -25,7 +18,6 @@ impl Default for UIState {
         Self {
             layerflags: Default::default(),
             strokes: Default::default(),
-            colors: Default::default(),
             format_precision: 3,
         }
     }
@@ -55,6 +47,7 @@ pub fn render(
     context: Res<EguiContext>,
     mut ui_state: ResMut<UIState>,
     mut canvases: Query<&mut Canvas>,
+    mut step_sizes: Query<&mut StepSize>,
 ) {
     let ctx = &context.ctx;
 
@@ -84,9 +77,12 @@ pub fn render(
 
         ui.heading("Colors");
         ui.vertical(|mut ui| {
-            ui_state.colors.show_controls(&mut ui);
             ui_state.strokes.show_controls(&mut ui);
         });
+        ui.heading("Step Sizes");
+        for mut step_size in step_sizes.iter_mut() {
+            step_size.show_controls(ui);
+        }
     });
 
     CentralPanel::default().show(ctx, |ui| {
@@ -161,25 +157,5 @@ impl Strokes {
         stroke_ui(ui, &mut self.coordinates, "Coordinates");
         stroke_ui(ui, &mut self.focussed_acceleration, "Acceleration");
         stroke_ui(ui, &mut self.focussed_velocity, "Velocity");
-    }
-}
-pub struct Colors {
-    pub exact_sample: Hsva,
-}
-
-impl Default for Colors {
-    fn default() -> Self {
-        Self {
-            exact_sample: Hsva::from(Color32::YELLOW),
-        }
-    }
-}
-
-impl Colors {
-    fn show_controls(&mut self, ui: &mut Ui) {
-        ui.horizontal(|mut ui| {
-            color_edit_button_hsva(&mut ui, &mut self.exact_sample, Alpha::BlendOrAdditive);
-            ui.label("Exact Sample Points");
-        });
     }
 }

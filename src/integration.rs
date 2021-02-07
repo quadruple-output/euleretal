@@ -30,6 +30,10 @@ impl Integration {
         self.canvas_id
     }
 
+    pub fn get_step_size_id(&self) -> Entity {
+        self.step_size_id
+    }
+
     pub fn closest_sample(&self, pos: Vec3) -> Option<Sample> {
         self.reference_samples
             .iter()

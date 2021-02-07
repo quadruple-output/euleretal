@@ -1,5 +1,6 @@
-use crate::{Canvas, Integration, UIState};
+use crate::{Canvas, Integration, StepSize};
 use bevy::prelude::*;
+use egui::Color32;
 
 pub struct Plugin;
 
@@ -10,12 +11,13 @@ impl bevy::prelude::Plugin for Plugin {
 }
 
 pub fn render_integration(
-    ui_state: Res<UIState>,
     integrations: Query<&Integration>,
     mut canvases: Query<&mut Canvas>,
+    step_sizes: Query<&StepSize>,
 ) {
     for integration in integrations.iter() {
         let canvas = canvases.get_mut(integration.get_canvas_id()).unwrap();
-        integration.draw_on(&canvas, ui_state.colors.exact_sample.into());
+        let step_size = step_sizes.get(integration.get_step_size_id()).unwrap();
+        integration.draw_on(&canvas, Color32::from(step_size.color));
     }
 }
