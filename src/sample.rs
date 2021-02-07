@@ -1,6 +1,6 @@
 use bevy::math::Vec3;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Sample {
     /// Step Number
     pub n: usize,

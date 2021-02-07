@@ -19,16 +19,27 @@ pub fn inspector(
     }
     for integration in integrations.iter() {
         let canvas = canvases.get_mut(integration.get_canvas_id()).unwrap();
+
         canvas.on_hover_ui(|ui, mouse_pos| {
-            if let Some(sample) = integration.closest_sample(mouse_pos) {
+            if let Some((ref_sample, calc_sample)) = integration.closest_sample(mouse_pos) {
                 canvas.vector(
-                    sample.s,
-                    sample.v * sample.dt,
+                    ref_sample.s,
+                    ref_sample.v * ref_sample.dt,
                     ui_state.strokes.focussed_velocity,
                 );
                 canvas.vector(
-                    sample.s,
-                    sample.a * sample.dt,
+                    ref_sample.s,
+                    ref_sample.a * ref_sample.dt,
+                    ui_state.strokes.focussed_acceleration,
+                );
+                canvas.vector(
+                    calc_sample.s,
+                    calc_sample.v * calc_sample.dt,
+                    ui_state.strokes.focussed_velocity,
+                );
+                canvas.vector(
+                    calc_sample.s,
+                    calc_sample.a * calc_sample.dt,
                     ui_state.strokes.focussed_acceleration,
                 );
 
@@ -36,8 +47,20 @@ pub fn inspector(
                 ui.separator();
                 ui.label(format!(
                     "#{}: t = {}",
-                    sample.n,
-                    ui_state.format_f32(sample.t)
+                    calc_sample.n,
+                    ui_state.format_f32(calc_sample.t)
+                ));
+                ui.label(format!(
+                    "ds = {}",
+                    ui_state.format_f32((calc_sample.s - ref_sample.s).length())
+                ));
+                ui.label(format!(
+                    "dv = {}",
+                    ui_state.format_f32((calc_sample.v - ref_sample.v).length())
+                ));
+                ui.label(format!(
+                    "da = {}",
+                    ui_state.format_f32((calc_sample.a - ref_sample.a).length())
                 ));
             }
         });

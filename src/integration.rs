@@ -48,14 +48,33 @@ impl Integration {
         self.integrator_id
     }
 
-    pub fn closest_sample(&self, pos: Vec3) -> Option<Sample> {
-        self.reference_samples
+    /// returns (ReferenceSample,ComputedSample)
+    pub fn closest_sample(&self, pos: Vec3) -> Option<(Sample, Sample)> {
+        if self.reference_samples.is_empty() {
+            None
+        } else {
+            let (closest_reference, dist_ref) = Self::find_closest(&self.reference_samples, pos);
+            let (closest_sample, dist_sample) = Self::find_closest(&self.samples, pos);
+            if dist_ref < dist_sample {
+                Some((closest_reference, self.samples[closest_reference.n]))
+            } else {
+                Some((self.reference_samples[closest_sample.n], closest_sample))
+            }
+        }
+    }
+
+    fn find_closest(samples: &[Sample], pos: Vec3) -> (Sample, f32) {
+        assert!(!samples.is_empty());
+        samples
             .iter()
-            .chain(self.samples.iter())
-            .fold_first(|closest_so_far, next_sample| {
-                closer_sample(closest_so_far, next_sample, pos)
+            .map(|s| (s, (s.s - pos).length_squared()))
+            .fold((Sample::default(), f32::MAX), |(s0, d0), (&s1, d1)| {
+                if d0 < d1 {
+                    (s0, d0)
+                } else {
+                    (s1, d1)
+                }
             })
-            .cloned()
     }
 
     pub fn draw_on(&self, canvas: &Canvas, reference_color: Color32, sample_color: Color32) {
@@ -65,13 +84,5 @@ impl Integration {
         self.samples
             .iter()
             .for_each(|sample| canvas.dot(sample.s, sample_color));
-    }
-}
-
-fn closer_sample<'t>(s1: &'t Sample, s2: &'t Sample, pos: Vec3) -> &'t Sample {
-    if (s1.s - pos).length() < (s2.s - pos).length() {
-        s1
-    } else {
-        s2
     }
 }
