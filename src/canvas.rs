@@ -17,18 +17,31 @@ pub struct Canvas {
 }
 
 impl Canvas {
-    pub fn new(trajectory: Vec<Vec3>, scenario_id: Entity) -> Self {
-        let mut bbox = BoundingBox::default();
-        trajectory.iter().for_each(|&s| bbox.expand_to(s));
+    pub fn new(scenario_id: Entity) -> Self {
         Self {
             allocated_painter: None,
-            visible_units: bbox.diameter() * 1.2,
-            focus: bbox.center(),
+            visible_units: 1.,
+            focus: Default::default(),
             scenario_id,
-            trajectory,
+            trajectory: Default::default(),
             scale: Default::default(),
             area_center: Default::default(),
         }
+    }
+
+    pub fn set_trajectory(&mut self, trajectory: Vec<Vec3>) {
+        self.trajectory = trajectory;
+    }
+
+    pub fn has_trajectory(&self) -> bool {
+        !self.trajectory.is_empty()
+    }
+
+    pub fn auto_focus(&mut self) {
+        let mut bbox = BoundingBox::default();
+        self.trajectory.iter().for_each(|&s| bbox.expand_to(s));
+        self.focus = bbox.center();
+        self.visible_units = bbox.diameter() * 1.2;
     }
 
     pub fn get_scenario<'a>(

@@ -16,16 +16,14 @@ impl Integration {
         step_size_id: Entity,
         canvas_id: Entity,
         integrator_id: Entity,
-        reference_samples: Vec<Sample>,
-        integration_steps: Vec<Sample>,
         color: Hsva,
     ) -> Self {
         Self {
             step_size_id,
             canvas_id,
             integrator_id,
-            samples: integration_steps,
-            reference_samples,
+            samples: Default::default(),
+            reference_samples: Default::default(),
             color,
         }
     }

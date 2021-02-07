@@ -64,11 +64,8 @@ fn initialize_scenario(commands: &mut Commands) {
         integrator: Box::new(ImplicitEuler),
     };
     let step_size = StepSize::new("long", 1.5, Hsva::from(Color32::YELLOW));
-    let trajectory = scenario.calculate_trajectory(step_size.dt);
-    let integration_steps = integrator.integrate(&scenario, step_size.dt);
-    let reference_samples = scenario.calculate_reference_samples(step_size.dt);
     let scenario_id = commands.spawn((scenario,)).current_entity().unwrap();
-    let canvas = Canvas::new(trajectory, scenario_id);
+    let canvas = Canvas::new(scenario_id);
     let canvas_id = commands.spawn((canvas,)).current_entity().unwrap();
     let integrator_id = commands.spawn((integrator,)).current_entity().unwrap();
     let step_size_id = commands.spawn((step_size,)).current_entity().unwrap();
@@ -76,8 +73,6 @@ fn initialize_scenario(commands: &mut Commands) {
         step_size_id,
         canvas_id,
         integrator_id,
-        reference_samples,
-        integration_steps,
         Hsva::from(Color32::RED),
     );
     commands.spawn((integration,));

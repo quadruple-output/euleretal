@@ -122,7 +122,7 @@ impl Default for LayerFlags {
     fn default() -> Self {
         Self {
             coordinates: true,
-            acceleration_field: true,
+            acceleration_field: false,
             inspector: true,
         }
     }
