@@ -1,10 +1,6 @@
-use bevy::{
-    ecs::{Entity, Query},
-    math::Vec3,
-};
+use crate::{Sample, Scenario};
+use bevy::prelude::*;
 use egui::{clamp, Color32, Painter, Pos2, Response, Sense, Shape, Stroke, Ui, Vec2};
-
-use crate::Scenario;
 
 pub struct Canvas {
     allocated_painter: Option<(Response, Painter)>,
@@ -51,10 +47,20 @@ impl Canvas {
         query.get(self.scenario_id)
     }
 
-    pub fn draw_trajectory(&mut self, stroke: Stroke) {
+    pub fn draw_sample_trajectory(&self, samples: &[Sample], stroke: Stroke) {
+        self._draw_trajectory(samples.iter().map(|sample| &sample.s), stroke)
+    }
+
+    pub fn draw_trajectory(&self, stroke: Stroke) {
+        self._draw_trajectory(self.trajectory.iter(), stroke);
+    }
+
+    pub fn _draw_trajectory<'a, I>(&self, trajectory: I, stroke: Stroke)
+    where
+        I: Iterator<Item = &'a Vec3>,
+    {
         if let Some((_, ref painter)) = self.allocated_painter {
-            self.trajectory
-                .iter()
+            trajectory
                 .map(|s| self.user_to_screen(*s))
                 // fold_first is unstable. might be renamed to "reduce"
                 // https://github.com/rust-lang/rust/pull/79805
@@ -62,6 +68,22 @@ impl Canvas {
                     // avoid drawing extremely short line segments:
                     if (u0.x - u1.x).abs() > 2. || (u0.y - u1.y).abs() > 2. {
                         painter.line_segment([u0, u1], stroke);
+                        u1
+                    } else {
+                        u0
+                    }
+                });
+        }
+    }
+
+    pub fn draw_sample_dots(&self, samples: &[Sample], color: Color32) {
+        if let Some((_, ref painter)) = self.allocated_painter {
+            samples
+                .iter()
+                .map(|sample| self.user_to_screen(sample.s))
+                .fold(Pos2::new(f32::MAX, f32::MAX), |u0, u1| {
+                    if (u0.x - u1.x).abs() > 1. || (u0.y - u1.y).abs() > 1. {
+                        painter.circle_filled(u1, 2.5, color);
                         u1
                     } else {
                         u0
@@ -140,12 +162,6 @@ impl Canvas {
             move_to(&mut tip, end);
             painter.add(Shape::polygon(tip, stroke.color, stroke));
             painter.line_segment(tail, stroke)
-        }
-    }
-
-    pub fn dot(&self, pos: Vec3, color: Color32) {
-        if let Some((_, ref painter)) = self.allocated_painter {
-            painter.circle_filled(self.user_to_screen(pos), 2.5, color);
         }
     }
 

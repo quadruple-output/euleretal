@@ -1,4 +1,4 @@
-use crate::{Canvas, Sample};
+use crate::{Canvas, ConfiguredIntegrator, Sample, Scenario, StepSize};
 use bevy::prelude::*;
 use egui::{Color32, Stroke};
 
@@ -21,24 +21,32 @@ impl Integration {
         }
     }
 
-    pub fn set_integration_steps(&mut self, integration_steps: Vec<Sample>) {
-        self.samples = integration_steps;
-    }
-
-    pub fn set_reference_samples(&mut self, reference_samples: Vec<Sample>) {
-        self.reference_samples = reference_samples;
+    pub fn update(
+        &mut self,
+        scenario: &Scenario,
+        integrator: &ConfiguredIntegrator,
+        step_size: &StepSize,
+    ) {
+        self.reference_samples = scenario.calculate_reference_samples(step_size.dt);
+        self.samples = integrator.integrate(&scenario, step_size.dt);
     }
 
     pub fn get_canvas_id(&self) -> Entity {
         self.canvas_id
     }
 
-    pub fn get_step_size_id(&self) -> Entity {
-        self.step_size_id
+    pub fn get_step_size<'a>(
+        &self,
+        query: &'a Query<&StepSize>,
+    ) -> Result<&'a StepSize, bevy::ecs::QueryError> {
+        query.get(self.step_size_id)
     }
 
-    pub fn get_integrator_id(&self) -> Entity {
-        self.integrator_id
+    pub fn get_integrator<'a>(
+        &self,
+        query: &'a Query<&ConfiguredIntegrator>,
+    ) -> Result<&'a ConfiguredIntegrator, bevy::ecs::QueryError> {
+        query.get(self.integrator_id)
     }
 
     /// returns (ReferenceSample,ComputedSample)
@@ -70,16 +78,9 @@ impl Integration {
             })
     }
 
-    pub fn draw_on(&self, canvas: &Canvas, dot_color: Color32, stroke: Stroke) {
-        self.reference_samples
-            .iter()
-            .for_each(|sample| canvas.dot(sample.s, dot_color));
-        self.samples
-            .iter()
-            .for_each(|sample| canvas.dot(sample.s, dot_color));
-        self.samples.iter().fold_first(|s0, s1| {
-            canvas.line_segment(s0.s, s1.s, stroke);
-            s1
-        });
+    pub fn draw_on(&self, canvas: &mut Canvas, dot_color: Color32, stroke: Stroke) {
+        canvas.draw_sample_trajectory(&self.samples, stroke);
+        canvas.draw_sample_dots(&self.reference_samples, dot_color);
+        canvas.draw_sample_dots(&self.samples, dot_color);
     }
 }
