@@ -20,4 +20,8 @@ impl Integrator for ImplicitEuler {
             a: a.value_at(s1),
         }
     }
+
+    fn label(&self) -> String {
+        "implicit Euler".to_string()
+    }
 }

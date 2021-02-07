@@ -1,4 +1,5 @@
 use crate::{Acceleration, Sample, Scenario};
+use egui::Ui;
 pub use euler::*;
 
 mod euler;
@@ -11,9 +12,15 @@ impl ConfiguredIntegrator {
     pub fn integrate(&self, scenario: &Scenario, dt: f32) -> Vec<Sample> {
         self.integrator.integrate(scenario, dt)
     }
+
+    pub fn show_controls(&mut self, ui: &mut Ui) {
+        ui.label(self.integrator.label());
+    }
 }
 
 pub trait Integrator: Send + Sync {
+    fn label(&self) -> String;
+
     fn integrate_step(&self, a: &dyn Acceleration, sample: Sample, dt: f32) -> Sample;
 
     fn integrate(&self, scenario: &Scenario, dt: f32) -> Vec<Sample> {
