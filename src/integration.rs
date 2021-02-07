@@ -1,6 +1,6 @@
 use crate::{Canvas, Sample};
 use bevy::prelude::*;
-use egui::Color32;
+use egui::{color::Hsva, Color32};
 
 pub struct Integration {
     step_size_id: Entity,
@@ -8,6 +8,7 @@ pub struct Integration {
     integrator_id: Entity,
     samples: Vec<Sample>,
     reference_samples: Vec<Sample>,
+    pub color: Hsva,
 }
 
 impl Integration {
@@ -16,14 +17,25 @@ impl Integration {
         canvas_id: Entity,
         integrator_id: Entity,
         reference_samples: Vec<Sample>,
+        integration_steps: Vec<Sample>,
+        color: Hsva,
     ) -> Self {
         Self {
             step_size_id,
             canvas_id,
             integrator_id,
-            samples: Default::default(),
+            samples: integration_steps,
             reference_samples,
+            color,
         }
+    }
+
+    pub fn set_integration_steps(&mut self, integration_steps: Vec<Sample>) {
+        self.samples = integration_steps;
+    }
+
+    pub fn set_reference_samples(&mut self, reference_samples: Vec<Sample>) {
+        self.reference_samples = reference_samples;
     }
 
     pub fn get_canvas_id(&self) -> Entity {
@@ -34,19 +46,27 @@ impl Integration {
         self.step_size_id
     }
 
+    pub fn get_integrator_id(&self) -> Entity {
+        self.integrator_id
+    }
+
     pub fn closest_sample(&self, pos: Vec3) -> Option<Sample> {
         self.reference_samples
             .iter()
+            .chain(self.samples.iter())
             .fold_first(|closest_so_far, next_sample| {
                 closer_sample(closest_so_far, next_sample, pos)
             })
             .cloned()
     }
 
-    pub fn draw_on(&self, canvas: &Canvas, reference_color: Color32) {
+    pub fn draw_on(&self, canvas: &Canvas, reference_color: Color32, sample_color: Color32) {
         self.reference_samples
             .iter()
             .for_each(|sample| canvas.dot(sample.s, reference_color));
+        self.samples
+            .iter()
+            .for_each(|sample| canvas.dot(sample.s, sample_color));
     }
 }
 

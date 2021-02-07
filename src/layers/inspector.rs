@@ -34,10 +34,11 @@ pub fn inspector(
 
                 ui.label("Inspector");
                 ui.separator();
-                ui.label(match sample.n {
-                    Some(n) => format!("#{}: t = {}", n, ui_state.format_f32(sample.t)),
-                    None => format!("t= {}", ui_state.format_f32(sample.t)),
-                });
+                ui.label(format!(
+                    "#{}: t = {}",
+                    sample.n,
+                    ui_state.format_f32(sample.t)
+                ));
             }
         });
     }

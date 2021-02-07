@@ -1,20 +1,23 @@
 use super::Integrator;
-use crate::Sample;
+use crate::{Acceleration, Sample};
 
 #[derive(Debug)]
 pub struct ImplicitEuler;
 
 impl Integrator for ImplicitEuler {
-    fn integrate<A: crate::acceleration::Acceleration>(a: A, s0: Sample, dt: f32) -> Sample {
-        let _v1 = s0.v + s0.a * dt;
-        let _s1 = s0.s + _v1 * dt;
+    fn integrate_step(&self, a: &dyn Acceleration, sample: Sample, dt: f32) -> Sample {
+        let s0 = sample.s;
+        let v0 = sample.v;
+        let a0 = sample.a;
+        let v1 = v0 + a0 * dt;
+        let s1 = s0 + v1 * dt;
         Sample {
-            n: Some(s0.n.unwrap() + 1),
-            t: s0.t + dt,
+            n: sample.n + 1,
+            t: sample.t + dt,
             dt,
-            s: _s1,
-            v: _v1,
-            a: a.value_at(_s1),
+            s: s1,
+            v: v1,
+            a: a.value_at(s1),
         }
     }
 }

@@ -34,6 +34,18 @@ impl Scenario {
         self.accel.deref()
     }
 
+    pub fn s0(&self) -> Vec3 {
+        self.start_position
+    }
+
+    pub fn v0(&self) -> Vec3 {
+        self.start_velocity
+    }
+
+    pub fn duration(&self) -> f32 {
+        self.duration
+    }
+
     pub fn calculate_trajectory(&self, min_dt: f32) -> Vec<Vec3> {
         let num_steps = (self.duration / min_dt * Self::STEPS_PER_DT as f32) as usize;
         let (trajectory, _samples) = self._calculate_trajectory(1, self.duration, num_steps);

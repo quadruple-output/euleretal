@@ -1,9 +1,9 @@
 use bevy::math::Vec3;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Sample {
     /// Step Number
-    pub n: Option<usize>,
+    pub n: usize,
     /// Time
     pub t: f32,
     /// delta t:
@@ -19,7 +19,7 @@ pub struct Sample {
 impl From<(usize, f32, f32, Vec3, Vec3, Vec3)> for Sample {
     fn from(tuple: (usize, f32, f32, Vec3, Vec3, Vec3)) -> Self {
         Self {
-            n: Some(tuple.0),
+            n: tuple.0,
             t: tuple.1,
             dt: tuple.2,
             s: tuple.3,

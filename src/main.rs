@@ -23,7 +23,7 @@ use bevy_egui::{EguiPlugin, EguiSettings};
 use canvas::Canvas;
 use egui::{color::Hsva, Color32};
 use integration::Integration;
-use integrators::ImplicitEuler;
+use integrators::{ConfiguredIntegrator, ImplicitEuler};
 use sample::Sample;
 use scenarios::{CenterMass, Scenario};
 use step_size::StepSize;
@@ -60,15 +60,25 @@ fn initialize_scenario(commands: &mut Commands) {
         Vec3::new(1.4, 0.3, 0.),
         TAU,
     );
+    let integrator = ConfiguredIntegrator {
+        integrator: Box::new(ImplicitEuler),
+    };
     let step_size = StepSize::new("long", 1.5, Hsva::from(Color32::YELLOW));
     let trajectory = scenario.calculate_trajectory(step_size.dt);
+    let integration_steps = integrator.integrate(&scenario, step_size.dt);
     let reference_samples = scenario.calculate_reference_samples(step_size.dt);
     let scenario_id = commands.spawn((scenario,)).current_entity().unwrap();
     let canvas = Canvas::new(trajectory, scenario_id);
-    let integrator = ImplicitEuler;
     let canvas_id = commands.spawn((canvas,)).current_entity().unwrap();
     let integrator_id = commands.spawn((integrator,)).current_entity().unwrap();
     let step_size_id = commands.spawn((step_size,)).current_entity().unwrap();
-    let integration = Integration::new(step_size_id, canvas_id, integrator_id, reference_samples);
+    let integration = Integration::new(
+        step_size_id,
+        canvas_id,
+        integrator_id,
+        reference_samples,
+        integration_steps,
+        Hsva::from(Color32::RED),
+    );
     commands.spawn((integration,));
 }
