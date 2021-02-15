@@ -1,4 +1,4 @@
-use crate::{Canvas, Scenario, StepSize, UIState};
+use crate::{Canvas, Scenario, StepSize, UiState};
 use bevy::prelude::*;
 
 pub struct Plugin;
@@ -11,7 +11,7 @@ impl bevy::prelude::Plugin for Plugin {
 
 // UIState must be requested as Mut, or else it panics when other systems use it in parallel
 pub fn render_exact_path(
-    ui_state: ResMut<UIState>,
+    ui_state: ResMut<UiState>,
     mut canvases: Query<&mut Canvas>, // always request canvases with 'mut'
     //integrations: Query<&Integration>,
     step_sizes: Query<&StepSize>,

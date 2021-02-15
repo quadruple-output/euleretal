@@ -7,13 +7,13 @@ use egui::{stroke_ui, widgets::Slider, CentralPanel, Color32, Rgba, SidePanel, S
 
 pub struct Plugin;
 
-pub struct UIState {
+pub struct UiState {
     pub layerflags: LayerFlags,
     pub strokes: Strokes,
     pub format_precision: usize,
 }
 
-impl Default for UIState {
+impl Default for UiState {
     fn default() -> Self {
         Self {
             layerflags: Default::default(),
@@ -25,7 +25,7 @@ impl Default for UIState {
 
 impl bevy::prelude::Plugin for Plugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_resource(UIState::default())
+        app.add_resource(UiState::default())
             .add_system(render.system());
 
         let ctx = &app.resources().get_mut::<EguiContext>().unwrap().ctx;
@@ -45,7 +45,7 @@ impl bevy::prelude::Plugin for Plugin {
 
 pub fn render(
     context: Res<EguiContext>,
-    mut ui_state: ResMut<UIState>,
+    mut ui_state: ResMut<UiState>,
     mut canvases: Query<&mut Canvas>,
     mut step_sizes: Query<&mut StepSize>,
     mut integrators: Query<&mut ConfiguredIntegrator>,
@@ -105,7 +105,7 @@ pub fn render(
     });
 }
 
-impl UIState {
+impl UiState {
     pub fn format_f32(&self, n: f32) -> FormatterF32 {
         FormatterF32 {
             precision: self.format_precision,

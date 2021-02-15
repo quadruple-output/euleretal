@@ -1,4 +1,4 @@
-use crate::{Canvas, UIState};
+use crate::{Canvas, UiState};
 use bevy::prelude::*;
 
 pub struct Plugin;
@@ -11,7 +11,7 @@ impl bevy::prelude::Plugin for Plugin {
 
 fn display_coordinates(
     // UIState must be requested as Mut, or else it panics when other systems use it in parallel
-    ui_state: ResMut<UIState>,
+    ui_state: ResMut<UiState>,
     mut canvases: Query<&mut Canvas>,
 ) {
     if !ui_state.layerflags.coordinates {

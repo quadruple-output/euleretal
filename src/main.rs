@@ -2,10 +2,9 @@
   bevy_egui example: https://github.com/mvlabat/bevy_egui/blob/main/examples/ui.rs
 */
 
-#![feature(iterator_fold_self)]
-
 mod acceleration;
 mod canvas;
+mod functional_state;
 mod integration;
 mod integrators;
 mod layers;
@@ -13,8 +12,6 @@ mod sample;
 mod scenarios;
 mod step_size;
 mod ui;
-
-use std::f32::consts::TAU;
 
 use acceleration::Acceleration;
 use bevy::input::system::exit_on_esc_system;
@@ -26,8 +23,9 @@ use integration::Integration;
 use integrators::{ConfiguredIntegrator, ImplicitEuler};
 use sample::Sample;
 use scenarios::{CenterMass, Scenario};
+use std::f32::consts::TAU;
 use step_size::StepSize;
-use ui::UIState;
+use ui::UiState;
 
 fn main() {
     App::build()

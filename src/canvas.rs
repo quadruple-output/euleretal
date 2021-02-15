@@ -62,9 +62,7 @@ impl Canvas {
         if let Some((_, ref painter)) = self.allocated_painter {
             trajectory
                 .map(|s| self.user_to_screen(*s))
-                // fold_first is unstable. might be renamed to "reduce"
-                // https://github.com/rust-lang/rust/pull/79805
-                .fold_first(|u0, u1| {
+                .reduce(|u0, u1| {
                     // avoid drawing extremely short line segments:
                     if (u0.x - u1.x).abs() > 2. || (u0.y - u1.y).abs() > 2. {
                         painter.line_segment([u0, u1], stroke);

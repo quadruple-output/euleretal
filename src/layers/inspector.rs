@@ -1,4 +1,4 @@
-use crate::{Canvas, Integration, UIState};
+use crate::{Canvas, Integration, UiState};
 use bevy::prelude::*;
 
 pub struct Plugin;
@@ -10,7 +10,7 @@ impl bevy::prelude::Plugin for Plugin {
 }
 
 pub fn inspector(
-    ui_state: ResMut<UIState>,
+    ui_state: ResMut<UiState>,
     integrations: Query<&Integration>,
     mut canvases: Query<&mut Canvas>,
 ) {
