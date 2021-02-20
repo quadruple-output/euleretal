@@ -1,4 +1,4 @@
-use crate::{Acceleration, Sample, Scenario};
+use crate::{Acceleration, Sample, Scenario, TrackedChange};
 use egui::{stroke_ui, Stroke, Ui};
 pub use euler::*;
 
@@ -7,6 +7,12 @@ mod euler;
 pub struct ConfiguredIntegrator {
     pub integrator: Box<dyn Integrator>,
     pub stroke: Stroke,
+}
+
+impl TrackedChange for ConfiguredIntegrator {
+    fn change_count(&self) -> crate::change_tracker::ChangeCount {
+        0
+    }
 }
 
 impl ConfiguredIntegrator {

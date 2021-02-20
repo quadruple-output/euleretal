@@ -1,3 +1,4 @@
+use crate::{ChangeTracker, TrackedChange};
 use egui::{
     color::Hsva,
     color_picker::{color_edit_button_hsva, Alpha},
@@ -6,15 +7,21 @@ use egui::{
 
 pub struct StepSize {
     pub label: String,
-    pub dt: f32,
+    pub dt: ChangeTracker<f32>,
     pub color: Hsva,
+}
+
+impl TrackedChange for StepSize {
+    fn change_count(&self) -> crate::change_tracker::ChangeCount {
+        self.dt.change_count()
+    }
 }
 
 impl StepSize {
     pub fn new(label: &str, dt: f32, color: Hsva) -> Self {
         Self {
             label: label.to_string(),
-            dt,
+            dt: ChangeTracker::with(dt),
             color,
         }
     }
@@ -29,14 +36,9 @@ impl StepSize {
                 self.label = "<unnamed>".to_string();
             }
             // edit dt:
-            ui.add(
-                Slider::f32(&mut self.dt, 0.01..=2.)
-                    .text("dt")
-                    .logarithmic(true),
-            );
-            if self.dt < 0.01 {
-                self.dt = 0.01;
-            }
+            let mut dt = self.dt.get();
+            ui.add(Slider::f32(&mut dt, 0.01..=2.).text("dt").logarithmic(true));
+            self.dt.set(f32::max(dt, 0.01));
         });
     }
 }

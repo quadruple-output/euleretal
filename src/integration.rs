@@ -1,4 +1,4 @@
-use crate::{Canvas, ConfiguredIntegrator, Sample, Scenario, StepSize};
+use crate::{Canvas, ChangeCount, ConfiguredIntegrator, Sample, Scenario, StepSize, TrackedChange};
 use bevy::prelude::*;
 use egui::{Color32, Stroke};
 
@@ -7,7 +7,9 @@ pub struct Integration {
     canvas_id: Entity,
     integrator_id: Entity,
     samples: Vec<Sample>,
+    samples_change_count: ChangeCount,
     reference_samples: Vec<Sample>,
+    ref_samples_change_count: ChangeCount,
 }
 
 impl Integration {
@@ -17,7 +19,9 @@ impl Integration {
             canvas_id,
             integrator_id,
             samples: Default::default(),
+            samples_change_count: Default::default(),
             reference_samples: Default::default(),
+            ref_samples_change_count: Default::default(),
         }
     }
 
@@ -27,8 +31,16 @@ impl Integration {
         integrator: &ConfiguredIntegrator,
         step_size: &StepSize,
     ) {
-        self.reference_samples = scenario.calculate_reference_samples(step_size.dt);
-        self.samples = integrator.integrate(&scenario, step_size.dt);
+        let ref_samples_change_count = step_size.change_count() + scenario.change_count();
+        let samples_change_count = ref_samples_change_count + integrator.change_count();
+        if self.samples_change_count != samples_change_count {
+            self.samples = integrator.integrate(&scenario, step_size.dt.get());
+            self.samples_change_count = samples_change_count;
+            if self.ref_samples_change_count != ref_samples_change_count {
+                self.reference_samples = scenario.calculate_reference_samples(step_size.dt.get());
+                self.ref_samples_change_count = ref_samples_change_count;
+            }
+        }
     }
 
     pub fn get_canvas_id(&self) -> Entity {

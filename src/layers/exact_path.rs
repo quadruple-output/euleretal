@@ -19,7 +19,7 @@ pub fn render_exact_path(
 ) {
     let mut min_dt = f32::MAX;
     for step_size in step_sizes.iter() {
-        min_dt = step_size.dt.min(min_dt);
+        min_dt = step_size.dt.get().min(min_dt);
     }
     if min_dt == f32::MAX {
         return;

@@ -3,7 +3,7 @@ name = "euleretal"
 version = "0.1.0"
 authors = ["quadruple-output <57874618+quadruple-output@users.noreply.github.com>"]
 edition = "2018"
-
+rust = "1.5"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]

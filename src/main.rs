@@ -4,7 +4,7 @@
 
 mod acceleration;
 mod canvas;
-mod functional_state;
+mod change_tracker;
 mod integration;
 mod integrators;
 mod layers;
@@ -18,6 +18,7 @@ use bevy::input::system::exit_on_esc_system;
 use bevy::prelude::*;
 use bevy_egui::{EguiPlugin, EguiSettings};
 use canvas::Canvas;
+use change_tracker::*;
 use egui::{color::Hsva, Color32, Stroke};
 use integration::Integration;
 use integrators::{ConfiguredIntegrator, ImplicitEuler};
