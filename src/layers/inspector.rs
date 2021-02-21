@@ -22,24 +22,30 @@ pub fn inspector(
 
         canvas.on_hover_ui(|ui, mouse_pos| {
             if let Some((ref_sample, calc_sample)) = integration.closest_sample(mouse_pos) {
+                // *** reference sample:
+                // delta s by velocity:
                 canvas.vector(
                     ref_sample.s,
                     ref_sample.v * ref_sample.dt,
                     ui_state.strokes.focussed_velocity,
                 );
+                // delta s by acceleration at sample point:
                 canvas.vector(
                     ref_sample.s,
-                    ref_sample.a * ref_sample.dt,
+                    0.5 * ref_sample.a * ref_sample.dt * ref_sample.dt,
                     ui_state.strokes.focussed_acceleration,
                 );
+                // *** calculated sample:
+                // delta s by velocity:
                 canvas.vector(
                     calc_sample.s,
                     calc_sample.v * calc_sample.dt,
                     ui_state.strokes.focussed_velocity,
                 );
+                // delta s by acceleration at sample point:
                 canvas.vector(
                     calc_sample.s,
-                    calc_sample.a * calc_sample.dt,
+                    0.5 * calc_sample.a * calc_sample.dt * calc_sample.dt,
                     ui_state.strokes.focussed_acceleration,
                 );
 

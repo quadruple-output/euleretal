@@ -27,6 +27,7 @@ pub fn render_exact_path(
     for mut canvas in canvases.iter_mut() {
         let first_time = !canvas.has_trajectory();
         let scenario = canvas.get_scenario(&scenarios).unwrap();
+        // TODO: should be recalculated only when something changed
         let trajectory = scenario.calculate_trajectory(min_dt);
         canvas.set_trajectory(trajectory);
         if first_time {
