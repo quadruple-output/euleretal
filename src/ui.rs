@@ -1,9 +1,8 @@
-use core::fmt;
-
 use crate::{Canvas, ConfiguredIntegrator, Scenario, StepSize};
 use bevy::prelude::*;
 use bevy_egui::EguiContext;
-use egui::{stroke_ui, widgets::Slider, CentralPanel, Color32, Rgba, SidePanel, Stroke, Ui};
+use core::fmt;
+use egui::{stroke_ui, widgets::Slider, CentralPanel, Color32, Rgba, SidePanel, Stroke, Ui, Vec2};
 
 pub struct Plugin;
 
@@ -99,8 +98,13 @@ pub fn render(
     });
 
     CentralPanel::default().show(ctx, |ui| {
+        let panel_size = ui.available_size_before_wrap_finite();
+        let canvas_size = Vec2::new(
+            panel_size.x,
+            panel_size.y / canvases.iter_mut().count() as f32,
+        );
         for mut canvas in canvases.iter_mut() {
-            canvas.allocate_painter(ui, ui.available_size_before_wrap_finite());
+            canvas.allocate_painter(ui, canvas_size);
         }
     });
 }

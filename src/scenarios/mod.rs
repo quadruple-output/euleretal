@@ -4,8 +4,10 @@ use egui::{Slider, Ui};
 use std::ops::Deref;
 
 mod center_mass;
+mod constant_acceleration;
 
 pub use center_mass::CenterMass;
+pub use constant_acceleration::ConstantAcceleration;
 
 pub struct Scenario {
     accel: Box<dyn Acceleration>,
