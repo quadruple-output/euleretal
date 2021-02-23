@@ -1,6 +1,7 @@
 use crate::{Acceleration, ChangeTracker, Sample, TrackedChange};
 use bevy::math::Vec3;
 use egui::{Slider, Ui};
+use log::debug;
 use std::ops::Deref;
 
 mod center_mass;
@@ -75,12 +76,18 @@ impl Scenario {
     pub fn calculate_trajectory(&self, min_dt: f32) -> Vec<Vec3> {
         let num_steps = (self.duration.get() / min_dt * Self::STEPS_PER_DT as f32) as usize;
         let (trajectory, _samples) = self._calculate_trajectory(1, self.duration.get(), num_steps);
+        debug!("Calculated trajectory with {} segments", trajectory.len(),);
         trajectory
     }
 
     pub fn calculate_reference_samples(&self, dt: f32) -> Vec<Sample> {
-        let (_trajectory, samples) =
+        let (trajectory, samples) =
             self._calculate_trajectory((self.duration.get() / dt) as usize, dt, Self::STEPS_PER_DT);
+        debug!(
+            "Calculated {} reference samples, using trajectory with {} segments",
+            samples.len(),
+            trajectory.len(),
+        );
         samples
     }
 

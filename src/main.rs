@@ -20,6 +20,7 @@ use bevy_egui::{EguiPlugin, EguiSettings};
 use canvas::Canvas;
 use change_tracker::*;
 use egui::{color::Hsva, Color32, Stroke};
+use flexi_logger::{colored_opt_format, Logger};
 use integration::Integration;
 use integrators::{ConfiguredIntegrator, ImplicitEuler};
 use sample::Sample;
@@ -29,6 +30,12 @@ use step_size::StepSize;
 use ui::UiState;
 
 fn main() {
+    if let Err(e) = Logger::with_env_or_str("debug")
+        .format(colored_opt_format)
+        .start()
+    {
+        println!("Warning: Cannot initialize logging. {}", e);
+    }
     App::build()
         .add_resource(ClearColor(Color::BLACK))
         .add_resource(Msaa { samples: 4 })
