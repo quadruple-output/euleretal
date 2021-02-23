@@ -1,4 +1,5 @@
 use crate::{Acceleration, Sample, Scenario, TrackedChange};
+use decorum::R32;
 use egui::{stroke_ui, Stroke, Ui};
 pub use euler::*;
 
@@ -16,7 +17,7 @@ impl TrackedChange for ConfiguredIntegrator {
 }
 
 impl ConfiguredIntegrator {
-    pub fn integrate(&self, scenario: &Scenario, dt: f32) -> Vec<Sample> {
+    pub fn integrate(&self, scenario: &Scenario, dt: R32) -> Vec<Sample> {
         self.integrator.integrate(scenario, dt)
     }
 
@@ -28,14 +29,14 @@ impl ConfiguredIntegrator {
 pub trait Integrator: Send + Sync {
     fn label(&self) -> String;
 
-    fn integrate_step(&self, a: &dyn Acceleration, sample: Sample, dt: f32) -> Sample;
+    fn integrate_step(&self, a: &dyn Acceleration, sample: Sample, dt: R32) -> Sample;
 
-    fn integrate(&self, scenario: &Scenario, dt: f32) -> Vec<Sample> {
-        let num_steps = (scenario.duration() / dt) as usize;
+    fn integrate(&self, scenario: &Scenario, dt: R32) -> Vec<Sample> {
+        let num_steps = (scenario.duration() / dt).into_inner() as usize;
         let mut result = Vec::with_capacity(num_steps + 1);
         let mut sample = Sample {
             n: 0,
-            t: 0.,
+            t: 0f32.into(),
             dt,
             s: scenario.s0(),
             v: scenario.v0(),

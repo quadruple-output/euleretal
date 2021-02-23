@@ -1,5 +1,6 @@
-use crate::{Sample, Scenario};
+use crate::{change_tracker::TrackedChange, Sample, Scenario};
 use bevy::prelude::*;
+use decorum::R32;
 use egui::{clamp, Color32, Painter, Pos2, Response, Sense, Shape, Stroke, Ui, Vec2};
 
 pub struct Canvas {
@@ -10,6 +11,8 @@ pub struct Canvas {
     area_center: Pos2,
     scenario_id: Entity,
     trajectory: Vec<Vec3>,
+    scenario_change_count: u32,
+    trajectory_min_dt: R32,
 }
 
 impl Canvas {
@@ -22,11 +25,18 @@ impl Canvas {
             trajectory: Default::default(),
             scale: Default::default(),
             area_center: Default::default(),
+            scenario_change_count: 0,
+            trajectory_min_dt: Default::default(),
         }
     }
 
-    pub fn set_trajectory(&mut self, trajectory: Vec<Vec3>) {
-        self.trajectory = trajectory;
+    pub fn update_trajectory(&mut self, scenario: &Scenario, min_dt: R32) {
+        if self.scenario_change_count != scenario.change_count() || self.trajectory_min_dt > min_dt
+        {
+            self.trajectory = scenario.calculate_trajectory(min_dt);
+            self.trajectory_min_dt = min_dt;
+            self.scenario_change_count = scenario.change_count();
+        }
     }
 
     pub fn has_trajectory(&self) -> bool {

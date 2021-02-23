@@ -1,13 +1,14 @@
 use bevy::math::Vec3;
+use decorum::R32;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Sample {
     /// Step Number
     pub n: usize,
     /// Time
-    pub t: f32,
+    pub t: R32,
     /// delta t:
-    pub dt: f32,
+    pub dt: R32,
     /// Position
     pub s: Vec3,
     /// Velocity
@@ -16,8 +17,8 @@ pub struct Sample {
     pub a: Vec3,
 }
 
-impl From<(usize, f32, f32, Vec3, Vec3, Vec3)> for Sample {
-    fn from(tuple: (usize, f32, f32, Vec3, Vec3, Vec3)) -> Self {
+impl From<(usize, R32, R32, Vec3, Vec3, Vec3)> for Sample {
+    fn from(tuple: (usize, R32, R32, Vec3, Vec3, Vec3)) -> Self {
         Self {
             n: tuple.0,
             t: tuple.1,

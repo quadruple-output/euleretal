@@ -1,7 +1,8 @@
 use crate::{Acceleration, ChangeTracker, Sample, TrackedChange};
 use bevy::math::Vec3;
+use decorum::R32;
 use egui::{Slider, Ui};
-use log::debug;
+use log::info;
 use std::ops::Deref;
 
 mod center_mass;
@@ -14,7 +15,7 @@ pub struct Scenario {
     accel: Box<dyn Acceleration>,
     start_position: ChangeTracker<Vec3>,
     start_velocity: ChangeTracker<Vec3>,
-    duration: ChangeTracker<f32>,
+    duration: ChangeTracker<R32>,
 }
 
 impl TrackedChange for Scenario {
@@ -32,7 +33,7 @@ impl Scenario {
         acceleration: Box<dyn Acceleration>,
         start_position: Vec3,
         start_velocity: Vec3,
-        duration: f32,
+        duration: R32,
     ) -> Self {
         Self {
             accel: acceleration,
@@ -46,13 +47,13 @@ impl Scenario {
         ui.horizontal(|ui| {
             ui.label(self.acceleration().label());
             ui.vertical(|ui| {
-                let mut duration = self.duration.get();
+                let mut duration = self.duration.get().into_inner();
                 ui.add(
                     Slider::f32(&mut duration, 0.1..=50.)
                         .logarithmic(true)
                         .text("duration"),
                 );
-                self.duration.set(duration);
+                self.duration.set(duration.into());
             });
         });
     }
@@ -69,21 +70,25 @@ impl Scenario {
         self.start_velocity.get()
     }
 
-    pub fn duration(&self) -> f32 {
+    pub fn duration(&self) -> R32 {
         self.duration.get()
     }
 
-    pub fn calculate_trajectory(&self, min_dt: f32) -> Vec<Vec3> {
-        let num_steps = (self.duration.get() / min_dt * Self::STEPS_PER_DT as f32) as usize;
+    pub fn calculate_trajectory(&self, min_dt: R32) -> Vec<Vec3> {
+        let num_steps = (self.duration.get() / min_dt * R32::from(Self::STEPS_PER_DT as f32))
+            .into_inner() as usize;
         let (trajectory, _samples) = self._calculate_trajectory(1, self.duration.get(), num_steps);
-        debug!("Calculated trajectory with {} segments", trajectory.len(),);
+        info!("Calculated trajectory with {} segments", trajectory.len(),);
         trajectory
     }
 
-    pub fn calculate_reference_samples(&self, dt: f32) -> Vec<Sample> {
-        let (trajectory, samples) =
-            self._calculate_trajectory((self.duration.get() / dt) as usize, dt, Self::STEPS_PER_DT);
-        debug!(
+    pub fn calculate_reference_samples(&self, dt: R32) -> Vec<Sample> {
+        let (trajectory, samples) = self._calculate_trajectory(
+            (self.duration.get() / dt).into_inner() as usize,
+            dt,
+            Self::STEPS_PER_DT,
+        );
+        info!(
             "Calculated {} reference samples, using trajectory with {} segments",
             samples.len(),
             trajectory.len(),
@@ -95,13 +100,13 @@ impl Scenario {
     fn _calculate_trajectory(
         &self,
         iterations: usize,
-        dt: f32,
+        dt: R32,
         steps_per_dt: usize,
     ) -> (Vec<Vec3>, Vec<Sample>) {
         let mut trajectory = Vec::with_capacity(iterations * steps_per_dt + 1);
         let mut samples = Vec::with_capacity(iterations + 1);
 
-        let mut t0 = 0f32;
+        let mut t0 = R32::from(0.);
         let mut s0 = self.start_position.get();
         let mut v0 = self.start_velocity.get();
         let mut a0 = self.accel.value_at(s0);
@@ -109,12 +114,12 @@ impl Scenario {
         samples.push((0, t0, dt, s0, v0, a0).into());
 
         for step in 1..=iterations {
-            let t1 = step as f32 * dt;
+            let t1 = R32::from(step as f32) * dt;
             let mut ti0 = t0;
             for istep in 1..=steps_per_dt {
                 let ti1 = t0 * ((steps_per_dt - istep) as f32 / steps_per_dt as f32)
                     + t1 * (istep as f32 / steps_per_dt as f32);
-                let h = ti1 - ti0;
+                let h = (ti1 - ti0).into_inner();
 
                 a0 = self.accel.value_at(s0);
                 // let v1_tmp = v0 + a0 * h;

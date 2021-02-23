@@ -30,7 +30,7 @@ use step_size::StepSize;
 use ui::UiState;
 
 fn main() {
-    if let Err(e) = Logger::with_env_or_str("debug")
+    if let Err(e) = Logger::with_env_or_str("info")
         .format(colored_opt_format)
         .start()
     {
@@ -60,7 +60,7 @@ fn update_ui_scale_factor(mut egui_settings: ResMut<EguiSettings>, windows: Res<
 }
 
 fn initialize_scenario(commands: &mut Commands) {
-    let step_size = StepSize::new("long", 0.5, Hsva::from(Color32::YELLOW));
+    let step_size = StepSize::new("long", 0.5.into(), Hsva::from(Color32::YELLOW));
     let step_size_id = commands.spawn((step_size,)).current_entity().unwrap();
 
     let integrator = ConfiguredIntegrator {
@@ -73,7 +73,7 @@ fn initialize_scenario(commands: &mut Commands) {
         Box::new(CenterMass),
         Vec3::new(0., 1., 0.),
         Vec3::new(1., 0., 0.),
-        TAU,
+        TAU.into(),
     );
     let scenario_id_center_mass = commands
         .spawn((scenario_center_mass,))
@@ -84,7 +84,7 @@ fn initialize_scenario(commands: &mut Commands) {
         Box::new(ConstantAcceleration),
         Vec3::new(0., 0., 0.),
         Vec3::new(1., 0., 0.),
-        2.,
+        2f32.into(),
     );
     let scenario_id_constant_acceleration = commands
         .spawn((scenario_constant_acceleration,))

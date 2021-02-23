@@ -23,29 +23,31 @@ pub fn inspector(
         canvas.on_hover_ui(|ui, mouse_pos| {
             if let Some((ref_sample, calc_sample)) = integration.closest_sample(mouse_pos) {
                 // *** reference sample:
+                let ref_sample_dt = ref_sample.dt.into_inner();
                 // delta s by velocity:
                 canvas.vector(
                     ref_sample.s,
-                    ref_sample.v * ref_sample.dt,
+                    ref_sample.v * ref_sample_dt,
                     ui_state.strokes.focussed_velocity,
                 );
                 // delta s by acceleration at sample point:
                 canvas.vector(
                     ref_sample.s,
-                    0.5 * ref_sample.a * ref_sample.dt * ref_sample.dt,
+                    0.5 * ref_sample.a * ref_sample_dt * ref_sample_dt,
                     ui_state.strokes.focussed_acceleration,
                 );
                 // *** calculated sample:
+                let calc_sample_dt = calc_sample.dt.into_inner();
                 // delta s by velocity:
                 canvas.vector(
                     calc_sample.s,
-                    calc_sample.v * calc_sample.dt,
+                    calc_sample.v * calc_sample_dt,
                     ui_state.strokes.focussed_velocity,
                 );
                 // delta s by acceleration at sample point:
                 canvas.vector(
                     calc_sample.s,
-                    0.5 * calc_sample.a * calc_sample.dt * calc_sample.dt,
+                    0.5 * calc_sample.a * calc_sample_dt * calc_sample_dt,
                     ui_state.strokes.focussed_acceleration,
                 );
 
@@ -54,7 +56,7 @@ pub fn inspector(
                 ui.label(format!(
                     "#{}: t = {}",
                     calc_sample.n,
-                    ui_state.format_f32(calc_sample.t)
+                    ui_state.format_f32(calc_sample.t.into())
                 ));
                 ui.label(format!(
                     "ds = {}",

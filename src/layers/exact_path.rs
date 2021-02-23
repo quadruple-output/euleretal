@@ -17,22 +17,18 @@ pub fn render_exact_path(
     step_sizes: Query<&StepSize>,
     scenarios: Query<&Scenario>,
 ) {
-    let mut min_dt = f32::MAX;
-    for step_size in step_sizes.iter() {
-        min_dt = step_size.dt.get().min(min_dt);
-    }
-    if min_dt == f32::MAX {
-        return;
-    }
-    for mut canvas in canvases.iter_mut() {
-        let first_time = !canvas.has_trajectory();
-        let scenario = canvas.get_scenario(&scenarios).unwrap();
-        let todo = "should be recalculated only when something changed";
-        let trajectory = scenario.calculate_trajectory(min_dt);
-        canvas.set_trajectory(trajectory);
-        if first_time {
-            canvas.auto_focus();
+    if let Some(min_dt) = step_sizes.iter().map(|step_size| step_size.dt.get()).min()
+    // the desire to be able to use the previous call to min() was the trigger to use decorum::R32
+    {
+        for mut canvas in canvases.iter_mut() {
+            let first_time = !canvas.has_trajectory();
+            let scenario = canvas.get_scenario(&scenarios).unwrap();
+            canvas.update_trajectory(&scenario, min_dt);
+            if first_time {
+                let todo = "autofocus should consider all samples, not just trajectory";
+                canvas.auto_focus();
+            }
+            canvas.draw_trajectory(ui_state.strokes.trajectory);
         }
-        canvas.draw_trajectory(ui_state.strokes.trajectory);
     }
 }
