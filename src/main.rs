@@ -3,6 +3,7 @@
 */
 
 mod acceleration;
+mod bounding_box;
 mod canvas;
 mod change_tracker;
 mod integration;
@@ -17,6 +18,7 @@ use acceleration::Acceleration;
 use bevy::input::system::exit_on_esc_system;
 use bevy::prelude::*;
 use bevy_egui::{EguiPlugin, EguiSettings};
+use bounding_box::BoundingBox;
 use canvas::Canvas;
 use change_tracker::*;
 use egui::{color::Hsva, Color32, Stroke};
@@ -46,8 +48,7 @@ fn main() {
         .add_plugin(ui::Plugin)
         .add_plugin(layers::coordinates::Plugin)
         .add_plugin(layers::acceleration_field::Plugin)
-        .add_plugin(layers::exact_path::Plugin)
-        .add_plugin(layers::integration::Plugin)
+        .add_plugin(layers::integrations::Plugin)
         .add_plugin(layers::inspector::Plugin)
         .add_startup_system(initialize_scenario.system())
         .run();

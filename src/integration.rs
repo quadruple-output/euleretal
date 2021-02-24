@@ -90,9 +90,9 @@ impl Integration {
             })
     }
 
-    pub fn draw_on(&self, canvas: &mut Canvas, dot_color: Color32, stroke: Stroke) {
+    pub fn draw_on(&self, canvas: &mut Canvas, sample_color: Color32, stroke: Stroke) {
         canvas.draw_sample_trajectory(&self.samples, stroke);
-        canvas.draw_sample_dots(&self.reference_samples, dot_color);
-        canvas.draw_sample_dots(&self.samples, dot_color);
+        canvas.draw_sample_dots(&self.reference_samples, sample_color);
+        canvas.draw_sample_dots(&self.samples, sample_color);
     }
 }
