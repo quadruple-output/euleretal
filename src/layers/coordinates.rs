@@ -5,11 +5,12 @@ pub struct Plugin;
 
 impl bevy::prelude::Plugin for Plugin {
     fn build(&self, app: &mut bevy::prelude::AppBuilder) {
-        app.add_system(display_coordinates.system());
+        app.add_system(render.system());
     }
 }
 
-fn display_coordinates(
+#[allow(clippy::needless_pass_by_value)]
+fn render(
     // UIState must be requested as Mut, or else it panics when other systems use it in parallel
     ui_state: ResMut<UiState>,
     mut canvases: Query<&mut Canvas>,

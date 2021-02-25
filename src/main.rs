@@ -1,7 +1,4 @@
-/*
-  bevy_egui example: https://github.com/mvlabat/bevy_egui/blob/main/examples/ui.rs
-*/
-
+//#![warn(clippy::pedantic)]
 mod acceleration;
 mod bounding_box;
 mod canvas;
@@ -20,7 +17,7 @@ use bevy::prelude::*;
 use bevy_egui::{EguiPlugin, EguiSettings};
 use bounding_box::BoundingBox;
 use canvas::Canvas;
-use change_tracker::*;
+use change_tracker::{ChangeCount, ChangeTracker, TrackedChange};
 use egui::{color::Hsva, Color32, Stroke};
 use flexi_logger::{colored_opt_format, Logger};
 use integration::Integration;
@@ -38,6 +35,9 @@ fn main() {
     {
         println!("Warning: Cannot initialize logging. {}", e);
     }
+    /*
+      bevy_egui example: https://github.com/mvlabat/bevy_egui/blob/main/examples/ui.rs
+    */
     App::build()
         .add_resource(ClearColor(Color::BLACK))
         .add_resource(Msaa { samples: 4 })
@@ -54,6 +54,7 @@ fn main() {
         .run();
 }
 
+#[allow(clippy::needless_pass_by_value)]
 fn update_ui_scale_factor(mut egui_settings: ResMut<EguiSettings>, windows: Res<Windows>) {
     if let Some(window) = windows.get_primary() {
         egui_settings.scale_factor = 1.0 / window.scale_factor();

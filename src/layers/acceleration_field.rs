@@ -5,11 +5,12 @@ pub struct Plugin;
 
 impl bevy::prelude::Plugin for Plugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_system(render_acceleration.system());
+        app.add_system(render.system());
     }
 }
 
-pub fn render_acceleration(
+#[allow(clippy::needless_pass_by_value)]
+pub fn render(
     ui_state: Res<UiState>,
     scenarios: Query<&Scenario>,
     mut canvases: Query<&mut Canvas>, // always request canvases with 'mut'

@@ -5,11 +5,12 @@ pub struct Plugin;
 
 impl bevy::prelude::Plugin for Plugin {
     fn build(&self, app: &mut bevy::prelude::AppBuilder) {
-        app.add_system(inspector.system());
+        app.add_system(render.system());
     }
 }
 
-pub fn inspector(
+#[allow(clippy::needless_pass_by_value)]
+pub fn render(
     ui_state: ResMut<UiState>,
     integrations: Query<&Integration>,
     mut canvases: Query<&mut Canvas>,

@@ -1,4 +1,7 @@
-use crate::{Canvas, ChangeCount, ConfiguredIntegrator, Sample, Scenario, StepSize, TrackedChange};
+use crate::{
+    BoundingBox, Canvas, ChangeCount, ConfiguredIntegrator, Sample, Scenario, StepSize,
+    TrackedChange,
+};
 use bevy::prelude::*;
 use egui::{Color32, Stroke};
 
@@ -41,6 +44,15 @@ impl Integration {
                 self.ref_samples_change_count = ref_samples_change_count;
             }
         }
+    }
+
+    pub fn stretch_bbox(&self, bbox: &mut BoundingBox) {
+        self.reference_samples
+            .iter()
+            .for_each(|&sample| bbox.expand_to(sample.s));
+        self.samples
+            .iter()
+            .for_each(|&sample| bbox.expand_to(sample.s));
     }
 
     pub fn get_canvas_id(&self) -> Entity {

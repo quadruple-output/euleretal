@@ -43,9 +43,13 @@ impl Canvas {
         !self.trajectory.is_empty()
     }
 
-    pub fn auto_focus(&mut self) {
+    pub fn bbox(&self) -> BoundingBox {
         let mut bbox = BoundingBox::default();
         self.trajectory.iter().for_each(|&s| bbox.expand_to(s));
+        bbox
+    }
+
+    pub fn set_visible_bbox(&mut self, bbox: BoundingBox) {
         self.focus = bbox.center();
         self.visible_units = bbox.diameter() * 1.2;
     }
