@@ -38,7 +38,7 @@ pub fn render(
 
         let first_time = !canvas.has_trajectory();
         canvas.update_trajectory(&scenario, min_dt);
-        for (ref mut integration, integrator, step_size) in canvas_integrations.iter_mut() {
+        for (ref mut integration, integrator, step_size) in &mut canvas_integrations {
             integration.update(&scenario, &integrator, &step_size);
         }
         if first_time {
@@ -46,11 +46,11 @@ pub fn render(
             canvas_integrations
                 .iter()
                 .for_each(|(integration, _, _)| integration.stretch_bbox(&mut bbox));
-            canvas.set_visible_bbox(bbox);
+            canvas.set_visible_bbox(&bbox);
         }
 
         canvas.draw_trajectory(ui_state.strokes.trajectory);
-        for (ref mut integration, integrator, step_size) in canvas_integrations.iter_mut() {
+        for (ref mut integration, integrator, step_size) in &mut canvas_integrations {
             integration.draw_on(&mut canvas, step_size.color.into(), integrator.stroke);
         }
     }

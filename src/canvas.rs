@@ -20,13 +20,13 @@ impl Canvas {
         Self {
             allocated_painter: None,
             visible_units: 1.,
-            focus: Default::default(),
+            focus: Vec3::default(),
             scenario_id,
-            trajectory: Default::default(),
-            scale: Default::default(),
-            area_center: Default::default(),
+            trajectory: Vec::default(),
+            scale: Vec3::default(),
+            area_center: Pos2::default(),
             scenario_change_count: 0,
-            trajectory_min_dt: Default::default(),
+            trajectory_min_dt: R32::default(),
         }
     }
 
@@ -49,7 +49,7 @@ impl Canvas {
         bbox
     }
 
-    pub fn set_visible_bbox(&mut self, bbox: BoundingBox) {
+    pub fn set_visible_bbox(&mut self, bbox: &BoundingBox) {
         self.focus = bbox.center();
         self.visible_units = bbox.diameter() * 1.2;
     }
@@ -125,7 +125,7 @@ impl Canvas {
             let input = ui.input();
             if input.modifiers.command {
                 let Vec2 { x: _, y: scroll_y } = input.mouse.delta;
-                self.visible_units = clamp(self.visible_units * 1.01f32.powf(scroll_y), 0.1..=20.);
+                self.visible_units = clamp(self.visible_units * 1.01_f32.powf(scroll_y), 0.1..=20.);
             } else if input.mouse.down {
                 let mouse_delta = ui.input().mouse.delta;
                 let screen_focus = self.user_to_screen(self.focus);

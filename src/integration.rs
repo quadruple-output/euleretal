@@ -21,10 +21,10 @@ impl Integration {
             step_size_id,
             canvas_id,
             integrator_id,
-            samples: Default::default(),
-            samples_change_count: Default::default(),
-            reference_samples: Default::default(),
-            ref_samples_change_count: Default::default(),
+            samples: Vec::new(),
+            samples_change_count: ChangeCount::default(),
+            reference_samples: Vec::new(),
+            ref_samples_change_count: ChangeCount::default(),
         }
     }
 

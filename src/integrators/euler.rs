@@ -4,9 +4,9 @@ use super::Integrator;
 use crate::{Acceleration, Sample};
 
 #[derive(Debug)]
-pub struct ImplicitEuler;
+pub struct Implicit;
 
-impl Integrator for ImplicitEuler {
+impl Integrator for Implicit {
     fn integrate_step(&self, a: &dyn Acceleration, sample: Sample, dt: R32) -> Sample {
         let s0 = sample.s;
         let v0 = sample.v;

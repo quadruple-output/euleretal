@@ -6,17 +6,17 @@ use egui::{stroke_ui, widgets::Slider, CentralPanel, Color32, Rgba, SidePanel, S
 
 pub struct Plugin;
 
-pub struct UiState {
+pub struct State {
     pub layerflags: LayerFlags,
     pub strokes: Strokes,
     pub format_precision: usize,
 }
 
-impl Default for UiState {
+impl Default for State {
     fn default() -> Self {
         Self {
-            layerflags: Default::default(),
-            strokes: Default::default(),
+            layerflags: LayerFlags::default(),
+            strokes: Strokes::default(),
             format_precision: 3,
         }
     }
@@ -24,7 +24,7 @@ impl Default for UiState {
 
 impl bevy::prelude::Plugin for Plugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_resource(UiState::default())
+        app.add_resource(State::default())
             .add_system(render.system());
 
         let ctx = &app.resources().get_mut::<EguiContext>().unwrap().ctx;
@@ -42,9 +42,10 @@ impl bevy::prelude::Plugin for Plugin {
     }
 }
 
+#[allow(clippy::needless_pass_by_value)]
 pub fn render(
     context: Res<EguiContext>,
-    mut ui_state: ResMut<UiState>,
+    mut ui_state: ResMut<State>,
     mut canvases: Query<&mut Canvas>,
     mut step_sizes: Query<&mut StepSize>,
     mut integrators: Query<&mut ConfiguredIntegrator>,
@@ -109,7 +110,7 @@ pub fn render(
     });
 }
 
-impl UiState {
+impl State {
     pub fn format_f32(&self, n: f32) -> FormatterF32 {
         FormatterF32 {
             precision: self.format_precision,

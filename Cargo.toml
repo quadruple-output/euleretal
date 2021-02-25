@@ -1,5 +1,11 @@
 [package]
 name = "euleretal"
+description = "Interactive visualization of discrete integration functions for physical acceleration of rigid bodies"
+readme = "README.md"
+repository = "https://github.com/quadruple-output/euleretal"
+categories = ["game-development", "mathematics", "science", "simulation", "visualization"]
+keywords = ["Euler", "Runge-Kutta"]
+license = "MIT OR Apache-2.0"
 version = "0.1.0"
 authors = ["quadruple-output <57874618+quadruple-output@users.noreply.github.com>"]
 edition = "2018"

@@ -3,7 +3,6 @@ use bevy::math::Vec3;
 use decorum::R32;
 use egui::{Slider, Ui};
 use log::info;
-use std::ops::Deref;
 
 mod center_mass;
 mod constant_acceleration;
@@ -59,7 +58,7 @@ impl Scenario {
     }
 
     pub fn acceleration(&self) -> &dyn Acceleration {
-        self.accel.deref()
+        &*self.accel
     }
 
     pub fn s0(&self) -> Vec3 {
@@ -75,6 +74,7 @@ impl Scenario {
     }
 
     pub fn calculate_trajectory(&self, min_dt: R32) -> Vec<Vec3> {
+        #[allow(clippy::cast_sign_loss)]
         let num_steps = (self.duration.get() / min_dt * R32::from(Self::STEPS_PER_DT as f32))
             .into_inner() as usize;
         let (trajectory, _samples) = self._calculate_trajectory(1, self.duration.get(), num_steps);
@@ -83,6 +83,7 @@ impl Scenario {
     }
 
     pub fn calculate_reference_samples(&self, dt: R32) -> Vec<Sample> {
+        #[allow(clippy::cast_sign_loss)]
         let (trajectory, samples) = self._calculate_trajectory(
             (self.duration.get() / dt).into_inner() as usize,
             dt,

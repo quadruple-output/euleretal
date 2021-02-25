@@ -1,4 +1,10 @@
-//#![warn(clippy::pedantic)]
+// https://github.com/rust-lang/rust-clippy
+#![warn(clippy::pedantic)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::cast_precision_loss)]
+#![warn(clippy::cargo)]
+#![allow(clippy::multiple_crate_versions)]
+
 mod acceleration;
 mod bounding_box;
 mod canvas;
@@ -21,12 +27,12 @@ use change_tracker::{ChangeCount, ChangeTracker, TrackedChange};
 use egui::{color::Hsva, Color32, Stroke};
 use flexi_logger::{colored_opt_format, Logger};
 use integration::Integration;
-use integrators::{ConfiguredIntegrator, ImplicitEuler};
+use integrators::{euler::Implicit as ImplicitEuler, ConfiguredIntegrator};
 use sample::Sample;
 use scenarios::{CenterMass, ConstantAcceleration, Scenario};
 use std::f32::consts::TAU;
 use step_size::StepSize;
-use ui::UiState;
+use ui::State as UiState;
 
 fn main() {
     if let Err(e) = Logger::with_env_or_str("info")
@@ -86,7 +92,7 @@ fn initialize_scenario(commands: &mut Commands) {
         Box::new(ConstantAcceleration),
         Vec3::new(0., 0., 0.),
         Vec3::new(1., 0., 0.),
-        2f32.into(),
+        2_f32.into(),
     );
     let scenario_id_constant_acceleration = commands
         .spawn((scenario_constant_acceleration,))

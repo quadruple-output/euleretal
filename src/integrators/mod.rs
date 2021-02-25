@@ -1,9 +1,8 @@
 use crate::{Acceleration, Sample, Scenario, TrackedChange};
 use decorum::R32;
 use egui::{stroke_ui, Stroke, Ui};
-pub use euler::*;
 
-mod euler;
+pub mod euler;
 
 pub struct ConfiguredIntegrator {
     pub integrator: Box<dyn Integrator>,
@@ -32,11 +31,12 @@ pub trait Integrator: Send + Sync {
     fn integrate_step(&self, a: &dyn Acceleration, sample: Sample, dt: R32) -> Sample;
 
     fn integrate(&self, scenario: &Scenario, dt: R32) -> Vec<Sample> {
+        #[allow(clippy::cast_sign_loss)]
         let num_steps = (scenario.duration() / dt).into_inner() as usize;
         let mut result = Vec::with_capacity(num_steps + 1);
         let mut sample = Sample {
             n: 0,
-            t: 0f32.into(),
+            t: 0_f32.into(),
             dt,
             s: scenario.s0(),
             v: scenario.v0(),
