@@ -6,9 +6,6 @@ use bevy::prelude::*;
 use egui::{Color32, Stroke};
 
 pub struct Integration {
-    step_size_id: Entity,
-    canvas_id: Entity,
-    integrator_id: Entity,
     samples: Vec<Sample>,
     samples_change_count: ChangeCount,
     reference_samples: Vec<Sample>,
@@ -16,11 +13,8 @@ pub struct Integration {
 }
 
 impl Integration {
-    pub fn new(step_size_id: Entity, canvas_id: Entity, integrator_id: Entity) -> Self {
+    pub fn new() -> Self {
         Self {
-            step_size_id,
-            canvas_id,
-            integrator_id,
             samples: Vec::new(),
             samples_change_count: ChangeCount::default(),
             reference_samples: Vec::new(),
@@ -53,24 +47,6 @@ impl Integration {
         self.samples
             .iter()
             .for_each(|&sample| bbox.expand_to(sample.s));
-    }
-
-    pub fn get_canvas_id(&self) -> Entity {
-        self.canvas_id
-    }
-
-    pub fn get_step_size<'a>(
-        &self,
-        query: &'a Query<&StepSize>,
-    ) -> Result<&'a StepSize, bevy::ecs::QueryError> {
-        query.get(self.step_size_id)
-    }
-
-    pub fn get_integrator<'a>(
-        &self,
-        query: &'a Query<&ConfiguredIntegrator>,
-    ) -> Result<&'a ConfiguredIntegrator, bevy::ecs::QueryError> {
-        query.get(self.integrator_id)
     }
 
     /// returns (ReferenceSample,ComputedSample)

@@ -1,4 +1,4 @@
-use crate::{Canvas, Integration, UiState};
+use crate::{canvas, Canvas, Integration, UiState};
 use bevy::prelude::*;
 
 pub struct Plugin;
@@ -12,14 +12,14 @@ impl bevy::prelude::Plugin for Plugin {
 #[allow(clippy::needless_pass_by_value)]
 pub fn render(
     ui_state: ResMut<UiState>,
-    integrations: Query<&Integration>,
+    integrations: Query<(&Integration, &canvas::Entity)>,
     mut canvases: Query<&mut Canvas>,
 ) {
     if !ui_state.layerflags.inspector {
         return;
     }
-    for integration in integrations.iter() {
-        let canvas = canvases.get_mut(integration.get_canvas_id()).unwrap();
+    for (integration, canvas_id) in integrations.iter() {
+        let canvas = canvases.get_mut(canvas_id.0).unwrap();
 
         canvas.on_hover_ui(|ui, mouse_pos| {
             if let Some((ref_sample, calc_sample)) = integration.closest_sample(mouse_pos) {

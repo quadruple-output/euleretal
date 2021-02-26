@@ -69,13 +69,14 @@ fn update_ui_scale_factor(mut egui_settings: ResMut<EguiSettings>, windows: Res<
 
 fn initialize_scenario(commands: &mut Commands) {
     let step_size = StepSize::new("long", 0.5.into(), Hsva::from(Color32::YELLOW));
-    let step_size_id = commands.spawn((step_size,)).current_entity().unwrap();
+    let step_size_id = step_size::Entity(commands.spawn((step_size,)).current_entity().unwrap());
 
     let integrator = ConfiguredIntegrator {
         integrator: Box::new(ImplicitEuler),
         stroke: Stroke::new(1., Hsva::from(Color32::RED)),
     };
-    let integrator_id = commands.spawn((integrator,)).current_entity().unwrap();
+    let integrator_id =
+        integrators::Entity(commands.spawn((integrator,)).current_entity().unwrap());
 
     let scenario_center_mass = Scenario::new(
         Box::new(CenterMass),
@@ -83,10 +84,12 @@ fn initialize_scenario(commands: &mut Commands) {
         Vec3::new(1., 0., 0.),
         TAU.into(),
     );
-    let scenario_id_center_mass = commands
-        .spawn((scenario_center_mass,))
-        .current_entity()
-        .unwrap();
+    let scenario_center_mass_id = scenarios::Entity(
+        commands
+            .spawn((scenario_center_mass,))
+            .current_entity()
+            .unwrap(),
+    );
 
     let scenario_constant_acceleration = Scenario::new(
         Box::new(ConstantAcceleration),
@@ -94,28 +97,38 @@ fn initialize_scenario(commands: &mut Commands) {
         Vec3::new(1., 0., 0.),
         2_f32.into(),
     );
-    let scenario_id_constant_acceleration = commands
-        .spawn((scenario_constant_acceleration,))
-        .current_entity()
-        .unwrap();
+    let scenario_constant_acceleration_id = scenarios::Entity(
+        commands
+            .spawn((scenario_constant_acceleration,))
+            .current_entity()
+            .unwrap(),
+    );
 
-    let canvas_center_mass = Canvas::new(scenario_id_center_mass);
-    let canvas_id_center_mass = commands
-        .spawn((canvas_center_mass,))
-        .current_entity()
-        .unwrap();
+    let canvas_center_mass_id = canvas::Entity(
+        commands
+            .spawn((Canvas::new(), scenario_center_mass_id))
+            .current_entity()
+            .unwrap(),
+    );
 
-    let canvas_constant_acceleration = Canvas::new(scenario_id_constant_acceleration);
-    let canvas_id_constant_acceleration = commands
-        .spawn((canvas_constant_acceleration,))
-        .current_entity()
-        .unwrap();
+    let canvas_constant_acceleration_id = canvas::Entity(
+        commands
+            .spawn((Canvas::new(), scenario_constant_acceleration_id))
+            .current_entity()
+            .unwrap(),
+    );
 
-    let integration_center_mass =
-        Integration::new(step_size_id, canvas_id_center_mass, integrator_id);
-    commands.spawn((integration_center_mass,));
+    commands.spawn((
+        Integration::new(),
+        step_size_id,
+        canvas_center_mass_id,
+        integrator_id,
+    ));
 
-    let integration_constant_acceleration =
-        Integration::new(step_size_id, canvas_id_constant_acceleration, integrator_id);
-    commands.spawn((integration_constant_acceleration,));
+    commands.spawn((
+        Integration::new(),
+        step_size_id,
+        canvas_constant_acceleration_id,
+        integrator_id,
+    ));
 }

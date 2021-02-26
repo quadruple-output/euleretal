@@ -17,6 +17,9 @@ pub struct Scenario {
     duration: ChangeTracker<R32>,
 }
 
+#[derive(Clone, Copy)]
+pub struct Entity(pub bevy::ecs::Entity);
+
 impl TrackedChange for Scenario {
     fn change_count(&self) -> crate::change_tracker::ChangeCount {
         self.start_position.change_count()

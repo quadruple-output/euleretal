@@ -1,4 +1,7 @@
-use crate::{Canvas, ConfiguredIntegrator, Integration, Scenario, StepSize, UiState};
+use crate::{
+    canvas, integrators, scenarios, step_size, Canvas, ConfiguredIntegrator, Integration, Scenario,
+    StepSize, UiState,
+};
 use bevy::prelude::*;
 
 pub struct Plugin;
@@ -13,20 +16,26 @@ impl bevy::prelude::Plugin for Plugin {
 #[allow(clippy::needless_pass_by_value)]
 pub fn render(
     ui_state: ResMut<UiState>,
-    mut canvases: Query<(Entity, &mut Canvas)>, // always request canvases with 'mut'
-    mut integrations: Query<&mut Integration>,
+    mut canvases: Query<(Entity, &mut Canvas, &scenarios::Entity)>, // always request canvases with 'mut'
+    mut integrations: Query<(
+        &mut Integration,
+        &step_size::Entity,
+        &canvas::Entity,
+        &integrators::Entity,
+    )>,
     integrators: Query<&ConfiguredIntegrator>,
     step_sizes: Query<&StepSize>,
     scenarios: Query<&Scenario>,
 ) {
-    for (canvas_id, mut canvas) in canvases.iter_mut() {
-        let scenario = canvas.get_scenario(&scenarios).unwrap();
+    for (canvas_id, mut canvas, scenario_id) in canvases.iter_mut() {
+        let scenario = scenarios.get(scenario_id.0).unwrap();
         let mut canvas_integrations = integrations
             .iter_mut()
-            .filter(|integration| integration.get_canvas_id() == canvas_id)
-            .map(|integration| {
-                let integrator = integration.get_integrator(&integrators).unwrap();
-                let step_size = integration.get_step_size(&step_sizes).unwrap();
+            .filter(|(_, _, integration_canvas_id, _)| integration_canvas_id.0 == canvas_id)
+            .map(|(integration, step_size_id, _, integrator_id)| {
+                let todo = "create a bundle type with named components for this tuple";
+                let integrator = integrators.get(integrator_id.0).unwrap();
+                let step_size = step_sizes.get(step_size_id.0).unwrap();
                 (integration, integrator, step_size)
             })
             .collect::<Vec<_>>();

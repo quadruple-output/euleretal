@@ -18,6 +18,9 @@ impl TrackedChange for StepSize {
     }
 }
 
+#[derive(Clone, Copy)]
+pub struct Entity(pub bevy::prelude::Entity);
+
 impl StepSize {
     pub fn new(label: &str, dt: R32, color: Hsva) -> Self {
         Self {

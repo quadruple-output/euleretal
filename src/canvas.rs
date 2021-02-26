@@ -1,5 +1,5 @@
 use crate::{change_tracker::TrackedChange, BoundingBox, Sample, Scenario};
-use bevy::prelude::*;
+use bevy::prelude::Vec3;
 use decorum::R32;
 use egui::{clamp, Color32, Painter, Pos2, Response, Sense, Shape, Stroke, Ui, Vec2};
 
@@ -9,19 +9,20 @@ pub struct Canvas {
     focus: Vec3,
     scale: Vec3,
     area_center: Pos2,
-    scenario_id: Entity,
     trajectory: Vec<Vec3>,
     scenario_change_count: u32,
     trajectory_min_dt: R32,
 }
 
+#[derive(Clone, Copy)]
+pub struct Entity(pub bevy::prelude::Entity);
+
 impl Canvas {
-    pub fn new(scenario_id: Entity) -> Self {
+    pub fn new() -> Self {
         Self {
             allocated_painter: None,
             visible_units: 1.,
             focus: Vec3::default(),
-            scenario_id,
             trajectory: Vec::default(),
             scale: Vec3::default(),
             area_center: Pos2::default(),
@@ -52,13 +53,6 @@ impl Canvas {
     pub fn set_visible_bbox(&mut self, bbox: &BoundingBox) {
         self.focus = bbox.center();
         self.visible_units = bbox.diameter() * 1.2;
-    }
-
-    pub fn get_scenario<'a>(
-        &self,
-        query: &'a Query<&Scenario>,
-    ) -> Result<&'a Scenario, bevy::ecs::QueryError> {
-        query.get(self.scenario_id)
     }
 
     pub fn draw_sample_trajectory(&self, samples: &[Sample], stroke: Stroke) {

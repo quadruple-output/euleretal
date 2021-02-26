@@ -9,6 +9,9 @@ pub struct ConfiguredIntegrator {
     pub stroke: Stroke,
 }
 
+#[derive(Clone, Copy)]
+pub struct Entity(pub bevy::ecs::Entity);
+
 impl TrackedChange for ConfiguredIntegrator {
     fn change_count(&self) -> crate::change_tracker::ChangeCount {
         0
