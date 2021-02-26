@@ -1,10 +1,7 @@
 use crate::{
-    canvas,
-    integrator::{self, Integrator},
-    scenario, step_size, Canvas, Integration, Scenario, StepSize, UiState,
+    canvas, integrator, scenario, step_size, Canvas, Integration, Scenario, StepSize, UiState,
 };
 use bevy::prelude::*;
-use egui::Stroke;
 
 pub struct Plugin;
 
@@ -25,8 +22,7 @@ pub fn render(
         &canvas::Entity,
         &integrator::Entity,
     )>,
-    integrators: Query<(&Box<dyn Integrator>, &Stroke)>,
-    //integrators: Query<&integrator::Bundle>,
+    integrators: Query<integrator::Query>,
     step_sizes: Query<&StepSize>,
     scenarios: Query<&Scenario>,
 ) {
@@ -36,8 +32,8 @@ pub fn render(
             .iter_mut()
             .filter(|(_, _, integration_canvas_id, _)| integration_canvas_id.0 == canvas_id)
             .map(|(integration, step_size_id, _, integrator_id)| {
-                let todo = "create a bundle type with named components for this tuple";
-                let (integrator, stroke) = integrators.get(integrator_id.0).unwrap();
+                let (integrator, stroke): integrator::Query =
+                    integrators.get(integrator_id.0).unwrap();
                 let step_size = step_sizes.get(step_size_id.0).unwrap();
                 (integration, integrator, step_size, stroke)
             })

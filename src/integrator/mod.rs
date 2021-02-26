@@ -1,20 +1,24 @@
-use crate::{Acceleration, Sample, Scenario, TrackedChange};
+use crate::{Acceleration, ChangeCount, Sample, Scenario, TrackedChange};
 use decorum::R32;
 use egui::Stroke;
 
 pub mod euler;
 
 #[derive(bevy::ecs::Bundle)]
-pub struct Bundle {
-    pub integrator: Box<dyn Integrator>,
-    pub stroke: Stroke,
-}
+pub struct Bundle(pub Box<dyn Integrator>, pub Stroke);
+pub type Query<'a> = (&'a Box<dyn Integrator>, &'a Stroke);
 
 #[derive(Clone, Copy)]
 pub struct Entity(pub bevy::ecs::Entity);
 
+impl Bundle {
+    pub fn spawn(self, commands: &mut bevy::ecs::Commands) -> self::Entity {
+        Entity(commands.spawn(self).current_entity().unwrap())
+    }
+}
+
 impl TrackedChange for Bundle {
-    fn change_count(&self) -> crate::change_tracker::ChangeCount {
+    fn change_count(&self) -> ChangeCount {
         0
     }
 }

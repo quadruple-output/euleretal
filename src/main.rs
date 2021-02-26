@@ -27,7 +27,6 @@ use change_tracker::{ChangeCount, ChangeTracker, TrackedChange};
 use egui::{color::Hsva, Color32, Stroke};
 use flexi_logger::{colored_opt_format, Logger};
 use integration::Integration;
-use integrator::euler::Implicit as ImplicitEuler;
 use sample::Sample;
 use scenario::{CenterMass, ConstantAcceleration, Scenario};
 use std::f32::consts::TAU;
@@ -71,15 +70,11 @@ fn initialize_scenario(commands: &mut Commands) {
     let step_size = StepSize::new("long", 0.5.into(), Hsva::from(Color32::YELLOW));
     let step_size_id = step_size::Entity(commands.spawn((step_size,)).current_entity().unwrap());
 
-    let integrator_id = integrator::Entity(
-        commands
-            .spawn(integrator::Bundle {
-                integrator: Box::new(ImplicitEuler),
-                stroke: Stroke::new(1., Hsva::from(Color32::RED)),
-            })
-            .current_entity()
-            .unwrap(),
-    );
+    let integrator_id = integrator::Bundle(
+        Box::new(integrator::euler::Implicit),
+        Stroke::new(1., Hsva::from(Color32::RED)),
+    )
+    .spawn(commands);
 
     let scenario_center_mass = Scenario::new(
         Box::new(CenterMass),
