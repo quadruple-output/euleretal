@@ -1,6 +1,5 @@
 use crate::{
-    BoundingBox, Canvas, ChangeCount, ConfiguredIntegrator, Sample, Scenario, StepSize,
-    TrackedChange,
+    integrator, BoundingBox, Canvas, ChangeCount, Sample, Scenario, StepSize, TrackedChange,
 };
 use bevy::prelude::*;
 use egui::{Color32, Stroke};
@@ -25,11 +24,11 @@ impl Integration {
     pub fn update(
         &mut self,
         scenario: &Scenario,
-        integrator: &ConfiguredIntegrator,
+        integrator: &dyn integrator::Integrator,
         step_size: &StepSize,
     ) {
         let ref_samples_change_count = step_size.change_count() + scenario.change_count();
-        let samples_change_count = ref_samples_change_count + integrator.change_count();
+        let samples_change_count = ref_samples_change_count; // + integrator.change_count();
         if self.samples_change_count != samples_change_count {
             self.samples = integrator.integrate(&scenario, step_size.dt.get());
             self.samples_change_count = samples_change_count;

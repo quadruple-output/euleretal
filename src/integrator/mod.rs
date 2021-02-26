@@ -1,10 +1,11 @@
 use crate::{Acceleration, Sample, Scenario, TrackedChange};
 use decorum::R32;
-use egui::{stroke_ui, Stroke, Ui};
+use egui::Stroke;
 
 pub mod euler;
 
-pub struct ConfiguredIntegrator {
+#[derive(bevy::ecs::Bundle)]
+pub struct Bundle {
     pub integrator: Box<dyn Integrator>,
     pub stroke: Stroke,
 }
@@ -12,19 +13,9 @@ pub struct ConfiguredIntegrator {
 #[derive(Clone, Copy)]
 pub struct Entity(pub bevy::ecs::Entity);
 
-impl TrackedChange for ConfiguredIntegrator {
+impl TrackedChange for Bundle {
     fn change_count(&self) -> crate::change_tracker::ChangeCount {
         0
-    }
-}
-
-impl ConfiguredIntegrator {
-    pub fn integrate(&self, scenario: &Scenario, dt: R32) -> Vec<Sample> {
-        self.integrator.integrate(scenario, dt)
-    }
-
-    pub fn show_controls(&mut self, ui: &mut Ui) {
-        stroke_ui(ui, &mut self.stroke, &(*self.integrator.label()));
     }
 }
 

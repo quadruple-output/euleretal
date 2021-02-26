@@ -1,4 +1,4 @@
-use crate::{Canvas, ConfiguredIntegrator, Scenario, StepSize};
+use crate::{integrator, Canvas, Scenario, StepSize};
 use bevy::prelude::*;
 use bevy_egui::EguiContext;
 use core::fmt;
@@ -42,13 +42,13 @@ impl bevy::prelude::Plugin for Plugin {
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[allow(clippy::needless_pass_by_value, clippy::borrowed_box)]
 pub fn render(
     context: Res<EguiContext>,
     mut ui_state: ResMut<State>,
     mut canvases: Query<&mut Canvas>,
     mut step_sizes: Query<&mut StepSize>,
-    mut integrators: Query<&mut ConfiguredIntegrator>,
+    mut integrators: Query<(&Box<dyn integrator::Integrator>, &mut Stroke)>,
     mut scenarios: Query<&mut Scenario>,
 ) {
     let ctx = &context.ctx;
@@ -88,8 +88,8 @@ pub fn render(
         }
 
         ui.heading("Integrators");
-        for mut integrator in integrators.iter_mut() {
-            integrator.show_controls(ui);
+        for (integrator, mut stroke) in integrators.iter_mut() {
+            stroke_ui(ui, &mut stroke, &(*integrator.label()));
         }
 
         ui.heading("Scenarios");

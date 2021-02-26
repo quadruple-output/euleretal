@@ -10,10 +10,10 @@ mod bounding_box;
 mod canvas;
 mod change_tracker;
 mod integration;
-mod integrators;
-mod layers;
+mod integrator;
+mod layer;
 mod sample;
-mod scenarios;
+mod scenario;
 mod step_size;
 mod ui;
 
@@ -27,9 +27,9 @@ use change_tracker::{ChangeCount, ChangeTracker, TrackedChange};
 use egui::{color::Hsva, Color32, Stroke};
 use flexi_logger::{colored_opt_format, Logger};
 use integration::Integration;
-use integrators::{euler::Implicit as ImplicitEuler, ConfiguredIntegrator};
+use integrator::euler::Implicit as ImplicitEuler;
 use sample::Sample;
-use scenarios::{CenterMass, ConstantAcceleration, Scenario};
+use scenario::{CenterMass, ConstantAcceleration, Scenario};
 use std::f32::consts::TAU;
 use step_size::StepSize;
 use ui::State as UiState;
@@ -52,10 +52,10 @@ fn main() {
         .add_plugin(EguiPlugin)
         .add_system(update_ui_scale_factor.system())
         .add_plugin(ui::Plugin)
-        .add_plugin(layers::coordinates::Plugin)
-        .add_plugin(layers::acceleration_field::Plugin)
-        .add_plugin(layers::integrations::Plugin)
-        .add_plugin(layers::inspector::Plugin)
+        .add_plugin(layer::coordinates::Plugin)
+        .add_plugin(layer::acceleration_field::Plugin)
+        .add_plugin(layer::integrations::Plugin)
+        .add_plugin(layer::inspector::Plugin)
         .add_startup_system(initialize_scenario.system())
         .run();
 }
@@ -71,12 +71,15 @@ fn initialize_scenario(commands: &mut Commands) {
     let step_size = StepSize::new("long", 0.5.into(), Hsva::from(Color32::YELLOW));
     let step_size_id = step_size::Entity(commands.spawn((step_size,)).current_entity().unwrap());
 
-    let integrator = ConfiguredIntegrator {
-        integrator: Box::new(ImplicitEuler),
-        stroke: Stroke::new(1., Hsva::from(Color32::RED)),
-    };
-    let integrator_id =
-        integrators::Entity(commands.spawn((integrator,)).current_entity().unwrap());
+    let integrator_id = integrator::Entity(
+        commands
+            .spawn(integrator::Bundle {
+                integrator: Box::new(ImplicitEuler),
+                stroke: Stroke::new(1., Hsva::from(Color32::RED)),
+            })
+            .current_entity()
+            .unwrap(),
+    );
 
     let scenario_center_mass = Scenario::new(
         Box::new(CenterMass),
@@ -84,7 +87,7 @@ fn initialize_scenario(commands: &mut Commands) {
         Vec3::new(1., 0., 0.),
         TAU.into(),
     );
-    let scenario_center_mass_id = scenarios::Entity(
+    let scenario_center_mass_id = scenario::Entity(
         commands
             .spawn((scenario_center_mass,))
             .current_entity()
@@ -97,7 +100,7 @@ fn initialize_scenario(commands: &mut Commands) {
         Vec3::new(1., 0., 0.),
         2_f32.into(),
     );
-    let scenario_constant_acceleration_id = scenarios::Entity(
+    let scenario_constant_acceleration_id = scenario::Entity(
         commands
             .spawn((scenario_constant_acceleration,))
             .current_entity()

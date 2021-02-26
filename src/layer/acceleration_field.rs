@@ -1,4 +1,4 @@
-use crate::{scenarios, Canvas, Scenario, UiState};
+use crate::{scenario, Canvas, Scenario, UiState};
 use bevy::prelude::*;
 
 pub struct Plugin;
@@ -13,7 +13,7 @@ impl bevy::prelude::Plugin for Plugin {
 pub fn render(
     ui_state: Res<UiState>,
     scenarios: Query<&Scenario>,
-    mut canvases: Query<(&mut Canvas, &scenarios::Entity)>, // always request canvases with 'mut'
+    mut canvases: Query<(&mut Canvas, &scenario::Entity)>, // always request canvases with 'mut'
 ) {
     if !ui_state.layerflags.acceleration_field {
         return;
