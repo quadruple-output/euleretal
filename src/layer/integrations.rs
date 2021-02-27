@@ -1,6 +1,4 @@
-use crate::{
-    canvas, integrator, scenario, step_size, Canvas, Integration, Scenario, StepSize, UiState,
-};
+use crate::{canvas, integrator, scenario, step_size, Canvas, Integration, StepSize, UiState};
 use bevy::prelude::*;
 
 pub struct Plugin;
@@ -24,7 +22,7 @@ pub fn render(
     )>,
     integrators: Query<integrator::Query>,
     step_sizes: Query<&StepSize>,
-    scenarios: Query<&Scenario>,
+    scenarios: Query<scenario::Query>,
 ) {
     for (canvas_id, mut canvas, scenario_id) in canvases.iter_mut() {
         let scenario = scenarios.get(scenario_id.0).unwrap();

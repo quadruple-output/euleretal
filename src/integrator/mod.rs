@@ -1,4 +1,4 @@
-use crate::{Acceleration, ChangeCount, Sample, Scenario, TrackedChange};
+use crate::{scenario, Acceleration, ChangeCount, Sample, Scenario, TrackedChange};
 use decorum::R32;
 use egui::Stroke;
 
@@ -28,17 +28,19 @@ pub trait Integrator: Send + Sync {
 
     fn integrate_step(&self, a: &dyn Acceleration, sample: Sample, dt: R32) -> Sample;
 
-    fn integrate(&self, scenario: &Scenario, dt: R32) -> Vec<Sample> {
+    fn integrate(&self, scenario: &scenario::Query, dt: R32) -> Vec<Sample> {
         #[allow(clippy::cast_sign_loss)]
-        let num_steps = (scenario.duration() / dt).into_inner() as usize;
+        let num_steps = (scenario.duration().0.get() / dt).into_inner() as usize;
         let mut result = Vec::with_capacity(num_steps + 1);
         let mut sample = Sample {
             n: 0,
             t: 0_f32.into(),
             dt,
-            s: scenario.s0(),
-            v: scenario.v0(),
-            a: scenario.acceleration().value_at(scenario.s0()),
+            s: scenario.start_position().0.get(),
+            v: scenario.start_velocity().0.get(),
+            a: scenario
+                .acceleration()
+                .value_at(scenario.start_position().0.get()),
         };
         result.push(sample);
         for _ in 1..=num_steps {

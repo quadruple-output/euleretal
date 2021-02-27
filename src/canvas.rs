@@ -1,4 +1,4 @@
-use crate::{change_tracker::TrackedChange, BoundingBox, Sample, Scenario};
+use crate::{scenario, BoundingBox, Sample, Scenario, TrackedChange};
 use bevy::prelude::Vec3;
 use decorum::R32;
 use egui::{clamp, Color32, Painter, Pos2, Response, Sense, Shape, Stroke, Ui, Vec2};
@@ -31,7 +31,7 @@ impl Canvas {
         }
     }
 
-    pub fn update_trajectory(&mut self, scenario: &Scenario, min_dt: R32) {
+    pub fn update_trajectory(&mut self, scenario: &scenario::Query, min_dt: R32) {
         if self.scenario_change_count != scenario.change_count() || self.trajectory_min_dt > min_dt
         {
             self.trajectory = scenario.calculate_trajectory(min_dt);

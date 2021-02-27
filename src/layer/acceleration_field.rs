@@ -12,7 +12,7 @@ impl bevy::prelude::Plugin for Plugin {
 #[allow(clippy::needless_pass_by_value)]
 pub fn render(
     ui_state: Res<UiState>,
-    scenarios: Query<&Scenario>,
+    scenarios: Query<scenario::Query>,
     mut canvases: Query<(&mut Canvas, &scenario::Entity)>, // always request canvases with 'mut'
 ) {
     if !ui_state.layerflags.acceleration_field {

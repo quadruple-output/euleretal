@@ -1,4 +1,4 @@
-use crate::{integrator, Canvas, Scenario, StepSize};
+use crate::{integrator, scenario, Acceleration, Canvas, StepSize};
 use bevy::prelude::*;
 use bevy_egui::EguiContext;
 use core::fmt;
@@ -49,7 +49,7 @@ pub fn render(
     mut canvases: Query<&mut Canvas>,
     mut step_sizes: Query<&mut StepSize>,
     mut integrators: Query<(&Box<dyn integrator::Integrator>, &mut Stroke)>,
-    mut scenarios: Query<&mut Scenario>,
+    mut scenarios: Query<(&Box<dyn Acceleration>, &mut scenario::Duration)>,
 ) {
     let ctx = &context.ctx;
 
@@ -93,8 +93,12 @@ pub fn render(
         }
 
         ui.heading("Scenarios");
-        for mut scenario in scenarios.iter_mut() {
-            scenario.show_controls(ui);
+        for (acceleration, mut duration) in scenarios.iter_mut() {
+            let todo = "create method scenario.show_controls() (requires mut scenario)";
+            ui.horizontal(|ui| {
+                ui.label(acceleration.label());
+                duration.show_controls(ui);
+            });
         }
     });
 

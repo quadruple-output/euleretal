@@ -1,5 +1,6 @@
 use crate::{
-    integrator, BoundingBox, Canvas, ChangeCount, Sample, Scenario, StepSize, TrackedChange,
+    integrator, scenario, BoundingBox, Canvas, ChangeCount, Sample, Scenario, StepSize,
+    TrackedChange,
 };
 use bevy::prelude::*;
 use egui::{Color32, Stroke};
@@ -23,7 +24,7 @@ impl Integration {
 
     pub fn update(
         &mut self,
-        scenario: &Scenario,
+        scenario: &scenario::Query,
         integrator: &dyn integrator::Integrator,
         step_size: &StepSize,
     ) {

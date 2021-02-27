@@ -70,37 +70,28 @@ fn initialize_scenario(commands: &mut Commands) {
     let step_size = StepSize::new("long", 0.5.into(), Hsva::from(Color32::YELLOW));
     let step_size_id = step_size::Entity(commands.spawn((step_size,)).current_entity().unwrap());
 
+    let todo = "introduce Bundles and Query types for all types";
     let integrator_id = integrator::Bundle(
         Box::new(integrator::euler::Implicit),
         Stroke::new(1., Hsva::from(Color32::RED)),
     )
     .spawn(commands);
 
-    let scenario_center_mass = Scenario::new(
+    let scenario_center_mass_id = scenario::Bundle(
         Box::new(CenterMass),
-        Vec3::new(0., 1., 0.),
-        Vec3::new(1., 0., 0.),
-        TAU.into(),
-    );
-    let scenario_center_mass_id = scenario::Entity(
-        commands
-            .spawn((scenario_center_mass,))
-            .current_entity()
-            .unwrap(),
-    );
+        scenario::StartPosition(ChangeTracker::with(Vec3::new(0., 1., 0.))),
+        scenario::StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
+        scenario::Duration(ChangeTracker::with(TAU.into())),
+    )
+    .spawn(commands);
 
-    let scenario_constant_acceleration = Scenario::new(
+    let scenario_constant_acceleration_id = scenario::Bundle(
         Box::new(ConstantAcceleration),
-        Vec3::new(0., 0., 0.),
-        Vec3::new(1., 0., 0.),
-        2_f32.into(),
-    );
-    let scenario_constant_acceleration_id = scenario::Entity(
-        commands
-            .spawn((scenario_constant_acceleration,))
-            .current_entity()
-            .unwrap(),
-    );
+        scenario::StartPosition(ChangeTracker::with(Vec3::new(0., 0., 0.))),
+        scenario::StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
+        scenario::Duration(ChangeTracker::with(2_f32.into())),
+    )
+    .spawn(commands);
 
     let canvas_center_mass_id = canvas::Entity(
         commands
