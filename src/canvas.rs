@@ -17,6 +17,15 @@ pub struct Canvas {
 #[derive(Clone, Copy)]
 pub struct Entity(pub bevy::prelude::Entity);
 
+#[derive(bevy::ecs::Bundle)]
+pub struct Bundle(pub Canvas, pub scenario::Entity);
+
+impl Bundle {
+    pub fn spawn(self, commands: &mut bevy::ecs::Commands) -> self::Entity {
+        Entity(commands.spawn(self).current_entity().unwrap())
+    }
+}
+
 impl Canvas {
     pub fn new() -> Self {
         Self {

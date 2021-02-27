@@ -93,19 +93,11 @@ fn initialize_scenario(commands: &mut Commands) {
     )
     .spawn(commands);
 
-    let canvas_center_mass_id = canvas::Entity(
-        commands
-            .spawn((Canvas::new(), scenario_center_mass_id))
-            .current_entity()
-            .unwrap(),
-    );
+    let canvas_center_mass_id =
+        canvas::Bundle(Canvas::new(), scenario_center_mass_id).spawn(commands);
 
-    let canvas_constant_acceleration_id = canvas::Entity(
-        commands
-            .spawn((Canvas::new(), scenario_constant_acceleration_id))
-            .current_entity()
-            .unwrap(),
-    );
+    let canvas_constant_acceleration_id =
+        canvas::Bundle(Canvas::new(), scenario_constant_acceleration_id).spawn(commands);
 
     commands.spawn((
         Integration::new(),
