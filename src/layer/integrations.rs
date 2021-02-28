@@ -21,22 +21,32 @@ pub fn render(
         &canvas::Entity,
         &integrator::Entity,
     )>,
-    integrators: Query<integrator::Query>,
+    integrators: Query<(
+        &integrator::Kind,
+        &integrator::comp::Integrator,
+        &integrator::comp::Stroke,
+    )>,
     step_sizes: Query<(
         &step_size::Kind,
         &step_size::comp::Duration,
         &step_size::comp::Color,
     )>,
-    scenarios: Query<scenario::Query>,
+    scenarios: Query<(
+        &scenario::Kind,
+        &scenario::comp::Acceleration,
+        &scenario::comp::StartPosition,
+        &scenario::comp::StartVelocity,
+        &scenario::comp::Duration,
+    )>,
 ) {
     for (canvas_id, mut canvas, scenario_id) in canvases.iter_mut() {
-        let scenario = scenarios.get(scenario_id.0).unwrap();
+        let (_, acceleration, start_position, start_velocity, duration) =
+            scenarios.get(scenario_id.0).unwrap();
         let mut canvas_integrations = integrations
             .iter_mut()
             .filter(|(_, _, integration_canvas_id, _)| integration_canvas_id.0 == canvas_id)
             .map(|(integration, step_size_id, _, integrator_id)| {
-                let (integrator, stroke): integrator::Query =
-                    integrators.get(integrator_id.0).unwrap();
+                let (_, integrator, stroke) = integrators.get(integrator_id.0).unwrap();
                 let (_, step_duration, step_color) = step_sizes.get(step_size_id.0).unwrap();
                 (integration, integrator, step_duration, step_color, stroke)
             })
@@ -48,9 +58,22 @@ pub fn render(
             .unwrap_or_else(|| 0.1.into());
 
         let first_time = !canvas.has_trajectory();
-        canvas.update_trajectory(&scenario, min_dt);
+        canvas.update_trajectory(
+            &**acceleration,
+            start_position,
+            start_velocity,
+            duration,
+            min_dt,
+        );
         for (ref mut integration, integrator, step_duration, _, _) in &mut canvas_integrations {
-            integration.update(&scenario, &***integrator, &step_duration);
+            integration.update(
+                &**acceleration,
+                start_position,
+                start_velocity,
+                duration,
+                &***integrator,
+                *step_duration,
+            );
         }
         if first_time {
             let mut bbox = canvas.bbox();

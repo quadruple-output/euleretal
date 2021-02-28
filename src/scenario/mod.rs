@@ -1,4 +1,4 @@
-use crate::{Acceleration, ChangeTracker, Duration, Sample, TrackedChange};
+use crate::{Acceleration, ChangeTracker, Duration, Sample};
 use bevy::math::Vec3;
 use decorum::R32;
 use log::info;
@@ -9,6 +9,15 @@ mod constant_acceleration;
 pub use center_mass::CenterMass;
 pub use constant_acceleration::ConstantAcceleration;
 
+pub struct Kind;
+pub mod comp {
+    pub type Acceleration = Box<dyn crate::Acceleration>;
+    pub type StartPosition = super::StartPosition;
+    pub type StartVelocity = super::StartVelocity;
+    pub type Duration = crate::Duration;
+}
+
+const TODO: &str = "define types below as independent components, so they can be used elsewhere without referencing this mod";
 pub struct StartPosition(pub ChangeTracker<Vec3>);
 pub struct StartVelocity(pub ChangeTracker<Vec3>);
 
@@ -17,17 +26,11 @@ pub struct Entity(pub bevy::ecs::Entity);
 
 #[derive(bevy::ecs::Bundle)]
 pub struct Bundle(
-    pub Box<dyn Acceleration>,
-    pub StartPosition,
-    pub StartVelocity,
-    pub Duration,
-);
-
-pub type Query<'a> = (
-    &'a Box<dyn Acceleration>,
-    &'a StartPosition,
-    &'a StartVelocity,
-    &'a Duration,
+    pub Kind,
+    pub comp::Acceleration,
+    pub comp::StartPosition,
+    pub comp::StartVelocity,
+    pub comp::Duration,
 );
 
 impl Bundle {
@@ -36,80 +39,52 @@ impl Bundle {
     }
 }
 
-impl<'a> TrackedChange for Query<'a> {
-    fn change_count(&self) -> crate::change_tracker::ChangeCount {
-        let (_, start_position, start_velocity, duration) = self;
-        start_position.0.change_count()
-            + start_velocity.0.change_count()
-            + duration.0.change_count()
-    }
-}
-
-pub trait Scenario {
-    fn acceleration(&self) -> &dyn Acceleration;
-    fn start_position(&self) -> &StartPosition;
-    fn start_velocity(&self) -> &StartVelocity;
-    fn duration(&self) -> &Duration;
-    fn calculate_trajectory(&self, min_dt: R32) -> Vec<Vec3>;
-    fn calculate_reference_samples(&self, dt: R32) -> Vec<Sample>;
-}
-
 const STEPS_PER_DT: usize = 40;
 
-impl<'a> Scenario for Query<'a> {
-    #[inline]
-    fn acceleration(&self) -> &dyn Acceleration {
-        &**self.0
-    }
+pub fn calculate_trajectory(
+    acceleration: &dyn Acceleration,
+    start_position: &StartPosition,
+    start_velocity: &StartVelocity,
+    duration: &Duration,
+    min_dt: R32,
+) -> Vec<Vec3> {
+    #[allow(clippy::cast_sign_loss)]
+    let num_steps =
+        (duration.0.get() / min_dt * R32::from(STEPS_PER_DT as f32)).into_inner() as usize;
+    let (trajectory, _samples) = calculate_trajectory_and_samples(
+        acceleration,
+        start_position.0.get(),
+        start_velocity.0.get(),
+        1,
+        duration.0.get(),
+        num_steps,
+    );
+    info!("Calculated trajectory with {} segments", trajectory.len(),);
+    trajectory
+}
 
-    #[inline]
-    fn start_position(&self) -> &StartPosition {
-        &self.1
-    }
-
-    #[inline]
-    fn start_velocity(&self) -> &StartVelocity {
-        &self.2
-    }
-
-    #[inline]
-    fn duration(&self) -> &Duration {
-        &self.3
-    }
-
-    fn calculate_trajectory(&self, min_dt: R32) -> Vec<Vec3> {
-        #[allow(clippy::cast_sign_loss)]
-        let num_steps = (self.duration().0.get() / min_dt * R32::from(STEPS_PER_DT as f32))
-            .into_inner() as usize;
-        let (trajectory, _samples) = calculate_trajectory_and_samples(
-            self.acceleration(),
-            self.start_position().0.get(),
-            self.start_velocity().0.get(),
-            1,
-            self.duration().0.get(),
-            num_steps,
-        );
-        info!("Calculated trajectory with {} segments", trajectory.len(),);
-        trajectory
-    }
-
-    fn calculate_reference_samples(&self, dt: R32) -> Vec<Sample> {
-        #[allow(clippy::cast_sign_loss)]
-        let (trajectory, samples) = calculate_trajectory_and_samples(
-            self.acceleration(),
-            self.start_position().0.get(),
-            self.start_velocity().0.get(),
-            (self.duration().0.get() / dt).into_inner() as usize,
-            dt,
-            STEPS_PER_DT,
-        );
-        info!(
-            "Calculated {} reference samples, using trajectory with {} segments",
-            samples.len(),
-            trajectory.len(),
-        );
-        samples
-    }
+pub fn calculate_reference_samples(
+    acceleration: &dyn Acceleration,
+    start_position: &StartPosition,
+    start_velocity: &StartVelocity,
+    duration: &Duration,
+    dt: R32,
+) -> Vec<Sample> {
+    #[allow(clippy::cast_sign_loss)]
+    let (trajectory, samples) = calculate_trajectory_and_samples(
+        acceleration,
+        start_position.0.get(),
+        start_velocity.0.get(),
+        (duration.0.get() / dt).into_inner() as usize,
+        dt,
+        STEPS_PER_DT,
+    );
+    info!(
+        "Calculated {} reference samples, using trajectory with {} segments",
+        samples.len(),
+        trajectory.len(),
+    );
+    samples
 }
 
 /// returns (trajectory, samples)

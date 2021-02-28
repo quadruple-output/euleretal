@@ -1,4 +1,7 @@
-use crate::{scenario, BoundingBox, Sample, Scenario, TrackedChange};
+use crate::{
+    scenario::{self, StartPosition, StartVelocity},
+    Acceleration, BoundingBox, Duration, Sample, TrackedChange,
+};
 use bevy::prelude::Vec3;
 use decorum::R32;
 use egui::{clamp, Color32, Painter, Pos2, Response, Sense, Shape, Stroke, Ui, Vec2};
@@ -40,12 +43,27 @@ impl Canvas {
         }
     }
 
-    pub fn update_trajectory(&mut self, scenario: &scenario::Query, min_dt: R32) {
-        if self.scenario_change_count != scenario.change_count() || self.trajectory_min_dt > min_dt
-        {
-            self.trajectory = scenario.calculate_trajectory(min_dt);
+    pub fn update_trajectory(
+        &mut self,
+        acceleration: &dyn Acceleration,
+        start_position: &StartPosition,
+        start_velocity: &StartVelocity,
+        duration: &Duration,
+        min_dt: R32,
+    ) {
+        let scenario_change_count = start_position.0.change_count()
+            + start_velocity.0.change_count()
+            + duration.0.change_count();
+        if self.scenario_change_count != scenario_change_count || self.trajectory_min_dt > min_dt {
+            self.trajectory = scenario::calculate_trajectory(
+                acceleration,
+                start_position,
+                start_velocity,
+                duration,
+                min_dt,
+            );
             self.trajectory_min_dt = min_dt;
-            self.scenario_change_count = scenario.change_count();
+            self.scenario_change_count = scenario_change_count;
         }
     }
 

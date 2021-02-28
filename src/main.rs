@@ -31,8 +31,8 @@ use duration::Duration;
 use egui::{color::Hsva, Color32, Stroke};
 use flexi_logger::{colored_opt_format, Logger};
 use integration::Integration;
+use integrator::Integrator;
 use sample::Sample;
-use scenario::{CenterMass, ConstantAcceleration, Scenario};
 use std::f32::consts::TAU;
 use ui::State as UiState;
 use user_label::UserLabel;
@@ -81,13 +81,15 @@ fn initialize_scenario(commands: &mut Commands) {
 
     let todo = "introduce Bundles and Query types for all types";
     let integrator_id = integrator::Bundle(
+        integrator::Kind,
         Box::new(integrator::euler::Implicit),
         Stroke::new(1., Hsva::from(Color32::RED)),
     )
     .spawn(commands);
 
     let scenario_center_mass_id = scenario::Bundle(
-        Box::new(CenterMass),
+        scenario::Kind,
+        Box::new(scenario::CenterMass),
         scenario::StartPosition(ChangeTracker::with(Vec3::new(0., 1., 0.))),
         scenario::StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
         Duration(ChangeTracker::with(TAU.into())),
@@ -95,7 +97,8 @@ fn initialize_scenario(commands: &mut Commands) {
     .spawn(commands);
 
     let scenario_constant_acceleration_id = scenario::Bundle(
-        Box::new(ConstantAcceleration),
+        scenario::Kind,
+        Box::new(scenario::ConstantAcceleration),
         scenario::StartPosition(ChangeTracker::with(Vec3::new(0., 0., 0.))),
         scenario::StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
         Duration(ChangeTracker::with(2_f32.into())),

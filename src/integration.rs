@@ -1,9 +1,10 @@
 use crate::{
-    integrator, scenario, BoundingBox, Canvas, ChangeCount, Duration, Sample, Scenario,
+    scenario, Acceleration, BoundingBox, Canvas, ChangeCount, Duration, Integrator, Sample,
     TrackedChange,
 };
 use bevy::prelude::*;
 use egui::{Color32, Stroke};
+use scenario::{StartPosition, StartVelocity};
 
 pub struct Integration {
     samples: Vec<Sample>,
@@ -24,17 +25,35 @@ impl Integration {
 
     pub fn update(
         &mut self,
-        scenario: &scenario::Query,
-        integrator: &dyn integrator::Integrator,
+        acceleration: &dyn Acceleration,
+        start_position: &StartPosition,
+        start_velocity: &StartVelocity,
+        duration: &Duration,
+        integrator: &dyn Integrator,
         step_size: &Duration,
     ) {
-        let ref_samples_change_count = step_size.0.change_count() + scenario.change_count();
+        let ref_samples_change_count = step_size.0.change_count()
+            + start_position.0.change_count()
+            + start_velocity.0.change_count()
+            + duration.0.change_count();
         let samples_change_count = ref_samples_change_count; // + integrator.change_count();
         if self.samples_change_count != samples_change_count {
-            self.samples = integrator.integrate(&scenario, step_size.0.get());
+            self.samples = integrator.integrate(
+                acceleration,
+                start_position,
+                start_velocity,
+                duration,
+                step_size.0.get(),
+            );
             self.samples_change_count = samples_change_count;
             if self.ref_samples_change_count != ref_samples_change_count {
-                self.reference_samples = scenario.calculate_reference_samples(step_size.0.get());
+                self.reference_samples = scenario::calculate_reference_samples(
+                    acceleration,
+                    start_position,
+                    start_velocity,
+                    duration,
+                    step_size.0.get(),
+                );
                 self.ref_samples_change_count = ref_samples_change_count;
             }
         }
