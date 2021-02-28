@@ -1,7 +1,6 @@
-use crate::{Acceleration, ChangeTracker, Sample, TrackedChange};
+use crate::{Acceleration, ChangeTracker, Duration, Sample, TrackedChange};
 use bevy::math::Vec3;
 use decorum::R32;
-use egui::{Slider, Ui};
 use log::info;
 
 mod center_mass;
@@ -12,7 +11,6 @@ pub use constant_acceleration::ConstantAcceleration;
 
 pub struct StartPosition(pub ChangeTracker<Vec3>);
 pub struct StartVelocity(pub ChangeTracker<Vec3>);
-pub struct Duration(pub ChangeTracker<R32>);
 
 #[derive(Clone, Copy)]
 pub struct Entity(pub bevy::ecs::Entity);
@@ -159,18 +157,4 @@ fn calculate_trajectory_and_samples(
         samples.push((step, t0, dt, s0, v0, a0).into());
     }
     (trajectory, samples)
-}
-
-impl Duration {
-    pub fn show_controls(&mut self, ui: &mut Ui) {
-        ui.vertical(|ui| {
-            let mut duration_for_edit = self.0.get().into_inner();
-            ui.add(
-                Slider::f32(&mut duration_for_edit, 0.1..=50.)
-                    .logarithmic(true)
-                    .text("duration"),
-            );
-            self.0.set(duration_for_edit.into());
-        });
-    }
 }

@@ -1,4 +1,4 @@
-use crate::{integrator, scenario, Acceleration, Canvas, StepSize};
+use crate::{integrator, step_size, Acceleration, Canvas, Duration};
 use bevy::prelude::*;
 use bevy_egui::EguiContext;
 use core::fmt;
@@ -47,9 +47,14 @@ pub fn render(
     context: Res<EguiContext>,
     mut ui_state: ResMut<State>,
     mut canvases: Query<&mut Canvas>,
-    mut step_sizes: Query<&mut StepSize>,
+    mut step_sizes: Query<(
+        &mut step_size::Kind,
+        &mut step_size::comp::UserLabel,
+        &mut step_size::comp::Duration,
+        &mut step_size::comp::Color,
+    )>,
     mut integrators: Query<(&Box<dyn integrator::Integrator>, &mut Stroke)>,
-    mut scenarios: Query<(&Box<dyn Acceleration>, &mut scenario::Duration)>,
+    mut scenarios: Query<(&Box<dyn Acceleration>, &mut Duration)>,
 ) {
     let ctx = &context.ctx;
 
@@ -83,8 +88,8 @@ pub fn render(
         });
 
         ui.heading("Step Sizes");
-        for mut step_size in step_sizes.iter_mut() {
-            step_size.show_controls(ui);
+        for (_, mut label, mut duration, mut color) in step_sizes.iter_mut() {
+            step_size::show_controls(ui, &mut label, &mut duration, &mut color);
         }
 
         ui.heading("Integrators");

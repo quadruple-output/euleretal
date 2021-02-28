@@ -9,6 +9,7 @@ mod acceleration;
 mod bounding_box;
 mod canvas;
 mod change_tracker;
+mod duration;
 mod integration;
 mod integrator;
 mod layer;
@@ -16,6 +17,7 @@ mod sample;
 mod scenario;
 mod step_size;
 mod ui;
+mod user_label;
 
 use acceleration::Acceleration;
 use bevy::input::system::exit_on_esc_system;
@@ -24,14 +26,16 @@ use bevy_egui::{EguiPlugin, EguiSettings};
 use bounding_box::BoundingBox;
 use canvas::Canvas;
 use change_tracker::{ChangeCount, ChangeTracker, TrackedChange};
+use decorum::R32;
+use duration::Duration;
 use egui::{color::Hsva, Color32, Stroke};
 use flexi_logger::{colored_opt_format, Logger};
 use integration::Integration;
 use sample::Sample;
 use scenario::{CenterMass, ConstantAcceleration, Scenario};
 use std::f32::consts::TAU;
-use step_size::StepSize;
 use ui::State as UiState;
+use user_label::UserLabel;
 
 fn main() {
     if let Err(e) = Logger::with_env_or_str("info")
@@ -67,8 +71,13 @@ fn update_ui_scale_factor(mut egui_settings: ResMut<EguiSettings>, windows: Res<
 }
 
 fn initialize_scenario(commands: &mut Commands) {
-    let step_size = StepSize::new("long", 0.5.into(), Hsva::from(Color32::YELLOW));
-    let step_size_id = step_size::Entity(commands.spawn((step_size,)).current_entity().unwrap());
+    let step_size_id = step_size::Bundle(
+        step_size::Kind,
+        UserLabel("long".to_string()),
+        Duration(ChangeTracker::with(R32::from(0.5))),
+        Hsva::from(Color32::YELLOW),
+    )
+    .spawn(commands);
 
     let todo = "introduce Bundles and Query types for all types";
     let integrator_id = integrator::Bundle(
@@ -81,7 +90,7 @@ fn initialize_scenario(commands: &mut Commands) {
         Box::new(CenterMass),
         scenario::StartPosition(ChangeTracker::with(Vec3::new(0., 1., 0.))),
         scenario::StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
-        scenario::Duration(ChangeTracker::with(TAU.into())),
+        Duration(ChangeTracker::with(TAU.into())),
     )
     .spawn(commands);
 
@@ -89,7 +98,7 @@ fn initialize_scenario(commands: &mut Commands) {
         Box::new(ConstantAcceleration),
         scenario::StartPosition(ChangeTracker::with(Vec3::new(0., 0., 0.))),
         scenario::StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
-        scenario::Duration(ChangeTracker::with(2_f32.into())),
+        Duration(ChangeTracker::with(2_f32.into())),
     )
     .spawn(commands);
 

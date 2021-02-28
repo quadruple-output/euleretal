@@ -1,5 +1,5 @@
 use crate::{
-    integrator, scenario, BoundingBox, Canvas, ChangeCount, Sample, Scenario, StepSize,
+    integrator, scenario, BoundingBox, Canvas, ChangeCount, Duration, Sample, Scenario,
     TrackedChange,
 };
 use bevy::prelude::*;
@@ -26,15 +26,15 @@ impl Integration {
         &mut self,
         scenario: &scenario::Query,
         integrator: &dyn integrator::Integrator,
-        step_size: &StepSize,
+        step_size: &Duration,
     ) {
-        let ref_samples_change_count = step_size.change_count() + scenario.change_count();
+        let ref_samples_change_count = step_size.0.change_count() + scenario.change_count();
         let samples_change_count = ref_samples_change_count; // + integrator.change_count();
         if self.samples_change_count != samples_change_count {
-            self.samples = integrator.integrate(&scenario, step_size.dt.get());
+            self.samples = integrator.integrate(&scenario, step_size.0.get());
             self.samples_change_count = samples_change_count;
             if self.ref_samples_change_count != ref_samples_change_count {
-                self.reference_samples = scenario.calculate_reference_samples(step_size.dt.get());
+                self.reference_samples = scenario.calculate_reference_samples(step_size.0.get());
                 self.ref_samples_change_count = ref_samples_change_count;
             }
         }

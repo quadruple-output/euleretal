@@ -1,5 +1,6 @@
-use crate::{canvas, integrator, scenario, step_size, Canvas, Integration, StepSize, UiState};
+use crate::{canvas, integrator, scenario, step_size, Canvas, Integration, UiState};
 use bevy::prelude::*;
+use egui::color::Color32;
 
 pub struct Plugin;
 
@@ -21,7 +22,11 @@ pub fn render(
         &integrator::Entity,
     )>,
     integrators: Query<integrator::Query>,
-    step_sizes: Query<&StepSize>,
+    step_sizes: Query<(
+        &step_size::Kind,
+        &step_size::comp::Duration,
+        &step_size::comp::Color,
+    )>,
     scenarios: Query<scenario::Query>,
 ) {
     for (canvas_id, mut canvas, scenario_id) in canvases.iter_mut() {
@@ -32,32 +37,32 @@ pub fn render(
             .map(|(integration, step_size_id, _, integrator_id)| {
                 let (integrator, stroke): integrator::Query =
                     integrators.get(integrator_id.0).unwrap();
-                let step_size = step_sizes.get(step_size_id.0).unwrap();
-                (integration, integrator, step_size, stroke)
+                let (_, step_duration, step_color) = step_sizes.get(step_size_id.0).unwrap();
+                (integration, integrator, step_duration, step_color, stroke)
             })
             .collect::<Vec<_>>();
         let min_dt = canvas_integrations
             .iter()
-            .map(|(_, _, step_size, _)| step_size.dt.get())
+            .map(|(_, _, step_duration, _, _)| step_duration.0.get())
             .min() // this crate depends on decorum::R32 just to be able to use this min() function
             .unwrap_or_else(|| 0.1.into());
 
         let first_time = !canvas.has_trajectory();
         canvas.update_trajectory(&scenario, min_dt);
-        for (ref mut integration, integrator, step_size, _) in &mut canvas_integrations {
-            integration.update(&scenario, &***integrator, &step_size);
+        for (ref mut integration, integrator, step_duration, _, _) in &mut canvas_integrations {
+            integration.update(&scenario, &***integrator, &step_duration);
         }
         if first_time {
             let mut bbox = canvas.bbox();
             canvas_integrations
                 .iter()
-                .for_each(|(integration, _, _, _)| integration.stretch_bbox(&mut bbox));
+                .for_each(|(integration, _, _, _, _)| integration.stretch_bbox(&mut bbox));
             canvas.set_visible_bbox(&bbox);
         }
 
         canvas.draw_trajectory(ui_state.strokes.trajectory);
-        for (ref mut integration, _, step_size, &stroke) in &mut canvas_integrations {
-            integration.draw_on(&mut canvas, step_size.color.into(), stroke);
+        for (ref mut integration, _, _, &step_color, &stroke) in &mut canvas_integrations {
+            integration.draw_on(&mut canvas, Color32::from(step_color), stroke);
         }
     }
 }

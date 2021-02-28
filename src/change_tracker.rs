@@ -18,6 +18,7 @@ pub struct ChangeTracker<T: PartialEq + Copy> {
 
 impl<T: PartialEq + Copy> ChangeTracker<T> {
     pub fn with(value: T) -> Self {
+        let todo = "remove ChangeTracker and use Bevy's change tracking";
         Self {
             value,
             change_count: 1,
