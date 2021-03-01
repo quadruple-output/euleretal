@@ -1,8 +1,9 @@
-use crate::{canvas, integrator, step_size, Acceleration, Duration};
-use bevy::prelude::*;
-use bevy_egui::EguiContext;
-use core::fmt;
-use egui::{stroke_ui, widgets::Slider, CentralPanel, Color32, Rgba, SidePanel, Stroke, Ui, Vec2};
+use crate::prelude::Vec2; // to distinguish from bevy::prelude::Vec2
+use crate::prelude::*;
+use ::bevy::prelude::*;
+use ::bevy_egui::EguiContext;
+use ::core::fmt;
+use ::egui::{stroke_ui, widgets::Slider, CentralPanel, Rgba, SidePanel};
 
 pub struct Plugin;
 
@@ -53,7 +54,7 @@ pub fn render(
         &mut step_size::comp::Duration,
         &mut step_size::comp::Color,
     )>,
-    mut integrators: Query<(&Box<dyn integrator::Integrator>, &mut Stroke)>,
+    mut integrators: Query<(&Box<dyn Integrator>, &mut Stroke)>,
     mut scenarios: Query<(&Box<dyn Acceleration>, &mut Duration)>,
 ) {
     let ctx = &context.ctx;

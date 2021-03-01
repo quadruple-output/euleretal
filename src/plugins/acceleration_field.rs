@@ -1,5 +1,5 @@
-use crate::{canvas, scenario, UiState};
-use bevy::prelude::*;
+use crate::prelude::*;
+use ::bevy::prelude::*;
 
 pub struct Plugin;
 

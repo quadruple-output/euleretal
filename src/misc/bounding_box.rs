@@ -1,4 +1,4 @@
-use bevy::math::Vec3;
+use crate::prelude::*;
 
 #[derive(Debug, Default)]
 pub struct BoundingBox {

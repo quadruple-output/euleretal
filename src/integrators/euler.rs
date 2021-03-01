@@ -1,7 +1,4 @@
-use decorum::R32;
-
-use super::Integrator;
-use crate::{Acceleration, Sample};
+use crate::prelude::*;
 
 #[derive(Debug)]
 pub struct Implicit;

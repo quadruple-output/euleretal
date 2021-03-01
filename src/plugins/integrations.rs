@@ -1,6 +1,5 @@
-use crate::{canvas, integration, integrator, scenario, step_size, UiState};
-use bevy::prelude::*;
-use egui::color::Color32;
+use crate::prelude::*;
+use ::bevy::prelude::*;
 
 pub struct Plugin;
 

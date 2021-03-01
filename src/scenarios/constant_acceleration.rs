@@ -1,5 +1,4 @@
-use crate::acceleration::Acceleration;
-use bevy::math::Vec3;
+use crate::prelude::*;
 
 pub struct ConstantAcceleration;
 

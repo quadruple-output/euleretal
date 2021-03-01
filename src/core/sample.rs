@@ -1,5 +1,4 @@
-use bevy::math::Vec3;
-use decorum::R32;
+use crate::prelude::*;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Sample {

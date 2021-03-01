@@ -1,10 +1,5 @@
-use crate::{
-    scenario::{self, StartPosition, StartVelocity},
-    Acceleration, BoundingBox, Duration, Sample, TrackedChange,
-};
-use bevy::prelude::Vec3;
-use decorum::R32;
-use egui::{clamp, Color32, Painter, Pos2, Response, Sense, Shape, Stroke, Ui, Vec2};
+use crate::prelude::*;
+use ::egui::{clamp, Painter, Response, Sense, Shape};
 
 pub struct Kind;
 

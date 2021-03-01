@@ -1,26 +1,4 @@
-use crate::{scenario, Acceleration, Duration, Sample};
-use decorum::R32;
-use scenario::{StartPosition, StartVelocity};
-
-pub mod euler;
-
-pub struct Kind;
-pub mod comp {
-    pub type Integrator = Box<dyn super::Integrator>;
-    pub type Stroke = egui::Stroke;
-}
-
-#[derive(Clone, Copy)]
-pub struct Entity(pub bevy::ecs::Entity);
-
-#[derive(bevy::ecs::Bundle)]
-pub struct Bundle(pub Kind, pub comp::Integrator, pub comp::Stroke);
-
-impl Bundle {
-    pub fn spawn(self, commands: &mut bevy::ecs::Commands) -> self::Entity {
-        Entity(commands.spawn(self).current_entity().unwrap())
-    }
-}
+use crate::prelude::*;
 
 pub trait Integrator: Send + Sync {
     fn label(&self) -> String;

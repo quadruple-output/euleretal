@@ -1,25 +1,12 @@
-use crate::{Acceleration, ChangeTracker, Duration, Sample};
-use bevy::math::Vec3;
-use decorum::R32;
-use log::info;
-
-mod center_mass;
-mod constant_acceleration;
-
-pub use center_mass::CenterMass;
-pub use constant_acceleration::ConstantAcceleration;
+use crate::prelude::*;
 
 pub struct Kind;
 pub mod comp {
     pub type Acceleration = Box<dyn crate::Acceleration>;
-    pub type StartPosition = super::StartPosition;
-    pub type StartVelocity = super::StartVelocity;
+    pub type StartPosition = crate::StartPosition;
+    pub type StartVelocity = crate::StartVelocity;
     pub type Duration = crate::Duration;
 }
-
-const TODO: &str = "define types below as independent components, so they can be used elsewhere without referencing this mod";
-pub struct StartPosition(pub ChangeTracker<Vec3>);
-pub struct StartVelocity(pub ChangeTracker<Vec3>);
 
 #[derive(Clone, Copy)]
 pub struct Entity(pub bevy::ecs::Entity);
@@ -59,7 +46,7 @@ pub fn calculate_trajectory(
         duration.0.get(),
         num_steps,
     );
-    info!("Calculated trajectory with {} segments", trajectory.len(),);
+    log::info!("Calculated trajectory with {} segments", trajectory.len(),);
     trajectory
 }
 
@@ -79,7 +66,7 @@ pub fn calculate_reference_samples(
         dt,
         STEPS_PER_DT,
     );
-    info!(
+    log::info!(
         "Calculated {} reference samples, using trajectory with {} segments",
         samples.len(),
         trajectory.len(),

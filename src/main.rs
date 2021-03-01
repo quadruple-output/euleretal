@@ -5,39 +5,31 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::multiple_crate_versions)]
 
-mod acceleration;
-mod bounding_box;
-mod canvas;
-mod change_tracker;
-mod duration;
-mod integration;
-mod integrator;
-mod layer;
-mod sample;
-mod scenario;
-mod step_size;
-mod ui;
-mod user_label;
+mod components;
+mod core;
+mod entities;
+mod integrators;
+mod misc;
+mod plugins;
+mod scenarios;
 
-use acceleration::Acceleration;
-use bevy::input::system::exit_on_esc_system;
-use bevy::prelude::*;
-use bevy_egui::{EguiPlugin, EguiSettings};
-use bounding_box::BoundingBox;
-use change_tracker::{ChangeCount, ChangeTracker, TrackedChange};
-use decorum::R32;
-use duration::Duration;
-use egui::{color::Hsva, Color32, Stroke};
-use flexi_logger::{colored_opt_format, Logger};
-use integrator::Integrator;
-use sample::Sample;
-use std::f32::consts::TAU;
-use ui::State as UiState;
-use user_label::UserLabel;
+mod prelude {
+    pub use crate::components::prelude::*;
+    pub use crate::core::prelude::*;
+    pub use crate::entities::prelude::*;
+    pub use crate::misc::prelude::*;
+    pub use crate::plugins::ui::State as UiState; // TODO: THIS IS A RESOURCE AND SHOULD NOT BE IN PLUGINS
+    pub use ::bevy::math::Vec3;
+    pub use ::decorum::R32;
+    pub use ::egui::{color::Hsva, Color32, Pos2, Stroke, Ui, Vec2};
+}
+
+use crate::prelude::*;
+use ::bevy::prelude::*;
 
 fn main() {
-    if let Err(e) = Logger::with_env_or_str("info")
-        .format(colored_opt_format)
+    if let Err(e) = flexi_logger::Logger::with_env_or_str("info")
+        .format(flexi_logger::colored_opt_format)
         .start()
     {
         println!("Warning: Cannot initialize logging. {}", e);
@@ -49,20 +41,23 @@ fn main() {
         .add_resource(ClearColor(Color::BLACK))
         .add_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
-        .add_system(exit_on_esc_system.system())
-        .add_plugin(EguiPlugin)
+        .add_system(::bevy::input::system::exit_on_esc_system.system())
+        .add_plugin(::bevy_egui::EguiPlugin)
         .add_system(update_ui_scale_factor.system())
-        .add_plugin(ui::Plugin)
-        .add_plugin(layer::coordinates::Plugin)
-        .add_plugin(layer::acceleration_field::Plugin)
-        .add_plugin(layer::integrations::Plugin)
-        .add_plugin(layer::inspector::Plugin)
+        .add_plugin(plugins::Ui)
+        .add_plugin(plugins::Coordinates)
+        .add_plugin(plugins::AccelerationField)
+        .add_plugin(plugins::Integrations)
+        .add_plugin(plugins::Inspector)
         .add_startup_system(initialize_scenario.system())
         .run();
 }
 
 #[allow(clippy::needless_pass_by_value)]
-fn update_ui_scale_factor(mut egui_settings: ResMut<EguiSettings>, windows: Res<Windows>) {
+fn update_ui_scale_factor(
+    mut egui_settings: ResMut<bevy_egui::EguiSettings>,
+    windows: Res<Windows>,
+) {
     if let Some(window) = windows.get_primary() {
         egui_settings.scale_factor = 1.0 / window.scale_factor();
     }
@@ -77,28 +72,27 @@ fn initialize_scenario(commands: &mut Commands) {
     )
     .spawn(commands);
 
-    let todo = "introduce Bundles and Query types for all types";
     let integrator_id = integrator::Bundle(
         integrator::Kind,
-        Box::new(integrator::euler::Implicit),
+        Box::new(integrators::euler::Implicit),
         Stroke::new(1., Hsva::from(Color32::RED)),
     )
     .spawn(commands);
 
     let scenario_center_mass_id = scenario::Bundle(
         scenario::Kind,
-        Box::new(scenario::CenterMass),
-        scenario::StartPosition(ChangeTracker::with(Vec3::new(0., 1., 0.))),
-        scenario::StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
-        Duration(ChangeTracker::with(TAU.into())),
+        Box::new(scenarios::CenterMass),
+        StartPosition(ChangeTracker::with(Vec3::new(0., 1., 0.))),
+        StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
+        Duration(ChangeTracker::with(::std::f32::consts::TAU.into())),
     )
     .spawn(commands);
 
     let scenario_constant_acceleration_id = scenario::Bundle(
         scenario::Kind,
-        Box::new(scenario::ConstantAcceleration),
-        scenario::StartPosition(ChangeTracker::with(Vec3::new(0., 0., 0.))),
-        scenario::StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
+        Box::new(scenarios::ConstantAcceleration),
+        StartPosition(ChangeTracker::with(Vec3::new(0., 0., 0.))),
+        StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
         Duration(ChangeTracker::with(2_f32.into())),
     )
     .spawn(commands);

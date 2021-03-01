@@ -1,10 +1,4 @@
-use crate::{
-    canvas, scenario, Acceleration, BoundingBox, ChangeCount, Duration, Integrator, Sample,
-    TrackedChange,
-};
-use bevy::math::Vec3;
-use egui::{Color32, Stroke};
-use scenario::{StartPosition, StartVelocity};
+use crate::prelude::*;
 
 pub struct Kind;
 

@@ -1,3 +1,5 @@
+use crate::prelude::*;
+
 pub struct Kind;
 pub mod comp {
     pub type UserLabel = crate::UserLabel;
@@ -23,12 +25,11 @@ impl Bundle {
 }
 
 pub fn show_controls(
-    ui: &mut egui::Ui,
+    ui: &mut Ui,
     label: &mut comp::UserLabel,
     duration: &mut comp::Duration,
     color: &mut comp::Color,
 ) {
-    use decorum::R32;
     use egui::{
         color_picker::{color_edit_button_hsva, Alpha},
         Slider,

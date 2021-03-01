@@ -1,6 +1,5 @@
-use crate::ChangeTracker;
-use decorum::R32;
-use egui::{Slider, Ui};
+use crate::prelude::*;
+use ::egui::Slider;
 
 pub struct Duration(pub ChangeTracker<R32>);
 
