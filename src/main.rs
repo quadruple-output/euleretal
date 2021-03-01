@@ -24,13 +24,11 @@ use bevy::input::system::exit_on_esc_system;
 use bevy::prelude::*;
 use bevy_egui::{EguiPlugin, EguiSettings};
 use bounding_box::BoundingBox;
-use canvas::Canvas;
 use change_tracker::{ChangeCount, ChangeTracker, TrackedChange};
 use decorum::R32;
 use duration::Duration;
 use egui::{color::Hsva, Color32, Stroke};
 use flexi_logger::{colored_opt_format, Logger};
-use integration::Integration;
 use integrator::Integrator;
 use sample::Sample;
 use std::f32::consts::TAU;
@@ -106,22 +104,30 @@ fn initialize_scenario(commands: &mut Commands) {
     .spawn(commands);
 
     let canvas_center_mass_id =
-        canvas::Bundle(Canvas::new(), scenario_center_mass_id).spawn(commands);
+        canvas::Bundle(canvas::Kind, canvas::State::new(), scenario_center_mass_id).spawn(commands);
 
-    let canvas_constant_acceleration_id =
-        canvas::Bundle(Canvas::new(), scenario_constant_acceleration_id).spawn(commands);
+    let canvas_constant_acceleration_id = canvas::Bundle(
+        canvas::Kind,
+        canvas::comp::State::new(),
+        scenario_constant_acceleration_id,
+    )
+    .spawn(commands);
 
-    commands.spawn((
-        Integration::new(),
+    integration::Bundle(
+        integration::Kind,
+        integration::comp::State::new(),
+        integrator_id,
         step_size_id,
         canvas_center_mass_id,
-        integrator_id,
-    ));
+    )
+    .spawn(commands);
 
-    commands.spawn((
-        Integration::new(),
+    integration::Bundle(
+        integration::Kind,
+        integration::comp::State::new(),
+        integrator_id,
         step_size_id,
         canvas_constant_acceleration_id,
-        integrator_id,
-    ));
+    )
+    .spawn(commands);
 }

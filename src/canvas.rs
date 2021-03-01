@@ -6,7 +6,26 @@ use bevy::prelude::Vec3;
 use decorum::R32;
 use egui::{clamp, Color32, Painter, Pos2, Response, Sense, Shape, Stroke, Ui, Vec2};
 
-pub struct Canvas {
+pub struct Kind;
+
+pub mod comp {
+    pub type State = super::State;
+    pub type ScenarioId = crate::scenario::Entity;
+}
+
+#[derive(Clone, Copy)]
+pub struct Entity(pub bevy::prelude::Entity);
+
+#[derive(bevy::ecs::Bundle)]
+pub struct Bundle(pub Kind, pub State, pub comp::ScenarioId);
+
+impl Bundle {
+    pub fn spawn(self, commands: &mut bevy::ecs::Commands) -> self::Entity {
+        Entity(commands.spawn(self).current_entity().unwrap())
+    }
+}
+
+pub struct State {
     allocated_painter: Option<(Response, Painter)>,
     visible_units: f32,
     focus: Vec3,
@@ -17,19 +36,7 @@ pub struct Canvas {
     trajectory_min_dt: R32,
 }
 
-#[derive(Clone, Copy)]
-pub struct Entity(pub bevy::prelude::Entity);
-
-#[derive(bevy::ecs::Bundle)]
-pub struct Bundle(pub Canvas, pub scenario::Entity);
-
-impl Bundle {
-    pub fn spawn(self, commands: &mut bevy::ecs::Commands) -> self::Entity {
-        Entity(commands.spawn(self).current_entity().unwrap())
-    }
-}
-
-impl Canvas {
+impl State {
     pub fn new() -> Self {
         Self {
             allocated_painter: None,
@@ -83,29 +90,27 @@ impl Canvas {
     }
 
     pub fn draw_sample_trajectory(&self, samples: &[Sample], stroke: Stroke) {
-        self._draw_trajectory(samples.iter().map(|sample| &sample.s), stroke)
+        self.draw_connected_samples(samples.iter().map(|sample| &sample.s), stroke)
     }
 
     pub fn draw_trajectory(&self, stroke: Stroke) {
-        self._draw_trajectory(self.trajectory.iter(), stroke);
+        self.draw_connected_samples(self.trajectory.iter(), stroke);
     }
 
-    pub fn _draw_trajectory<'a, I>(&self, trajectory: I, stroke: Stroke)
+    fn draw_connected_samples<'a, Iter>(&self, samples: Iter, stroke: Stroke)
     where
-        I: Iterator<Item = &'a Vec3>,
+        Iter: Iterator<Item = &'a Vec3>,
     {
         if let Some((_, ref painter)) = self.allocated_painter {
-            trajectory
-                .map(|s| self.user_to_screen(*s))
-                .reduce(|u0, u1| {
-                    // avoid drawing extremely short line segments:
-                    if (u0.x - u1.x).abs() > 2. || (u0.y - u1.y).abs() > 2. {
-                        painter.line_segment([u0, u1], stroke);
-                        u1
-                    } else {
-                        u0
-                    }
-                });
+            samples.map(|s| self.user_to_screen(*s)).reduce(|u0, u1| {
+                // avoid drawing extremely short line segments:
+                if (u0.x - u1.x).abs() > 2. || (u0.y - u1.y).abs() > 2. {
+                    painter.line_segment([u0, u1], stroke);
+                    u1
+                } else {
+                    u0
+                }
+            });
         }
     }
 
@@ -165,7 +170,7 @@ impl Canvas {
         }
     }
 
-    pub fn line_segment(&self, start: Vec3, end: Vec3, stroke: Stroke) {
+    pub fn draw_line_segment(&self, start: Vec3, end: Vec3, stroke: Stroke) {
         if let Some((_, ref painter)) = self.allocated_painter {
             painter.line_segment(
                 [self.user_to_screen(start), self.user_to_screen(end)],
@@ -175,7 +180,7 @@ impl Canvas {
     }
 
     #[allow(clippy::vec_init_then_push)]
-    pub fn vector(&self, start: Vec3, vec: Vec3, stroke: Stroke) {
+    pub fn draw_vector(&self, start: Vec3, vec: Vec3, stroke: Stroke) {
         if let Some((_, ref painter)) = self.allocated_painter {
             let end = self.user_to_screen(start + vec);
             let start = self.user_to_screen(start);
@@ -198,7 +203,7 @@ impl Canvas {
         }
     }
 
-    pub fn hline(&self, y: f32, stroke: Stroke) {
+    pub fn draw_hline(&self, y: f32, stroke: Stroke) {
         if let Some((ref response, ref painter)) = self.allocated_painter {
             let area = response.rect;
             let transformed_y = self.user_to_screen(Vec3::new(0., y, 0.)).y;
@@ -212,7 +217,7 @@ impl Canvas {
         }
     }
 
-    pub fn vline(&self, x: f32, stroke: Stroke) {
+    pub fn draw_vline(&self, x: f32, stroke: Stroke) {
         if let Some((ref response, ref painter)) = self.allocated_painter {
             let area = response.rect;
             let transformed_x = self.user_to_screen(Vec3::new(x, 0., 0.)).x;

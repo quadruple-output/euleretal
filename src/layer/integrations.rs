@@ -1,4 +1,4 @@
-use crate::{canvas, integrator, scenario, step_size, Canvas, Integration, UiState};
+use crate::{canvas, integration, integrator, scenario, step_size, UiState};
 use bevy::prelude::*;
 use egui::color::Color32;
 
@@ -14,9 +14,15 @@ impl bevy::prelude::Plugin for Plugin {
 #[allow(clippy::needless_pass_by_value, clippy::borrowed_box)]
 pub fn render(
     ui_state: ResMut<UiState>,
-    mut canvases: Query<(Entity, &mut Canvas, &scenario::Entity)>, // always request canvases with 'mut'
+    mut canvases: Query<(
+        Entity,
+        &canvas::Kind,
+        &mut canvas::comp::State,
+        &canvas::comp::ScenarioId,
+    )>, // always request canvases with 'mut'
     mut integrations: Query<(
-        &mut Integration,
+        &integration::Kind,
+        &mut integration::comp::State,
         &step_size::Entity,
         &canvas::Entity,
         &integrator::Entity,
@@ -39,13 +45,13 @@ pub fn render(
         &scenario::comp::Duration,
     )>,
 ) {
-    for (canvas_id, mut canvas, scenario_id) in canvases.iter_mut() {
+    for (canvas_id, _, mut canvas, scenario_id) in canvases.iter_mut() {
         let (_, acceleration, start_position, start_velocity, duration) =
             scenarios.get(scenario_id.0).unwrap();
         let mut canvas_integrations = integrations
             .iter_mut()
-            .filter(|(_, _, integration_canvas_id, _)| integration_canvas_id.0 == canvas_id)
-            .map(|(integration, step_size_id, _, integrator_id)| {
+            .filter(|(_, _, _, integration_canvas_id, _)| integration_canvas_id.0 == canvas_id)
+            .map(|(_, integration, step_size_id, _, integrator_id)| {
                 let (_, integrator, stroke) = integrators.get(integrator_id.0).unwrap();
                 let (_, step_duration, step_color) = step_sizes.get(step_size_id.0).unwrap();
                 (integration, integrator, step_duration, step_color, stroke)

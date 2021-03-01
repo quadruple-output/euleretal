@@ -1,4 +1,4 @@
-use crate::{integrator, step_size, Acceleration, Canvas, Duration};
+use crate::{canvas, integrator, step_size, Acceleration, Duration};
 use bevy::prelude::*;
 use bevy_egui::EguiContext;
 use core::fmt;
@@ -46,7 +46,7 @@ impl bevy::prelude::Plugin for Plugin {
 pub fn render(
     context: Res<EguiContext>,
     mut ui_state: ResMut<State>,
-    mut canvases: Query<&mut Canvas>,
+    mut canvases: Query<(&canvas::Kind, &mut canvas::comp::State)>,
     mut step_sizes: Query<(
         &mut step_size::Kind,
         &mut step_size::comp::UserLabel,
@@ -109,11 +109,9 @@ pub fn render(
 
     CentralPanel::default().show(ctx, |ui| {
         let panel_size = ui.available_size_before_wrap_finite();
-        let canvas_size = Vec2::new(
-            panel_size.x,
-            panel_size.y / canvases.iter_mut().count() as f32,
-        );
-        for mut canvas in canvases.iter_mut() {
+        let canvas_count = canvases.iter_mut().count();
+        let canvas_size = Vec2::new(panel_size.x, panel_size.y / canvas_count as f32);
+        for (_, mut canvas) in canvases.iter_mut() {
             canvas.allocate_painter(ui, canvas_size);
         }
     });
