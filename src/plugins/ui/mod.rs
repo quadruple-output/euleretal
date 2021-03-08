@@ -1,10 +1,11 @@
-use crate::prelude::Vec2; // to distinguish from bevy::prelude::Vec2
 use crate::prelude::*;
 use ::bevy::prelude::*;
 use ::bevy_egui::EguiContext;
 use ::core::fmt;
 use ::egui::{CentralPanel, Rgba, SidePanel};
 
+mod canvas_grid;
+mod canvas_view;
 mod color_controls;
 mod integrator_controls;
 mod layer_controls;
@@ -59,7 +60,7 @@ pub fn setup(context: Res<EguiContext>) {
 pub fn show(
     context: Res<EguiContext>,
     mut state: ResMut<State>,
-    mut canvases: Query<(&canvas::Kind, &mut canvas::comp::State)>,
+    mut canvases: Query<&mut canvas::comp::State>,
     mut step_sizes: Query<(
         &mut step_size::comp::UserLabel,
         &mut step_size::comp::Duration,
@@ -74,19 +75,13 @@ pub fn show(
         layer_controls::show(ui, &mut state);
         settings::show(ui, &mut state);
         color_controls::show(ui, &mut state);
-
         step_size_controls::show(ui, &mut step_sizes);
         integrator_controls::show(ui, &mut integrators);
         scenario_controls::show(ui, &mut scenarios);
     });
 
     CentralPanel::default().show(ctx, |ui| {
-        let panel_size = ui.available_size_before_wrap_finite();
-        let canvas_count = canvases.iter_mut().count();
-        let canvas_size = Vec2::new(panel_size.x, panel_size.y / canvas_count as f32);
-        for (_, mut canvas) in canvases.iter_mut() {
-            canvas.allocate_painter(ui, canvas_size);
-        }
+        canvas_grid::show(ui, &mut canvases);
     });
 }
 
