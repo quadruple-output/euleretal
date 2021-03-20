@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::app::prelude::*;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Sample {

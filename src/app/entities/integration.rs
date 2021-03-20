@@ -1,18 +1,18 @@
-use crate::prelude::*;
+use crate::app::prelude::*;
 
 pub struct Kind;
 
 pub mod comp {
     pub type State = super::State;
-    pub type StepSizeId = crate::step_size::Entity;
-    pub type CanvasId = crate::canvas::Entity;
-    pub type IntegratorId = crate::integrator::Entity;
+    pub type StepSizeId = super::step_size::Entity;
+    pub type CanvasId = super::canvas::Entity;
+    pub type IntegratorId = super::integrator::Entity;
 }
 
 #[derive(Clone, Copy)]
-pub struct Entity(bevy::ecs::Entity);
+pub struct Entity(bevy_ecs::Entity);
 
-#[derive(bevy::ecs::Bundle)]
+#[derive(bevy_ecs::Bundle)]
 pub struct Bundle(
     pub Kind,
     pub comp::State,
@@ -22,7 +22,7 @@ pub struct Bundle(
 );
 
 impl Bundle {
-    pub fn spawn(self, commands: &mut bevy::ecs::Commands) -> self::Entity {
+    pub fn spawn(self, commands: &mut bevy_ecs::Commands) -> self::Entity {
         Entity(commands.spawn(self).current_entity().unwrap())
     }
 }

@@ -1,3 +1,24 @@
+mod components;
+mod core;
+mod entities;
+mod integrators;
+mod misc;
+mod scenarios;
+
+mod prelude {
+    pub use super::components::prelude::*;
+    pub use super::core::prelude::*;
+    pub use super::entities::prelude::*;
+    pub use super::misc::prelude::*;
+    pub use ::bevy_math::Vec3;
+    pub use ::decorum::R32;
+    pub use ::eframe::egui;
+    pub use ::eframe::egui::{color::Hsva, Color32, Pos2, Stroke, Ui, Vec2};
+}
+
+use self::prelude::*;
+use ::bevy_ecs::prelude::*;
+
 use eframe::{egui, epi};
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.

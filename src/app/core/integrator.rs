@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::app::prelude::*;
 
 pub trait Integrator: Send + Sync {
     fn label(&self) -> String;

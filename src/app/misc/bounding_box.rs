@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::app::prelude::*;
 
 #[derive(Debug, Default)]
 pub struct BoundingBox {

@@ -1,17 +1,17 @@
-use crate::prelude::*;
+use crate::app::prelude::*;
 
 pub struct Kind;
 pub mod comp {
-    pub type Acceleration = Box<dyn crate::Acceleration>;
-    pub type StartPosition = crate::StartPosition;
-    pub type StartVelocity = crate::StartVelocity;
-    pub type Duration = crate::Duration;
+    pub type Acceleration = Box<dyn super::Acceleration>;
+    pub type StartPosition = super::StartPosition;
+    pub type StartVelocity = super::StartVelocity;
+    pub type Duration = super::Duration;
 }
 
 #[derive(Clone, Copy)]
-pub struct Entity(pub bevy::ecs::Entity);
+pub struct Entity(pub bevy_ecs::Entity);
 
-#[derive(bevy::ecs::Bundle)]
+#[derive(bevy_ecs::Bundle)]
 pub struct Bundle(
     pub Kind,
     pub comp::Acceleration,
@@ -21,7 +21,7 @@ pub struct Bundle(
 );
 
 impl Bundle {
-    pub fn spawn(self, commands: &mut bevy::ecs::Commands) -> self::Entity {
+    pub fn spawn(self, commands: &mut bevy_ecs::Commands) -> self::Entity {
         Entity(commands.spawn(self).current_entity().unwrap())
     }
 }

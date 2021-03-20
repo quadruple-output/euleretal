@@ -1,14 +1,16 @@
+use crate::app::prelude::*;
+
 pub struct Kind;
 pub mod comp {
-    pub type UserLabel = crate::UserLabel;
-    pub type Duration = crate::Duration;
-    pub type Color = egui::color::Hsva;
+    pub type UserLabel = super::UserLabel;
+    pub type Duration = super::Duration;
+    pub type Color = super::egui::color::Hsva;
 }
 
 #[derive(Clone, Copy)]
-pub struct Entity(pub bevy::prelude::Entity);
+pub struct Entity(pub bevy_ecs::Entity);
 
-#[derive(bevy::ecs::Bundle)]
+#[derive(bevy_ecs::Bundle)]
 pub struct Bundle(
     pub Kind,
     pub comp::UserLabel,
@@ -17,7 +19,7 @@ pub struct Bundle(
 );
 
 impl Bundle {
-    pub fn spawn(self, commands: &mut bevy::ecs::Commands) -> self::Entity {
+    pub fn spawn(self, commands: &mut bevy_ecs::Commands) -> self::Entity {
         Entity(commands.spawn(self).current_entity().unwrap())
     }
 }

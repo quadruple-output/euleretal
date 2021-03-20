@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::app::prelude::*;
 
 pub trait Acceleration: Send + Sync {
     fn value_at(&self, pos: Vec3) -> Vec3;

@@ -1,21 +1,21 @@
-use crate::prelude::*;
-use ::egui::{clamp, Painter, Response, Sense, Shape};
+use crate::app::prelude::*;
+use ::eframe::egui::{clamp, Painter, PointerButton, Response, Sense, Shape};
 
 pub struct Kind;
 
 pub mod comp {
     pub type State = super::State;
-    pub type ScenarioId = crate::scenario::Entity;
+    pub type ScenarioId = crate::app::scenario::Entity;
 }
 
 #[derive(Clone, Copy)]
-pub struct Entity(pub bevy::prelude::Entity);
+pub struct Entity(pub bevy_ecs::Entity);
 
-#[derive(bevy::ecs::Bundle)]
+#[derive(bevy_ecs::Bundle)]
 pub struct Bundle(pub Kind, pub State, pub comp::ScenarioId);
 
 impl Bundle {
-    pub fn spawn(self, commands: &mut bevy::ecs::Commands) -> self::Entity {
+    pub fn spawn(self, commands: &mut bevy_ecs::Commands) -> self::Entity {
         Entity(commands.spawn(self).current_entity().unwrap())
     }
 }
@@ -142,13 +142,13 @@ impl State {
     }
 
     fn interact(&mut self, ui: &Ui, response: &Response) {
-        if response.hovered {
+        if response.hovered() {
             let input = ui.input();
             if input.modifiers.command {
-                let Vec2 { x: _, y: scroll_y } = input.mouse.delta;
+                let Vec2 { x: _, y: scroll_y } = input.pointer.delta();
                 self.visible_units = clamp(self.visible_units * 1.01_f32.powf(scroll_y), 0.1..=20.);
-            } else if input.mouse.down {
-                let mouse_delta = ui.input().mouse.delta;
+            } else if input.pointer.button_down(PointerButton::Primary) {
+                let mouse_delta = ui.input().pointer.delta();
                 let screen_focus = self.user_to_screen(self.focus);
                 self.focus = self.screen_to_user(screen_focus - mouse_delta);
             }
@@ -158,7 +158,7 @@ impl State {
     pub fn on_hover_ui(&self, add_contents: impl FnOnce(&mut Ui, Vec3)) {
         if let Some((ref response, _)) = self.allocated_painter {
             response.clone().on_hover_ui(|ui| {
-                if let Some(mouse_pos) = ui.input().mouse.pos {
+                if let Some(mouse_pos) = ui.input().pointer.tooltip_pos() {
                     add_contents(ui, self.screen_to_user(mouse_pos));
                 }
             });
@@ -186,7 +186,7 @@ impl State {
             let mut tail = [Pos2::new(0., -2.), Pos2::new(0., 2.)];
             // the vec![] macro does not work here...
             let mut tip = Vec::with_capacity(3);
-            tip.push(Pos2::zero());
+            tip.push(Pos2::ZERO);
             tip.push(Pos2::new(-6., -2.));
             tip.push(Pos2::new(-6., 2.));
             rotate(&mut tail, direction_normalized);
