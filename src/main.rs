@@ -9,6 +9,6 @@
 // When compiling natively:
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
-    let app = euleretal::TemplateApp::default();
+    let app = euleretal::App::default();
     eframe::run_native(Box::new(app));
 }
