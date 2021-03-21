@@ -1,0 +1,254 @@
+mod canvas_grid;
+mod canvas_view;
+mod color_controls;
+mod integrator_controls;
+mod layer_controls;
+mod scenario_controls;
+mod settings;
+mod step_size_controls;
+
+use crate::{integrators, prelude::*, scenarios};
+use ::core::fmt;
+use bevy_ecs::{Commands, Resources, World};
+use eframe::{egui, epi};
+use egui::{CentralPanel, Rgba, SidePanel};
+
+/// We derive Deserialize/Serialize so we can persist app state on shutdown.
+#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
+pub struct App {
+    world: World,
+    resources: Resources,
+    state: State,
+}
+
+impl Default for App {
+    fn default() -> Self {
+        let mut default = Self::new();
+        default.initialize_scenario();
+        default
+    }
+}
+
+impl epi::App for App {
+    fn name(&self) -> &str {
+        "euleretal"
+    }
+
+    /// Called by the framework to load old app state (if any).
+    #[cfg(feature = "persistence")]
+    fn load(&mut self, storage: &dyn epi::Storage) {
+        *self = epi::get_value(storage, epi::APP_KEY).unwrap_or_default()
+    }
+
+    /// Called by the frame work to save state before shutdown.
+    #[cfg(feature = "persistence")]
+    fn save(&mut self, storage: &mut dyn epi::Storage) {
+        epi::set_value(storage, epi::APP_KEY, self);
+    }
+
+    fn setup(&mut self, ctx: &egui::CtxRef) {
+        let mut style = (*ctx.style()).clone();
+
+        /* -=- Change Color Scheme to B/W -=- *\
+        style.visuals.widgets.noninteractive.bg_fill = Color32::WHITE;
+        style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(1., Color32::BLACK);
+        */
+        style.visuals.widgets.noninteractive.bg_fill = Color32::BLACK;
+        style.visuals.widgets.noninteractive.fg_stroke =
+            //Stroke::new(1., Rgba::from_rgb(1., 191. / 255., 0.)); // amber
+            Stroke::new(1., Rgba::from_rgb(1., 126. / 255., 0.)); // SAE/ECE amber
+        style.spacing.tooltip_width = 100.; // minimum distance of tooltip from right border (default:400)
+        ctx.set_style(style);
+    }
+
+    fn max_size_points(&self) -> Vec2 {
+        // Some browsers get slow with huge WebGL canvases, so we limit the size:
+        Vec2::new(1024.0, 2048.0)
+    }
+
+    /// Called each time the UI needs repainting, which may be many times per second.
+    /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
+    fn update(&mut self, ctx: &egui::CtxRef, _frame: &mut epi::Frame<'_>) {
+        let mut canvases = self.world.query_mut::<&mut canvas::comp::State>();
+        let mut step_sizes = self.world.query_mut::<(
+            &mut step_size::comp::UserLabel,
+            &mut step_size::comp::Duration,
+            &mut step_size::comp::Color,
+        )>();
+        let mut integrators = self
+            .world
+            .query_mut::<(&Box<dyn Integrator>, &mut Stroke)>();
+        let mut integrators = self
+            .world
+            .query_mut::<(&Box<dyn Integrator>, &mut Stroke)>();
+        let mut scenarios = self
+            .world
+            .query_mut::<(&Box<dyn Acceleration>, &mut Duration)>();
+
+        SidePanel::left("side_panel", 200.0).show(ctx, |ui| {
+            layer_controls::show(ui, &mut self.state);
+            settings::show(ui, &mut self.state);
+            color_controls::show(ui, &mut self.state);
+            step_size_controls::show(ui, &mut self.world);
+            integrator_controls::show(ui, &mut self.world);
+            scenario_controls::show(ui, &mut self.world);
+        });
+
+        CentralPanel::default().show(ctx, |ui| {
+            canvas_grid::show(ui, &mut self.world);
+        });
+    }
+}
+
+impl App {
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            world: World::default(),
+            resources: Resources::default(),
+            state: State::default(),
+        }
+    }
+
+    fn initialize_scenario(&mut self) {
+        let mut commands = Commands::default();
+        commands.set_entity_reserver(self.world.get_entity_reserver());
+        let step_size_id = step_size::Bundle(
+            step_size::Kind,
+            UserLabel("long".to_string()),
+            Duration(ChangeTracker::with(R32::from(0.5))),
+            Hsva::from(Color32::YELLOW),
+        )
+        .spawn(&mut commands);
+
+        let integrator_id = integrator::Bundle(
+            integrator::Kind,
+            Box::new(integrators::euler::Implicit),
+            Stroke::new(1., Hsva::from(Color32::RED)),
+        )
+        .spawn(&mut commands);
+
+        let scenario_center_mass_id = scenario::Bundle(
+            scenario::Kind,
+            Box::new(scenarios::CenterMass),
+            StartPosition(ChangeTracker::with(Vec3::new(0., 1., 0.))),
+            StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
+            Duration(ChangeTracker::with(::std::f32::consts::TAU.into())),
+        )
+        .spawn(&mut commands);
+
+        let scenario_constant_acceleration_id = scenario::Bundle(
+            scenario::Kind,
+            Box::new(scenarios::ConstantAcceleration),
+            StartPosition(ChangeTracker::with(Vec3::new(0., 0., 0.))),
+            StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
+            Duration(ChangeTracker::with(2_f32.into())),
+        )
+        .spawn(&mut commands);
+
+        let canvas_center_mass_id =
+            canvas::Bundle(canvas::Kind, canvas::State::new(), scenario_center_mass_id)
+                .spawn(&mut commands);
+
+        let canvas_constant_acceleration_id = canvas::Bundle(
+            canvas::Kind,
+            canvas::comp::State::new(),
+            scenario_constant_acceleration_id,
+        )
+        .spawn(&mut commands);
+
+        integration::Bundle(
+            integration::Kind,
+            integration::comp::State::new(),
+            integrator_id,
+            step_size_id,
+            canvas_center_mass_id,
+        )
+        .spawn(&mut commands);
+
+        integration::Bundle(
+            integration::Kind,
+            integration::comp::State::new(),
+            integrator_id,
+            step_size_id,
+            canvas_constant_acceleration_id,
+        )
+        .spawn(&mut commands);
+
+        commands.apply(&mut self.world, &mut self.resources);
+    }
+}
+
+pub struct State {
+    pub layerflags: LayerFlags,
+    pub strokes: Strokes,
+    pub format_precision: usize,
+}
+
+impl Default for State {
+    fn default() -> Self {
+        Self {
+            layerflags: LayerFlags::default(),
+            strokes: Strokes::default(),
+            format_precision: 3,
+        }
+    }
+}
+
+impl State {
+    pub fn format_f32(&self, n: f32) -> FormatterF32 {
+        FormatterF32 {
+            precision: self.format_precision,
+            n,
+        }
+    }
+}
+
+pub struct FormatterF32 {
+    precision: usize,
+    n: f32,
+}
+
+impl fmt::Display for FormatterF32 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:.*}", self.precision, self.n)
+    }
+}
+
+pub struct LayerFlags {
+    pub coordinates: bool,
+    pub acceleration_field: bool,
+    pub inspector: bool,
+}
+
+impl Default for LayerFlags {
+    fn default() -> Self {
+        Self {
+            coordinates: true,
+            acceleration_field: false,
+            inspector: true,
+        }
+    }
+}
+
+pub struct Strokes {
+    pub trajectory: Stroke,
+    pub acceleration: Stroke,
+    pub coordinates: Stroke,
+    pub focussed_velocity: Stroke,
+    pub focussed_acceleration: Stroke,
+}
+
+impl Default for Strokes {
+    fn default() -> Self {
+        let col_accel = Rgba::from_rgb(0.3, 0.3, 0.8);
+        let col_velo = Rgba::from(Color32::WHITE);
+        Self {
+            trajectory: Stroke::new(1., col_velo * 0.25),
+            focussed_velocity: Stroke::new(1., col_velo * 1.),
+            acceleration: Stroke::new(1., col_accel * 0.25),
+            focussed_acceleration: Stroke::new(1., col_accel * 1.),
+            coordinates: Stroke::new(1., Rgba::from_rgb(0., 0.5, 0.) * 0.3),
+        }
+    }
+}

@@ -6,8 +6,26 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::multiple_crate_versions)]
 
-mod app;
-pub use app::App;
+mod components;
+mod core;
+mod entities;
+mod integrators;
+mod misc;
+mod scenarios;
+pub mod ui;
+
+mod prelude {
+    pub use super::components::prelude::*;
+    pub use super::core::prelude::*;
+    pub use super::entities::prelude::*;
+    pub use super::misc::prelude::*;
+    pub use ::bevy_math::Vec3;
+    pub use ::decorum::R32;
+    pub use eframe::egui;
+    pub use eframe::egui::{color::Hsva, Color32, Pos2, Stroke, Ui, Vec2};
+}
+
+use self::prelude::*;
 
 // ----------------------------------------------------------------------------
 // When compiling for web:
@@ -22,6 +40,6 @@ use eframe::wasm_bindgen::{self, prelude::*};
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn start(canvas_id: &str) -> Result<(), eframe::wasm_bindgen::JsValue> {
-    let app = App::default();
+    let app = ui::App::default();
     eframe::start_web(canvas_id, Box::new(app))
 }
