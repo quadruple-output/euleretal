@@ -9,6 +9,13 @@
 // When compiling natively:
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
+    if let Err(e) = flexi_logger::Logger::with_env_or_str("info")
+        .format(flexi_logger::colored_opt_format)
+        .start()
+    {
+        println!("Warning: Cannot initialize logging. {}", e);
+    }
+
     let app = euleretal::App::default();
     eframe::run_native(Box::new(app));
 }
