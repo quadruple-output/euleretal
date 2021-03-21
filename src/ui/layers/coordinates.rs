@@ -1,40 +1,26 @@
 use crate::prelude::*;
-use ::bevy::prelude::*;
 
-pub struct Plugin;
-
-impl bevy::prelude::Plugin for Plugin {
-    fn build(&self, app: &mut bevy::prelude::AppBuilder) {
-        app.add_system(render.system());
-    }
-}
-
-#[allow(clippy::needless_pass_by_value)]
-fn render(
-    // UIState must be requested as Mut, or else it panics when other systems use it in parallel
-    ui_state: ResMut<UiState>,
-    mut canvases: Query<(&canvas::Kind, &mut canvas::comp::State)>,
-) {
-    if !ui_state.layerflags.coordinates {
+pub fn render(world: &mut World, state: &ControlState) {
+    if !state.layerflags.coordinates {
         return;
     }
-    for (_, canvas) in canvases.iter_mut() {
-        canvas.draw_hline(0., ui_state.strokes.coordinates);
-        canvas.draw_vline(0., ui_state.strokes.coordinates);
+    for canvas in world.query::<&canvas::comp::State>() {
+        canvas.draw_hline(0., state.strokes.coordinates);
+        canvas.draw_vline(0., state.strokes.coordinates);
         let min = canvas.min();
         let max = canvas.max();
         for step in ((min.x - 1.) as i32)..=((max.x + 1.) as i32) {
             canvas.draw_line_segment(
                 Vec3::new(step as f32, -0.05, 0.),
                 Vec3::new(step as f32, 0.05, 0.),
-                ui_state.strokes.coordinates,
+                state.strokes.coordinates,
             );
         }
         for step in ((min.y - 1.) as i32)..=((max.y + 1.) as i32) {
             canvas.draw_line_segment(
                 Vec3::new(-0.05, step as f32, 1.),
                 Vec3::new(0.05, step as f32, 1.),
-                ui_state.strokes.coordinates,
+                state.strokes.coordinates,
             );
         }
 

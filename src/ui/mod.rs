@@ -3,6 +3,7 @@ mod canvas_view;
 mod color_controls;
 mod integrator_controls;
 mod layer_controls;
+mod layers;
 mod scenario_controls;
 mod settings;
 mod step_size_controls;
@@ -18,7 +19,7 @@ use egui::{CentralPanel, Rgba, SidePanel};
 pub struct App {
     world: World,
     resources: Resources,
-    state: State,
+    control_state: ControlState,
 }
 
 impl Default for App {
@@ -69,26 +70,10 @@ impl epi::App for App {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::CtxRef, _frame: &mut epi::Frame<'_>) {
-        let mut canvases = self.world.query_mut::<&mut canvas::comp::State>();
-        let mut step_sizes = self.world.query_mut::<(
-            &mut step_size::comp::UserLabel,
-            &mut step_size::comp::Duration,
-            &mut step_size::comp::Color,
-        )>();
-        let mut integrators = self
-            .world
-            .query_mut::<(&Box<dyn Integrator>, &mut Stroke)>();
-        let mut integrators = self
-            .world
-            .query_mut::<(&Box<dyn Integrator>, &mut Stroke)>();
-        let mut scenarios = self
-            .world
-            .query_mut::<(&Box<dyn Acceleration>, &mut Duration)>();
-
         SidePanel::left("side_panel", 200.0).show(ctx, |ui| {
-            layer_controls::show(ui, &mut self.state);
-            settings::show(ui, &mut self.state);
-            color_controls::show(ui, &mut self.state);
+            layer_controls::show(ui, &mut self.control_state);
+            settings::show(ui, &mut self.control_state);
+            color_controls::show(ui, &mut self.control_state);
             step_size_controls::show(ui, &mut self.world);
             integrator_controls::show(ui, &mut self.world);
             scenario_controls::show(ui, &mut self.world);
@@ -97,6 +82,10 @@ impl epi::App for App {
         CentralPanel::default().show(ctx, |ui| {
             canvas_grid::show(ui, &mut self.world);
         });
+
+        layers::coordinates::render(&mut self.world, &self.control_state);
+        layers::acceleration_field::render(&mut self.world, &self.control_state);
+        layers::inspector::render(&mut self.world, &self.control_state);
     }
 }
 
@@ -106,7 +95,7 @@ impl App {
         Self {
             world: World::default(),
             resources: Resources::default(),
-            state: State::default(),
+            control_state: ControlState::default(),
         }
     }
 
@@ -179,13 +168,13 @@ impl App {
     }
 }
 
-pub struct State {
+pub struct ControlState {
     pub layerflags: LayerFlags,
     pub strokes: Strokes,
     pub format_precision: usize,
 }
 
-impl Default for State {
+impl Default for ControlState {
     fn default() -> Self {
         Self {
             layerflags: LayerFlags::default(),
@@ -195,7 +184,8 @@ impl Default for State {
     }
 }
 
-impl State {
+impl ControlState {
+    #[must_use]
     pub fn format_f32(&self, n: f32) -> FormatterF32 {
         FormatterF32 {
             precision: self.format_precision,

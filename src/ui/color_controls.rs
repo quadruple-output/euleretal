@@ -1,7 +1,7 @@
-use super::State;
+use super::ControlState;
 use crate::egui::{stroke_ui, Ui};
 
-pub fn show(ui: &mut Ui, state: &mut State) {
+pub fn show(ui: &mut Ui, state: &mut ControlState) {
     ui.heading("Colors");
     ui.vertical(|ui| {
         stroke_ui(ui, &mut state.strokes.trajectory, "Exact Trajectory");
