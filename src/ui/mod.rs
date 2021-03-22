@@ -86,6 +86,7 @@ impl epi::App for App {
         layers::coordinates::render(&mut self.world, &self.control_state);
         layers::acceleration_field::render(&mut self.world, &self.control_state);
         layers::inspector::render(&mut self.world, &self.control_state);
+        layers::integrations::render(&mut self.world, &self.control_state);
     }
 }
 
@@ -122,7 +123,7 @@ impl App {
             Box::new(scenarios::CenterMass),
             StartPosition(ChangeTracker::with(Vec3::new(0., 1., 0.))),
             StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
-            Duration(ChangeTracker::with(::std::f32::consts::TAU.into())),
+            Duration(ChangeTracker::with(std::f32::consts::TAU.into())),
         )
         .spawn(&mut commands);
 
@@ -148,7 +149,7 @@ impl App {
 
         integration::Bundle(
             integration::Kind,
-            integration::comp::State::new(),
+            integration::comp::State::new(integration::State::new()),
             integrator_id,
             step_size_id,
             canvas_center_mass_id,
@@ -157,7 +158,7 @@ impl App {
 
         integration::Bundle(
             integration::Kind,
-            integration::comp::State::new(),
+            integration::comp::State::new(integration::State::new()), // TODO: make this more elegant
             integrator_id,
             step_size_id,
             canvas_constant_acceleration_id,

@@ -8,21 +8,21 @@ pub trait Integrator: Send + Sync {
     fn integrate(
         &self,
         acceleration: &dyn Acceleration,
-        start_position: &StartPosition,
-        start_velocity: &StartVelocity,
-        duration: &Duration,
+        start_position: Vec3,
+        start_velocity: Vec3,
+        duration: R32,
         dt: R32,
     ) -> Vec<Sample> {
         #[allow(clippy::cast_sign_loss)]
-        let num_steps = (duration.0.get() / dt).into_inner() as usize;
+        let num_steps = (duration / dt).into_inner() as usize;
         let mut result = Vec::with_capacity(num_steps + 1);
         let mut sample = Sample {
             n: 0,
             t: 0_f32.into(),
             dt,
-            s: start_position.0.get(),
-            v: start_velocity.0.get(),
-            a: acceleration.value_at(start_position.0.get()),
+            s: start_position,
+            v: start_velocity,
+            a: acceleration.value_at(start_position),
         };
         result.push(sample);
         for _ in 1..=num_steps {

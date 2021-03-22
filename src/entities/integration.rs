@@ -3,7 +3,9 @@ use crate::prelude::*;
 pub struct Kind;
 
 pub mod comp {
-    pub type State = super::State;
+    use std::sync::Mutex;
+
+    pub type State = Mutex<super::State>;
     pub type StepSizeId = super::step_size::Entity;
     pub type CanvasId = super::canvas::Entity;
     pub type IntegratorId = super::integrator::Entity;
@@ -21,9 +23,55 @@ pub struct Bundle(
     pub comp::CanvasId,
 );
 
+pub type Query<'a> = (
+    bevy_ecs::Entity,
+    &'a Kind,
+    &'a comp::State,
+    &'a comp::IntegratorId,
+    &'a comp::StepSizeId,
+    &'a comp::CanvasId,
+);
+
+pub struct Gathered<'a> {
+    pub id: bevy_ecs::Entity,
+    pub state: &'a comp::State,
+    pub integrator: &'a dyn Integrator,
+    pub stroke: &'a integrator::comp::Stroke,
+    pub step_duration: ChangeTracker<R32, change_tracker::Read>,
+    pub step_color: step_size::comp::Color,
+    pub canvas_id: bevy_ecs::Entity,
+}
+
 impl Bundle {
     pub fn spawn(self, commands: &mut bevy_ecs::Commands) -> self::Entity {
         Entity(commands.spawn(self).current_entity().unwrap())
+    }
+}
+
+impl<'a> super::Gather for Query<'a> {
+    type T = Gathered<'a>;
+    fn gather_from(&self, world: &World) -> Gathered<'a> {
+        // enforce type check for assignments:
+        let id: bevy_ecs::Entity = self.0;
+        let state: &comp::State = self.2;
+        let integrator_id: &comp::IntegratorId = self.3;
+        let step_size_id: &comp::StepSizeId = self.4;
+        let canvas_id: &comp::CanvasId = self.5;
+        let (integrator, stroke) = world
+            .get::<(&integrator::comp::Integrator, &integrator::comp::Stroke)>(integrator_id.0)
+            .unwrap();
+        let (step_duration, &step_color) = world
+            .get::<(&step_size::comp::Duration, &step_size::comp::Color)>(step_size_id.0)
+            .unwrap();
+        Gathered {
+            id,
+            state,
+            integrator: &***integrator,
+            stroke,
+            step_duration: step_duration.0.copy_read_only(),
+            step_color,
+            canvas_id: canvas_id.0,
+        }
     }
 }
 
@@ -42,51 +90,6 @@ impl State {
             reference_samples: Vec::new(),
             ref_samples_change_count: ChangeCount::default(),
         }
-    }
-
-    pub fn update(
-        &mut self,
-        acceleration: &dyn Acceleration,
-        start_position: &StartPosition,
-        start_velocity: &StartVelocity,
-        duration: &Duration,
-        integrator: &dyn Integrator,
-        step_size: &Duration,
-    ) {
-        let ref_samples_change_count = step_size.0.change_count()
-            + start_position.0.change_count()
-            + start_velocity.0.change_count()
-            + duration.0.change_count();
-        let samples_change_count = ref_samples_change_count; // + integrator.change_count();
-        if self.samples_change_count != samples_change_count {
-            self.samples = integrator.integrate(
-                acceleration,
-                start_position,
-                start_velocity,
-                duration,
-                step_size.0.get(),
-            );
-            self.samples_change_count = samples_change_count;
-            if self.ref_samples_change_count != ref_samples_change_count {
-                self.reference_samples = scenario::calculate_reference_samples(
-                    acceleration,
-                    start_position,
-                    start_velocity,
-                    duration,
-                    step_size.0.get(),
-                );
-                self.ref_samples_change_count = ref_samples_change_count;
-            }
-        }
-    }
-
-    pub fn stretch_bbox(&self, bbox: &mut BoundingBox) {
-        self.reference_samples
-            .iter()
-            .for_each(|&sample| bbox.expand_to(sample.s));
-        self.samples
-            .iter()
-            .for_each(|&sample| bbox.expand_to(sample.s));
     }
 
     /// returns (ReferenceSample,ComputedSample)
@@ -117,10 +120,67 @@ impl State {
                 }
             })
     }
+}
 
-    pub fn draw_on(&self, canvas: &mut canvas::State, sample_color: Color32, stroke: Stroke) {
-        canvas.draw_sample_trajectory(&self.samples, stroke);
-        canvas.draw_sample_dots(&self.reference_samples, sample_color);
-        canvas.draw_sample_dots(&self.samples, sample_color);
+impl<'a> Gathered<'a> {
+    pub fn update(
+        &self,
+        acceleration: &dyn Acceleration,
+        start_position: &ChangeTracker<Vec3, impl change_tracker::TRead>,
+        start_velocity: &ChangeTracker<Vec3, impl change_tracker::TRead>,
+        duration: &ChangeTracker<R32, impl change_tracker::TRead>,
+        integrator: &dyn Integrator,
+        step_size: &ChangeTracker<R32, impl change_tracker::TRead>,
+    ) {
+        let mut state = self.state.lock().unwrap();
+        let ref_samples_change_count = step_size.change_count()
+            + start_position.change_count()
+            + start_velocity.change_count()
+            + duration.change_count();
+        let samples_change_count = ref_samples_change_count; // + integrator.change_count();
+        if state.samples_change_count != samples_change_count {
+            state.samples = integrator.integrate(
+                acceleration,
+                start_position.get(),
+                start_velocity.get(),
+                duration.get(),
+                step_size.get(),
+            );
+            state.samples_change_count = samples_change_count;
+            if state.ref_samples_change_count != ref_samples_change_count {
+                state.reference_samples = scenario::calculate_reference_samples(
+                    acceleration,
+                    start_position.get(),
+                    start_velocity.get(),
+                    duration.get(),
+                    step_size.get(),
+                );
+                state.ref_samples_change_count = ref_samples_change_count;
+            }
+        }
+    }
+
+    pub fn stretch_bbox(&self, bbox: &mut BoundingBox) {
+        let state = self.state.lock().unwrap();
+        state
+            .reference_samples
+            .iter()
+            .for_each(|&sample| bbox.expand_to(sample.s));
+        state
+            .samples
+            .iter()
+            .for_each(|&sample| bbox.expand_to(sample.s));
+    }
+
+    /// returns (ReferenceSample,ComputedSample)
+    pub fn closest_sample(&self, pos: Vec3) -> Option<(Sample, Sample)> {
+        self.state.lock().unwrap().closest_sample(pos)
+    }
+
+    pub fn draw_on(&self, canvas: &mut canvas::State, sample_color: Color32, stroke: &Stroke) {
+        let state = self.state.lock().unwrap();
+        canvas.draw_sample_trajectory(&state.samples, stroke);
+        canvas.draw_sample_dots(&state.reference_samples, sample_color);
+        canvas.draw_sample_dots(&state.samples, sample_color);
     }
 }

@@ -10,7 +10,9 @@ pub fn render(world: &mut World, state: &ControlState) {
         let canvas = world.get::<canvas::comp::State>(canvas_id.0).unwrap();
 
         canvas.on_hover_ui(|ui, mouse_pos| {
-            if let Some((ref_sample, calc_sample)) = integration.closest_sample(mouse_pos) {
+            if let Some((ref_sample, calc_sample)) =
+                integration.lock().unwrap().closest_sample(mouse_pos)
+            {
                 // *** reference sample:
                 let ref_sample_dt = ref_sample.dt.into_inner();
                 // delta s by velocity:

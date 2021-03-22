@@ -48,14 +48,13 @@ impl State {
     pub fn update_trajectory(
         &mut self,
         acceleration: &dyn Acceleration,
-        start_position: &StartPosition,
-        start_velocity: &StartVelocity,
-        duration: &Duration,
+        start_position: &ChangeTracker<Vec3, impl change_tracker::TRead>,
+        start_velocity: &ChangeTracker<Vec3, impl change_tracker::TRead>,
+        duration: &ChangeTracker<R32, impl change_tracker::TRead>,
         min_dt: R32,
     ) {
-        let scenario_change_count = start_position.0.change_count()
-            + start_velocity.0.change_count()
-            + duration.0.change_count();
+        let scenario_change_count =
+            start_position.change_count() + start_velocity.change_count() + duration.change_count();
         if self.scenario_change_count != scenario_change_count || self.trajectory_min_dt > min_dt {
             self.trajectory = scenario::calculate_trajectory(
                 acceleration,
@@ -84,15 +83,15 @@ impl State {
         self.visible_units = bbox.diameter() * 1.2;
     }
 
-    pub fn draw_sample_trajectory(&self, samples: &[Sample], stroke: Stroke) {
+    pub fn draw_sample_trajectory(&self, samples: &[Sample], stroke: &Stroke) {
         self.draw_connected_samples(samples.iter().map(|sample| &sample.s), stroke)
     }
 
-    pub fn draw_trajectory(&self, stroke: Stroke) {
+    pub fn draw_trajectory(&self, stroke: &Stroke) {
         self.draw_connected_samples(self.trajectory.iter(), stroke);
     }
 
-    fn draw_connected_samples<'a, Iter>(&self, samples: Iter, stroke: Stroke)
+    fn draw_connected_samples<'a, Iter>(&self, samples: Iter, stroke: &Stroke)
     where
         Iter: Iterator<Item = &'a Vec3>,
     {
@@ -100,7 +99,7 @@ impl State {
             samples.map(|s| self.user_to_screen(*s)).reduce(|u0, u1| {
                 // avoid drawing extremely short line segments:
                 if (u0.x - u1.x).abs() > 2. || (u0.y - u1.y).abs() > 2. {
-                    painter.line_segment([u0, u1], stroke);
+                    painter.line_segment([u0, u1], *stroke);
                     u1
                 } else {
                     u0

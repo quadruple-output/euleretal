@@ -1,3 +1,5 @@
+use bevy_ecs::World;
+
 pub mod canvas;
 pub mod integration;
 pub mod integrator;
@@ -10,4 +12,10 @@ pub mod prelude {
     pub use super::integrator;
     pub use super::scenario;
     pub use super::step_size;
+    pub use super::Gather;
+}
+
+pub trait Gather {
+    type T;
+    fn gather_from(&self, world: &World) -> Self::T;
 }

@@ -30,20 +30,20 @@ const STEPS_PER_DT: usize = 40;
 
 pub fn calculate_trajectory(
     acceleration: &dyn Acceleration,
-    start_position: &StartPosition,
-    start_velocity: &StartVelocity,
-    duration: &Duration,
+    start_position: &ChangeTracker<Vec3, impl change_tracker::TRead>,
+    start_velocity: &ChangeTracker<Vec3, impl change_tracker::TRead>,
+    duration: &ChangeTracker<R32, impl change_tracker::TRead>,
     min_dt: R32,
 ) -> Vec<Vec3> {
     #[allow(clippy::cast_sign_loss)]
     let num_steps =
-        (duration.0.get() / min_dt * R32::from(STEPS_PER_DT as f32)).into_inner() as usize;
+        (duration.get() / min_dt * R32::from(STEPS_PER_DT as f32)).into_inner() as usize;
     let (trajectory, _samples) = calculate_trajectory_and_samples(
         acceleration,
-        start_position.0.get(),
-        start_velocity.0.get(),
+        start_position.get(),
+        start_velocity.get(),
         1,
-        duration.0.get(),
+        duration.get(),
         num_steps,
     );
     log::info!("Calculated trajectory with {} segments", trajectory.len(),);
@@ -52,17 +52,17 @@ pub fn calculate_trajectory(
 
 pub fn calculate_reference_samples(
     acceleration: &dyn Acceleration,
-    start_position: &StartPosition,
-    start_velocity: &StartVelocity,
-    duration: &Duration,
+    start_position: Vec3,
+    start_velocity: Vec3,
+    duration: R32,
     dt: R32,
 ) -> Vec<Sample> {
     #[allow(clippy::cast_sign_loss)]
     let (trajectory, samples) = calculate_trajectory_and_samples(
         acceleration,
-        start_position.0.get(),
-        start_velocity.0.get(),
-        (duration.0.get() / dt).into_inner() as usize,
+        start_position,
+        start_velocity,
+        (duration / dt).into_inner() as usize,
         dt,
         STEPS_PER_DT,
     );

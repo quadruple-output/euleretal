@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 pub type ChangeCount = u32;
 
 pub trait TrackedChange {
@@ -11,21 +13,52 @@ pub trait TrackedChange {
     fn change_count(&self) -> ChangeCount;
 }
 
-pub struct ChangeTracker<T: PartialEq + Copy> {
+pub trait TRead: Sized {}
+pub trait TReadWrite: TRead {}
+pub struct Read;
+pub struct ReadWrite;
+impl TRead for Read {}
+impl TRead for ReadWrite {}
+impl TReadWrite for ReadWrite {}
+
+pub struct ChangeTracker<T, RoRw = ReadWrite>
+where
+    T: PartialEq + Copy,
+    RoRw: TRead,
+{
     value: T,
     change_count: ChangeCount,
+    dummy: PhantomData<RoRw>,
 }
 
-impl<T: PartialEq + Copy> ChangeTracker<T> {
-    pub fn with(value: T) -> Self {
-        Self {
-            value,
-            change_count: 1,
-        }
-    }
-
+impl<T, RoRw> ChangeTracker<T, RoRw>
+where
+    T: PartialEq + Copy,
+    RoRw: TRead,
+{
     pub fn get(&self) -> T {
         self.value
+    }
+
+    pub fn copy_read_only(&self) -> ChangeTracker<T, Read> {
+        ChangeTracker::<T, Read> {
+            value: self.value,
+            change_count: self.change_count,
+            dummy: PhantomData,
+        }
+    }
+}
+
+impl<T> ChangeTracker<T, ReadWrite>
+where
+    T: PartialEq + Copy,
+{
+    pub fn with(value: T) -> ChangeTracker<T, ReadWrite> {
+        ChangeTracker::<T, ReadWrite> {
+            value,
+            change_count: 1,
+            dummy: PhantomData,
+        }
     }
 
     pub fn set(&mut self, value: T) {
@@ -36,8 +69,20 @@ impl<T: PartialEq + Copy> ChangeTracker<T> {
     }
 }
 
-impl<T: PartialEq + Copy> TrackedChange for ChangeTracker<T> {
+impl<T, RoRw> TrackedChange for ChangeTracker<T, RoRw>
+where
+    T: PartialEq + Copy,
+    RoRw: TRead,
+{
     fn change_count(&self) -> ChangeCount {
         self.change_count
     }
 }
+
+// #[test] -- does not compile (which is good)
+// fn try_change_read_only_copy() {
+//    let a = ChangeTracker::with(1_u32);
+//    a.set(2);
+//    let b = a.copy_read_only();
+//    b.set(3);  <--- no method named `set` found for struct ChangeTracker<u32, Read>
+//}

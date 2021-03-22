@@ -6,7 +6,7 @@ use egui::{
 };
 
 pub fn show(ui: &mut Ui, world: &mut World) {
-    let mut step_sizes = world.query_mut::<(
+    let step_sizes = world.query_mut::<(
         &mut step_size::comp::UserLabel,
         &mut step_size::comp::Duration,
         &mut step_size::comp::Color,

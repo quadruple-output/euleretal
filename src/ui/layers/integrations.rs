@@ -1,48 +1,53 @@
 use crate::prelude::*;
 use bevy_ecs::Entity;
 
-pub fn render(state: &ControlState, world: &mut World) {
-    let canvas_ids = world
+pub fn render(world: &mut World, state: &ControlState) {
+    let canvas_and_scenario_ids = world
         .query::<(Entity, &canvas::comp::ScenarioId)>()
-        .map(|(e, s)| (e, *s))
+        .map(|(canvas_id, scenario_id)| (canvas_id, scenario_id.0))
         .collect::<Vec<_>>();
 
-    for (canvas_id, scenario_id) in canvas_ids {
-        let (acceleration, start_position, start_velocity, duration) = world
-            .get::<(
-                &scenario::comp::Acceleration,
-                &scenario::comp::StartPosition,
-                &scenario::comp::StartVelocity,
-                &scenario::comp::Duration,
-            )>(scenario_id.0)
+    let integrations = world
+        .query::<integration::Query>()
+        .map(|integration| integration.gather_from(&world))
+        .collect::<Vec<_>>();
+
+    let todo = "introduce scenarios::Query (like above)";
+    let scenarios = world
+        .query::<(
+            Entity,
+            &scenario::comp::Acceleration,
+            &scenario::comp::StartPosition,
+            &scenario::comp::StartVelocity,
+            &scenario::comp::Duration,
+        )>()
+        .map(|(id, a, pos, v, d)| {
+            (
+                id,
+                &*a,
+                pos.0.copy_read_only(),
+                v.0.copy_read_only(),
+                d.0.copy_read_only(),
+            )
+        })
+        .collect::<Vec<_>>();
+
+    for (canvas_id, scenario_id) in canvas_and_scenario_ids {
+        let (_, acceleration, start_position, start_velocity, duration) = scenarios
+            .iter()
+            .find(|(id, ..)| *id == scenario_id)
             .unwrap();
-        let mut canvas_integrations = world
-            .query::<(
-                &integration::comp::State,
-                &step_size::Entity,
-                &canvas::Entity,
-                &integrator::Entity,
-            )>()
-            .filter(|(_, _, integration_canvas_id, _)| integration_canvas_id.0 == canvas_id)
-            .map(|(integration, step_size_id, _, integrator_id)| {
-                let (integrator, stroke) = world
-                    .get::<(&integrator::comp::Integrator, &integrator::comp::Stroke)>(
-                        integrator_id.0,
-                    )
-                    .unwrap();
-                let (step_duration, step_color) = world
-                    .get::<(&step_size::comp::Duration, &step_size::comp::Color)>(step_size_id.0)
-                    .unwrap();
-                (integration, integrator, step_duration, step_color, stroke)
-            })
+        let mut canvas_integrations = integrations
+            .iter()
+            .filter(|integration| integration.canvas_id == canvas_id)
             .collect::<Vec<_>>();
         let min_dt = canvas_integrations
             .iter()
-            .map(|(_, _, step_duration, _, _)| step_duration.0.get())
+            .map(|integration| integration.step_duration.get())
             .min() // this crate depends on decorum::R32 just to be able to use this min() function
             .unwrap_or_else(|| 0.1.into());
 
-        let canvas = world
+        let mut canvas = world
             .get_mut::<&mut canvas::comp::State>(canvas_id)
             .unwrap();
         let first_time = !canvas.has_trajectory();
@@ -53,27 +58,31 @@ pub fn render(state: &ControlState, world: &mut World) {
             duration,
             min_dt,
         );
-        for (integration, integrator, step_duration, _, _) in &mut canvas_integrations {
+        for integration in &mut canvas_integrations {
             integration.update(
                 &***acceleration,
                 start_position,
                 start_velocity,
                 duration,
-                &****integrator,
-                *step_duration,
+                integration.integrator,
+                &integration.step_duration,
             );
         }
         if first_time {
             let mut bbox = canvas.bbox();
             canvas_integrations
                 .iter()
-                .for_each(|(integration, _, _, _, _)| integration.stretch_bbox(&mut bbox));
+                .for_each(|integration| integration.stretch_bbox(&mut bbox));
             canvas.set_visible_bbox(&bbox);
         }
 
-        canvas.draw_trajectory(state.strokes.trajectory);
-        for (ref mut integration, _, _, &step_color, &stroke) in &mut canvas_integrations {
-            integration.draw_on(&mut canvas, Color32::from(*step_color), *stroke);
+        canvas.draw_trajectory(&state.strokes.trajectory);
+        for integration in &mut canvas_integrations {
+            integration.draw_on(
+                &mut canvas,
+                Color32::from(integration.step_color),
+                integration.stroke,
+            );
         }
     }
 }
