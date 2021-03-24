@@ -64,7 +64,8 @@ impl epi::App for App {
 
     fn max_size_points(&self) -> Vec2 {
         // Some browsers get slow with huge WebGL canvases, so we limit the size:
-        Vec2::new(1024.0, 2048.0)
+        //Vec2::new(1024.0, 2048.0)
+        Vec2::new(4096.0, 4096.0)
     }
 
     /// Called each time the UI needs repainting, which may be many times per second.
@@ -82,6 +83,8 @@ impl epi::App for App {
         CentralPanel::default().show(ctx, |ui| {
             canvas_grid::show(ui, &mut self.world);
         });
+
+        ctx.request_repaint();
 
         layers::acceleration_field::render(&mut self.world, &self.control_state);
         layers::coordinates::render(&mut self.world, &self.control_state);
