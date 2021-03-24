@@ -15,7 +15,7 @@ pub mod prelude {
     pub use super::Gather;
 }
 
-pub trait Gather {
+pub trait Gather<'a> {
     type T;
-    fn gather_from(&self, world: &World) -> Self::T;
+    fn gather_from(&self, world: &'a World) -> Self::T;
 }

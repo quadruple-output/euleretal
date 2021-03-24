@@ -83,10 +83,10 @@ impl epi::App for App {
             canvas_grid::show(ui, &mut self.world);
         });
 
-        layers::coordinates::render(&mut self.world, &self.control_state);
         layers::acceleration_field::render(&mut self.world, &self.control_state);
-        layers::inspector::render(&mut self.world, &self.control_state);
+        layers::coordinates::render(&mut self.world, &self.control_state);
         layers::integrations::render(&mut self.world, &self.control_state);
+        layers::inspector::render(&mut self.world, &self.control_state);
     }
 }
 

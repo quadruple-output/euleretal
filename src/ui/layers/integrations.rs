@@ -47,9 +47,13 @@ pub fn render(world: &mut World, state: &ControlState) {
             .min() // this crate depends on decorum::R32 just to be able to use this min() function
             .unwrap_or_else(|| 0.1.into());
 
-        let mut canvas = world
-            .get_mut::<&mut canvas::comp::State>(canvas_id)
-            .unwrap();
+        let mut canvas = unsafe {
+            // should be safe as long as there is no other access to the
+            // canvas::comp::State of this entity
+            world
+                .get_mut_unchecked::<canvas::comp::State>(canvas_id)
+                .unwrap()
+        };
         let first_time = !canvas.has_trajectory();
         canvas.update_trajectory(
             &***acceleration,
@@ -76,12 +80,12 @@ pub fn render(world: &mut World, state: &ControlState) {
             canvas.set_visible_bbox(&bbox);
         }
 
-        canvas.draw_trajectory(&state.strokes.trajectory);
+        canvas.draw_trajectory(state.strokes.trajectory);
         for integration in &mut canvas_integrations {
             integration.draw_on(
                 &mut canvas,
                 Color32::from(integration.step_color),
-                integration.stroke,
+                *integration.stroke,
             );
         }
     }
