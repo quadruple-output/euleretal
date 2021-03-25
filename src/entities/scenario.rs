@@ -20,9 +20,46 @@ pub struct Bundle(
     pub comp::Duration,
 );
 
+pub type Query<'a> = (
+    bevy_ecs::Entity,
+    &'a Kind,
+    &'a comp::Acceleration,
+    &'a comp::StartPosition,
+    &'a comp::StartVelocity,
+    &'a comp::Duration,
+);
+
+pub struct Gathered<'a> {
+    pub id: bevy_ecs::Entity,
+    pub acceleration: &'a dyn Acceleration,
+    pub start_position: ChangeTracker<Vec3, change_tracker::Read>,
+    pub start_velocity: ChangeTracker<Vec3, change_tracker::Read>,
+    pub duration: ChangeTracker<R32, change_tracker::Read>,
+}
+
 impl Bundle {
     pub fn spawn(self, commands: &mut bevy_ecs::Commands) -> self::Entity {
         Entity(commands.spawn(self).current_entity().unwrap())
+    }
+}
+
+impl<'a> super::Gather<'a> for Query<'a> {
+    type T = Gathered<'a>;
+
+    fn gather_from(&self, _: &'a World) -> Gathered<'a> {
+        // enforce type check for assignments:
+        let id: bevy_ecs::Entity = self.0;
+        let acceleration: &'a comp::Acceleration = self.2;
+        let start_position: &comp::StartPosition = self.3;
+        let start_velocity: &comp::StartVelocity = self.4;
+        let duration: &comp::Duration = self.5;
+        Gathered {
+            id,
+            acceleration: &**acceleration,
+            start_position: start_position.0.copy_read_only(),
+            start_velocity: start_velocity.0.copy_read_only(),
+            duration: duration.0.copy_read_only(),
+        }
     }
 }
 

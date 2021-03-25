@@ -9,33 +9,19 @@ pub fn render(world: &mut World, state: &ControlState) {
 
     let integrations = world
         .query::<integration::Query>()
-        .map(|integration| integration.gather_from(&world))
+        .map(|integration| integration.gather_from(world))
         .collect::<Vec<_>>();
 
     let todo = "introduce scenarios::Query (like above)";
     let scenarios = world
-        .query::<(
-            Entity,
-            &scenario::comp::Acceleration,
-            &scenario::comp::StartPosition,
-            &scenario::comp::StartVelocity,
-            &scenario::comp::Duration,
-        )>()
-        .map(|(id, a, pos, v, d)| {
-            (
-                id,
-                &*a,
-                pos.0.copy_read_only(),
-                v.0.copy_read_only(),
-                d.0.copy_read_only(),
-            )
-        })
+        .query::<scenario::Query>()
+        .map(|scenario| scenario.gather_from(world))
         .collect::<Vec<_>>();
 
-    for (canvas_id, scenario_id) in canvas_and_scenario_ids {
-        let (_, acceleration, start_position, start_velocity, duration) = scenarios
+    for (canvas_id, canvas_scenario_id) in canvas_and_scenario_ids {
+        let canvas_scenario = scenarios
             .iter()
-            .find(|(id, ..)| *id == scenario_id)
+            .find(|scenario| scenario.id == canvas_scenario_id)
             .unwrap();
         let mut canvas_integrations = integrations
             .iter()
@@ -56,18 +42,18 @@ pub fn render(world: &mut World, state: &ControlState) {
         };
         let first_time = !canvas.has_trajectory();
         canvas.update_trajectory(
-            &***acceleration,
-            start_position,
-            start_velocity,
-            duration,
+            canvas_scenario.acceleration,
+            &canvas_scenario.start_position,
+            &canvas_scenario.start_velocity,
+            &canvas_scenario.duration,
             min_dt,
         );
         for integration in &mut canvas_integrations {
             integration.update(
-                &***acceleration,
-                start_position,
-                start_velocity,
-                duration,
+                canvas_scenario.acceleration,
+                &canvas_scenario.start_position,
+                &canvas_scenario.start_velocity,
+                &canvas_scenario.duration,
                 integration.integrator,
                 &integration.step_duration,
             );
