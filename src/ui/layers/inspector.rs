@@ -3,17 +3,18 @@ use crate::prelude::*;
 pub fn render(
     world: &World,
     state: &ControlState,
+    canvas_id: bevy_ecs::Entity,
     response: &egui::Response,
     painter: &egui::Painter,
 ) {
     if !state.layerflags.inspector {
         return;
     }
-    for (integration, canvas_id) in
-        world.query::<(&integration::comp::State, &integration::comp::CanvasId)>()
+    let canvas = world.get::<canvas::comp::State>(canvas_id).unwrap();
+    for (integration, _) in world
+        .query::<(&integration::comp::State, &integration::comp::CanvasId)>()
+        .filter(|(_, integration_canvas_id)| integration_canvas_id.0 == canvas_id)
     {
-        let canvas = world.get::<canvas::comp::State>(canvas_id.0).unwrap();
-
         canvas.on_hover_ui(response, |ui, mouse_pos| {
             if let Some((ref_sample, calc_sample)) =
                 integration.lock().unwrap().closest_sample(mouse_pos)

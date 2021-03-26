@@ -23,6 +23,6 @@ pub fn show(
         layers::acceleration_field::render(world, control_state, canvas_id, &response, &painter);
         layers::coordinates::render(world, &control_state, canvas_id, &response.rect, &painter);
         layers::integrations::render(world, &control_state, canvas_id, &painter);
-        layers::inspector::render(world, &control_state, &response, &painter);
+        layers::inspector::render(world, &control_state, canvas_id, &response, &painter);
     });
 }
