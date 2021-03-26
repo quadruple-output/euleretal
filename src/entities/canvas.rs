@@ -128,7 +128,6 @@ impl State {
         let (response, painter) = ui.allocate_painter(size, Sense::click_and_drag());
         self.interact(ui, &response);
         self.adjust_scale_and_center(&response.rect);
-        let todo = "get rid of response (and maybe even painter)";
         (response, painter)
     }
 
@@ -147,11 +146,25 @@ impl State {
     }
 
     pub fn on_hover_ui(&self, response: &Response, add_contents: impl FnOnce(&mut Ui, Vec3)) {
-        response.clone().on_hover_ui(|ui| {
-            if let Some(mouse_pos) = ui.input().pointer.tooltip_pos() {
-                add_contents(ui, self.screen_to_user(mouse_pos));
-            }
-        });
+        //** this used to work with bevy_egui, before switching to eframe, but now
+        //** the tooltip is placed _below_ the current paint area:
+        //
+        // response.clone().on_hover_ui(|ui| {
+        //     if let Some(mouse_pos) = ui.input().pointer.tooltip_pos() {
+        //         add_contents(ui, self.screen_to_user(mouse_pos));
+        //     }
+        // });
+        if response.hovered() && response.ctx.input().pointer.has_pointer() {
+            egui::popup::show_tooltip_at_pointer(
+                &response.ctx,
+                response.id.with("tooltip"),
+                |ui| {
+                    if let Some(mouse_pos) = ui.input().pointer.tooltip_pos() {
+                        add_contents(ui, self.screen_to_user(mouse_pos));
+                    }
+                },
+            );
+        }
     }
 
     pub fn draw_line_segment(&self, start: Vec3, end: Vec3, stroke: Stroke, painter: &Painter) {
