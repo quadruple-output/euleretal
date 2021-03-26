@@ -59,6 +59,7 @@ impl epi::App for App {
             //Stroke::new(1., Rgba::from_rgb(1., 191. / 255., 0.)); // amber
             Stroke::new(1., Rgba::from_rgb(1., 126. / 255., 0.)); // SAE/ECE amber
         style.spacing.tooltip_width = 100.; // minimum distance of tooltip from right border (default:400)
+        style.interaction.show_tooltips_only_when_still = false;
         ctx.set_style(style);
     }
 
@@ -81,15 +82,8 @@ impl epi::App for App {
         });
 
         CentralPanel::default().show(ctx, |ui| {
-            canvas_grid::show(ui, &mut self.world);
+            canvas_grid::show(ui, &mut self.world, &self.control_state);
         });
-
-        ctx.request_repaint();
-
-        layers::acceleration_field::render(&mut self.world, &self.control_state);
-        layers::coordinates::render(&mut self.world, &self.control_state);
-        layers::integrations::render(&mut self.world, &self.control_state);
-        layers::inspector::render(&mut self.world, &self.control_state);
     }
 }
 

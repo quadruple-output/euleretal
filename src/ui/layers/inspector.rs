@@ -1,6 +1,11 @@
 use crate::prelude::*;
 
-pub fn render(world: &mut World, state: &ControlState) {
+pub fn render(
+    world: &World,
+    state: &ControlState,
+    response: &egui::Response,
+    painter: &egui::Painter,
+) {
     if !state.layerflags.inspector {
         return;
     }
@@ -9,7 +14,7 @@ pub fn render(world: &mut World, state: &ControlState) {
     {
         let canvas = world.get::<canvas::comp::State>(canvas_id.0).unwrap();
 
-        canvas.on_hover_ui(|ui, mouse_pos| {
+        canvas.on_hover_ui(response, |ui, mouse_pos| {
             if let Some((ref_sample, calc_sample)) =
                 integration.lock().unwrap().closest_sample(mouse_pos)
             {
@@ -20,12 +25,14 @@ pub fn render(world: &mut World, state: &ControlState) {
                     ref_sample.s,
                     ref_sample.v * ref_sample_dt,
                     state.strokes.focussed_velocity,
+                    painter,
                 );
                 // delta s by acceleration at sample point:
                 canvas.draw_vector(
                     ref_sample.s,
                     0.5 * ref_sample.a * ref_sample_dt * ref_sample_dt,
                     state.strokes.focussed_acceleration,
+                    painter,
                 );
                 // *** calculated sample:
                 let calc_sample_dt = calc_sample.dt.into_inner();
@@ -34,12 +41,14 @@ pub fn render(world: &mut World, state: &ControlState) {
                     calc_sample.s,
                     calc_sample.v * calc_sample_dt,
                     state.strokes.focussed_velocity,
+                    painter,
                 );
                 // delta s by acceleration at sample point:
                 canvas.draw_vector(
                     calc_sample.s,
                     0.5 * calc_sample.a * calc_sample_dt * calc_sample_dt,
                     state.strokes.focussed_acceleration,
+                    painter,
                 );
 
                 ui.label("Inspector");

@@ -176,10 +176,16 @@ impl<'a> Gathered<'a> {
             .for_each(|&sample| bbox.expand_to(sample.s));
     }
 
-    pub fn draw_on(&self, canvas: &mut canvas::State, sample_color: Color32, stroke: Stroke) {
+    pub fn draw_on(
+        &self,
+        canvas: &canvas::State,
+        sample_color: Color32,
+        stroke: Stroke,
+        painter: &egui::Painter,
+    ) {
         let state = self.state.lock().unwrap();
-        canvas.draw_sample_trajectory(&state.samples, stroke);
-        canvas.draw_sample_dots(&state.reference_samples, sample_color);
-        canvas.draw_sample_dots(&state.samples, sample_color);
+        canvas.draw_sample_trajectory(&state.samples, stroke, painter);
+        canvas.draw_sample_dots(&state.reference_samples, sample_color, painter);
+        canvas.draw_sample_dots(&state.samples, sample_color, painter);
     }
 }

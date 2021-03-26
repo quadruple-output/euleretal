@@ -43,6 +43,25 @@ impl Bundle {
     }
 }
 
+impl<'a> super::Gather<'a> for Entity {
+    type T = Gathered<'a>;
+
+    fn gather_from(&self, world: &'a World) -> Gathered<'a> {
+        // enforce type check for assignments:
+        let acceleration = world.get::<comp::Acceleration>(self.0).unwrap();
+        let start_position = world.get::<comp::StartPosition>(self.0).unwrap();
+        let start_velocity = world.get::<comp::StartVelocity>(self.0).unwrap();
+        let duration = world.get::<comp::Duration>(self.0).unwrap();
+        Gathered {
+            id: self.0,
+            acceleration: &**acceleration,
+            start_position: start_position.0.copy_read_only(),
+            start_velocity: start_velocity.0.copy_read_only(),
+            duration: duration.0.copy_read_only(),
+        }
+    }
+}
+
 impl<'a> super::Gather<'a> for Query<'a> {
     type T = Gathered<'a>;
 

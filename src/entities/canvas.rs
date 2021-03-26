@@ -21,7 +21,6 @@ impl Bundle {
 }
 
 pub struct State {
-    allocated_painter: Option<(Response, Painter)>,
     visible_units: f32,
     focus: Vec3,
     scale: Vec3,
@@ -34,7 +33,6 @@ pub struct State {
 impl State {
     pub fn new() -> Self {
         Self {
-            allocated_painter: None,
             visible_units: 1.,
             focus: Vec3::default(),
             trajectory: Vec::default(),
@@ -83,61 +81,55 @@ impl State {
         self.visible_units = bbox.diameter() * 1.2;
     }
 
-    pub fn draw_sample_trajectory(&self, samples: &[Sample], stroke: Stroke) {
-        self.draw_connected_samples(samples.iter().map(|sample| &sample.s), stroke)
+    pub fn draw_sample_trajectory(&self, samples: &[Sample], stroke: Stroke, painter: &Painter) {
+        self.draw_connected_samples(samples.iter().map(|sample| &sample.s), stroke, painter)
     }
 
-    pub fn draw_trajectory(&self, stroke: Stroke) {
-        self.draw_connected_samples(self.trajectory.iter(), stroke);
+    pub fn draw_trajectory(&self, stroke: Stroke, painter: &Painter) {
+        self.draw_connected_samples(self.trajectory.iter(), stroke, painter);
     }
 
-    fn draw_connected_samples<'a, Iter>(&self, samples: Iter, stroke: Stroke)
+    fn draw_connected_samples<'a, Iter>(&self, samples: Iter, stroke: Stroke, painter: &Painter)
     where
         Iter: Iterator<Item = &'a Vec3>,
     {
-        if let Some((_, ref painter)) = self.allocated_painter {
-            samples.map(|s| self.user_to_screen(*s)).reduce(|u0, u1| {
-                // avoid drawing extremely short line segments:
-                if (u0.x - u1.x).abs() > 2. || (u0.y - u1.y).abs() > 2. {
-                    painter.line_segment([u0, u1], stroke);
+        samples.map(|s| self.user_to_screen(*s)).reduce(|u0, u1| {
+            // avoid drawing extremely short line segments:
+            if (u0.x - u1.x).abs() > 2. || (u0.y - u1.y).abs() > 2. {
+                painter.line_segment([u0, u1], stroke);
+                u1
+            } else {
+                u0
+            }
+        });
+    }
+
+    pub fn draw_sample_dots(&self, samples: &[Sample], color: Color32, painter: &Painter) {
+        samples
+            .iter()
+            .map(|sample| self.user_to_screen(sample.s))
+            .fold(Pos2::new(f32::MAX, f32::MAX), |u0, u1| {
+                if (u0.x - u1.x).abs() > 1. || (u0.y - u1.y).abs() > 1. {
+                    painter.circle_filled(u1, 2.5, color);
                     u1
                 } else {
                     u0
                 }
             });
-        }
     }
 
-    pub fn draw_sample_dots(&self, samples: &[Sample], color: Color32) {
-        if let Some((_, ref painter)) = self.allocated_painter {
-            samples
-                .iter()
-                .map(|sample| self.user_to_screen(sample.s))
-                .fold(Pos2::new(f32::MAX, f32::MAX), |u0, u1| {
-                    if (u0.x - u1.x).abs() > 1. || (u0.y - u1.y).abs() > 1. {
-                        painter.circle_filled(u1, 2.5, color);
-                        u1
-                    } else {
-                        u0
-                    }
-                });
-        }
+    fn adjust_scale_and_center(&mut self, paint_area: &egui::Rect) {
+        let scale = f32::min(paint_area.width(), paint_area.height()) / self.visible_units;
+        self.scale = Vec3::new(scale, -scale, 1.);
+        self.area_center = paint_area.center();
     }
 
-    fn adjust_scale_and_center(&mut self) {
-        if let Some((ref response, _)) = self.allocated_painter {
-            let area = response.rect;
-            let scale = f32::min(area.width(), area.height()) / self.visible_units;
-            self.scale = Vec3::new(scale, -scale, 1.);
-            self.area_center = area.center();
-        }
-    }
-
-    pub fn allocate_painter(&mut self, ui: &mut Ui, size: Vec2) {
+    pub fn allocate_painter(&mut self, ui: &mut Ui, size: Vec2) -> (Response, Painter) {
         let (response, painter) = ui.allocate_painter(size, Sense::click_and_drag());
         self.interact(ui, &response);
-        self.allocated_painter = Some((response, painter));
-        self.adjust_scale_and_center();
+        self.adjust_scale_and_center(&response.rect);
+        let todo = "get rid of response (and maybe even painter)";
+        (response, painter)
     }
 
     fn interact(&mut self, ui: &Ui, response: &Response) {
@@ -154,90 +146,76 @@ impl State {
         }
     }
 
-    pub fn on_hover_ui(&self, add_contents: impl FnOnce(&mut Ui, Vec3)) {
-        if let Some((ref response, _)) = self.allocated_painter {
-            response.clone().on_hover_ui(|ui| {
-                if let Some(mouse_pos) = ui.input().pointer.tooltip_pos() {
-                    add_contents(ui, self.screen_to_user(mouse_pos));
-                }
-            });
-        }
+    pub fn on_hover_ui(&self, response: &Response, add_contents: impl FnOnce(&mut Ui, Vec3)) {
+        response.clone().on_hover_ui(|ui| {
+            if let Some(mouse_pos) = ui.input().pointer.tooltip_pos() {
+                add_contents(ui, self.screen_to_user(mouse_pos));
+            }
+        });
     }
 
-    pub fn draw_line_segment(&self, start: Vec3, end: Vec3, stroke: Stroke) {
-        if let Some((_, ref painter)) = self.allocated_painter {
-            painter.line_segment(
-                [self.user_to_screen(start), self.user_to_screen(end)],
-                stroke,
-            )
-        }
+    pub fn draw_line_segment(&self, start: Vec3, end: Vec3, stroke: Stroke, painter: &Painter) {
+        painter.line_segment(
+            [self.user_to_screen(start), self.user_to_screen(end)],
+            stroke,
+        )
     }
 
     #[allow(clippy::vec_init_then_push)]
-    pub fn draw_vector(&self, start: Vec3, vec: Vec3, stroke: Stroke) {
-        if let Some((_, ref painter)) = self.allocated_painter {
-            let end = self.user_to_screen(start + vec);
-            let start = self.user_to_screen(start);
-            painter.line_segment([start, end], stroke);
-            let direction = end - start;
-            let direction_normalized =
-                direction / (direction.x * direction.x + direction.y * direction.y).sqrt();
-            let mut tail = [Pos2::new(0., -2.), Pos2::new(0., 2.)];
-            // the vec![] macro does not work here...
-            let mut tip = Vec::with_capacity(3);
-            tip.push(Pos2::ZERO);
-            tip.push(Pos2::new(-6., -2.));
-            tip.push(Pos2::new(-6., 2.));
-            rotate(&mut tail, direction_normalized);
-            rotate(&mut tip, direction_normalized);
-            move_to(&mut tail, start);
-            move_to(&mut tip, end);
-            painter.add(Shape::polygon(tip, stroke.color, stroke));
-            painter.line_segment(tail, stroke)
-        }
+    pub fn draw_vector(&self, start: Vec3, vec: Vec3, stroke: Stroke, painter: &Painter) {
+        let end = self.user_to_screen(start + vec);
+        let start = self.user_to_screen(start);
+        painter.line_segment([start, end], stroke);
+        let direction = end - start;
+        let direction_normalized =
+            direction / (direction.x * direction.x + direction.y * direction.y).sqrt();
+        let mut tail = [Pos2::new(0., -2.), Pos2::new(0., 2.)];
+        // the vec![] macro does not work here...
+        let mut tip = Vec::with_capacity(3);
+        tip.push(Pos2::ZERO);
+        tip.push(Pos2::new(-6., -2.));
+        tip.push(Pos2::new(-6., 2.));
+        rotate(&mut tail, direction_normalized);
+        rotate(&mut tip, direction_normalized);
+        move_to(&mut tail, start);
+        move_to(&mut tip, end);
+        painter.add(Shape::polygon(tip, stroke.color, stroke));
+        painter.line_segment(tail, stroke)
     }
 
-    pub fn draw_hline(&self, y: f32, stroke: Stroke) {
-        if let Some((ref response, ref painter)) = self.allocated_painter {
-            let area = response.rect;
-            let transformed_y = self.user_to_screen(Vec3::new(0., y, 0.)).y;
-            painter.line_segment(
-                [
-                    Pos2::new(area.left(), transformed_y),
-                    Pos2::new(area.right(), transformed_y),
-                ],
-                stroke,
-            );
-        }
+    pub fn draw_hline(&self, y: f32, stroke: Stroke, paint_area: &egui::Rect, painter: &Painter) {
+        let transformed_y = self.user_to_screen(Vec3::new(0., y, 0.)).y;
+        painter.line_segment(
+            [
+                Pos2::new(paint_area.left(), transformed_y),
+                Pos2::new(paint_area.right(), transformed_y),
+            ],
+            stroke,
+        );
     }
 
-    pub fn draw_vline(&self, x: f32, stroke: Stroke) {
-        if let Some((ref response, ref painter)) = self.allocated_painter {
-            let area = response.rect;
-            let transformed_x = self.user_to_screen(Vec3::new(x, 0., 0.)).x;
-            painter.line_segment(
-                [
-                    Pos2::new(transformed_x, area.top()),
-                    Pos2::new(transformed_x, area.bottom()),
-                ],
-                stroke,
-            );
-        }
+    pub fn draw_vline(&self, x: f32, stroke: Stroke, paint_area: &egui::Rect, painter: &Painter) {
+        let transformed_x = self.user_to_screen(Vec3::new(x, 0., 0.)).x;
+        painter.line_segment(
+            [
+                Pos2::new(transformed_x, paint_area.top()),
+                Pos2::new(transformed_x, paint_area.bottom()),
+            ],
+            stroke,
+        );
     }
 
-    pub fn min(&self) -> Vec3 {
-        let (ref response, _) = self.allocated_painter.as_ref().unwrap();
+    pub fn min(&self, paint_area: &egui::Rect) -> Vec3 {
         self.screen_to_user(Pos2::new(
-            response.rect.min.x,
-            response.rect.max.y, // user coords go from bottom to top
+            paint_area.min.x,
+            paint_area.max.y, // user coords go from bottom to top
         ))
     }
 
-    pub fn max(&self) -> Vec3 {
-        let (ref response, _) = self.allocated_painter.as_ref().unwrap();
+    pub fn max(&self, paint_area: &egui::Rect) -> Vec3 {
         self.screen_to_user(Pos2::new(
-            response.rect.max.x,
-            response.rect.min.y, // user coords go from bottom to top
+            paint_area.max.x,
+            paint_area.min.y, // user coords go from bottom to top
         ))
     }
 

@@ -5,6 +5,7 @@
 #![allow(clippy::cast_precision_loss)]
 #![warn(clippy::cargo)]
 #![allow(clippy::multiple_crate_versions)]
+//#![deny(missing_docs)]
 
 mod components;
 mod core;
