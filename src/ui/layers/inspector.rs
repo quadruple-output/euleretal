@@ -7,9 +7,6 @@ pub fn render(
     response: &egui::Response,
     painter: &egui::Painter,
 ) {
-    if !state.layerflags.inspector {
-        return;
-    }
     let canvas = world.get::<canvas::comp::State>(canvas_id).unwrap();
     for (integration, _) in world
         .query::<(&integration::comp::State, &integration::comp::CanvasId)>()

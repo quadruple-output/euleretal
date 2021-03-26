@@ -5,7 +5,7 @@ use egui::Ui;
 
 pub fn show(ui: &mut Ui, world: &mut World, control_state: &ControlState) {
     let panel_size = ui.available_size_before_wrap_finite();
-    let canvas_count = world.query_mut::<&mut canvas::comp::State>().count();
+    let canvas_count = world.query::<&canvas::Kind>().count();
     let view_size = Vec2::new(panel_size.x, panel_size.y / canvas_count as f32);
     let canvas_ids = world
         .query::<(bevy_ecs::Entity, &canvas::Kind)>()

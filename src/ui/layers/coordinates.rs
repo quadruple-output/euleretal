@@ -7,9 +7,6 @@ pub fn render(
     paint_area: &egui::Rect,
     painter: &egui::Painter,
 ) {
-    if !state.layerflags.coordinates {
-        return;
-    }
     let canvas = world.get::<canvas::comp::State>(canvas_id).unwrap();
     canvas.draw_hline(0., state.strokes.coordinates, paint_area, painter);
     canvas.draw_vline(0., state.strokes.coordinates, paint_area, painter);
