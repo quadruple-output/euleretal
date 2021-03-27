@@ -13,6 +13,7 @@ pub fn show(
     ui.vertical(|ui| {
         let response = ui.horizontal(|ui| {
             show_scenario_selector(ui, canvas_id, world);
+            show_integration_selector(ui, canvas_id, world);
         });
 
         let inner_size = Vec2::new(size.x, size.y - response.response.rect.height());
@@ -72,4 +73,48 @@ fn show_scenario_selector(ui: &mut Ui, canvas_id: bevy_ecs::Entity, world: &mut 
         let mut canvas_state = world.get_mut::<canvas::comp::State>(canvas_id).unwrap();
         canvas_state.reset_scenario();
     }
+}
+
+fn show_integration_selector(ui: &mut Ui, canvas_id: bevy_ecs::Entity, world: &mut World) {
+    let button_response = ui.add(egui::Button::new("Integrations"));
+    let mut canvas_state = unsafe {
+        world
+            .get_mut_unchecked::<canvas::comp::State>(canvas_id)
+            .unwrap()
+    };
+    if button_response.clicked() {
+        canvas_state.ui_integrations_window_open = !canvas_state.ui_integrations_window_open;
+    };
+
+    egui::Window::new("Integrations")
+        .id(ui.make_persistent_id(format!("integrations_button_{:?}", canvas_id)))
+        .open(&mut canvas_state.ui_integrations_window_open)
+        .collapsible(false)
+        .default_pos(button_response.rect.min)
+        .show(ui.ctx(), |ui| {
+            let canvas_integrations: Vec<integration::Gathered> = world
+                .query::<integration::Query>()
+                .map(|integration| integration.gather_from(world))
+                .filter(|integration| integration.canvas_id == canvas_id)
+                .collect();
+            egui::Grid::new("integrator grid")
+                .striped(true)
+                .show(ui, |ui| {
+                    for integration in &canvas_integrations {
+                        ui.label(integration.integrator.label());
+                        ui.label(format!(
+                            "{} ({})",
+                            integration.step_label,
+                            integration.step_duration.get()
+                        ));
+                        if canvas_integrations.len() > 1 {
+                            ui.small_button("\u{2796}"); // \u{2796}='➖', \u{1fsd1} = '🗑'
+                        }
+                        ui.end_row();
+                    }
+                });
+            if ui.button("\u{271a}").clicked() { // ✚
+                 //world.spawn(integration::Bundle::from(()));
+            }
+        });
 }

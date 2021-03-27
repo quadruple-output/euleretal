@@ -38,6 +38,7 @@ pub struct Gathered<'a> {
     pub integrator: &'a dyn Integrator,
     pub stroke: &'a integrator::comp::Stroke,
     pub step_duration: ChangeTracker<R32, change_tracker::Read>,
+    pub step_label: &'a String,
     pub step_color: step_size::comp::Color,
     pub canvas_id: bevy_ecs::Entity,
 }
@@ -66,6 +67,9 @@ impl<'a> super::Gather<'a> for Query<'a> {
         let step_duration = world
             .get::<step_size::comp::Duration>(step_size_id.0)
             .unwrap();
+        let step_label = world
+            .get::<step_size::comp::UserLabel>(step_size_id.0)
+            .unwrap();
         let step_color = world.get::<step_size::comp::Color>(step_size_id.0).unwrap();
         Gathered {
             id,
@@ -73,6 +77,7 @@ impl<'a> super::Gather<'a> for Query<'a> {
             integrator: &**integrator,
             stroke,
             step_duration: step_duration.0.copy_read_only(),
+            step_label: &step_label.0,
             step_color: *step_color,
             canvas_id: canvas_id.0,
         }
