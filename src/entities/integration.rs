@@ -12,7 +12,7 @@ pub mod comp {
 }
 
 #[derive(Clone, Copy)]
-pub struct Entity(bevy_ecs::Entity);
+pub struct Entity(pub bevy_ecs::Entity);
 
 #[derive(bevy_ecs::Bundle)]
 pub struct Bundle(

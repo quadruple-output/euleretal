@@ -76,39 +76,97 @@ fn show_scenario_selector(ui: &mut Ui, canvas_id: bevy_ecs::Entity, world: &mut 
 }
 
 fn show_integration_selector(ui: &mut Ui, canvas_id: bevy_ecs::Entity, world: &mut World) {
-    let button_response = ui.add(egui::Button::new("Integrations"));
-    let mut canvas_state = unsafe {
-        world
-            .get_mut_unchecked::<canvas::comp::State>(canvas_id)
-            .unwrap()
-    };
-    if button_response.clicked() {
-        canvas_state.ui_integrations_window_open = !canvas_state.ui_integrations_window_open;
-    };
+    let modifications;
+    {
+        // block makes sure that unsafely acquired canvas_state is not used longer
+        // than expected
+        let button_response = ui.add(egui::Button::new("Integrations"));
+        let mut canvas_state = unsafe {
+            world
+                .get_mut_unchecked::<canvas::comp::State>(canvas_id)
+                .unwrap()
+        };
+        if button_response.clicked() {
+            canvas_state.ui_integrations_window_open = !canvas_state.ui_integrations_window_open;
+        };
+        modifications = show_integrations_pop_up(
+            ui,
+            ui.make_persistent_id(format!("integrations_button_{:?}", canvas_id)),
+            &mut canvas_state.ui_integrations_window_open,
+            button_response.rect.min,
+            canvas_id,
+            world,
+        );
+    }
+
+    let (create, delete, swap_integrator) = modifications;
+    if create {
+        let best_integration = world
+            .query::<integration::Query>()
+            .map(|integration| integration.gather_from(world))
+            .next()
+            .unwrap();
+        integration::Bundle(
+            integration::Kind,
+            integration::comp::State::new(integration::State::new()),
+            best_integration.integrator_id,
+            best_integration.step_size_id,
+            canvas::Entity(canvas_id),
+        )
+        .spawn(world);
+    }
+    if let Some(integration_id) = delete {
+        world.despawn(integration_id).unwrap();
+    }
+    if let Some((integration_id, integrator_id)) = swap_integrator {
+        let mut integration_integrator_id = world
+            .get_mut::<integration::comp::IntegratorId>(integration_id.0)
+            .unwrap();
+        *integration_integrator_id = integrator_id;
+    }
+}
+
+/// returns (`create`, `delete`, `swap_integrator`) where `create` indicates whether a
+/// new integration shall be created, and `delete` may contain the integration to
+/// be deleted.
+fn show_integrations_pop_up(
+    ui: &mut Ui,
+    id: egui::Id,
+    open: &mut bool,
+    default_pos: Pos2,
+    canvas_id: bevy_ecs::Entity,
+    world: &bevy_ecs::World,
+) -> (
+    bool,
+    Option<bevy_ecs::Entity>,
+    Option<(integration::Entity, integrator::Entity)>,
+) {
+    let mut create = false;
+    let mut delete: Option<bevy_ecs::Entity> = None;
+    let mut swap_integrator: Option<(integration::Entity, integrator::Entity)> = None;
 
     let canvas_integrations: Vec<integration::Gathered> = world
         .query::<integration::Query>()
         .map(|integration| integration.gather_from(world))
         .filter(|integration| integration.canvas_id == canvas_id)
         .collect();
-    let mut create_new = false;
-    let mut delete: Option<bevy_ecs::Entity> = None;
+
     egui::Window::new("Integrations")
-        .id(ui.make_persistent_id(format!("integrations_button_{:?}", canvas_id)))
-        .open(&mut canvas_state.ui_integrations_window_open)
+        .id(id)
+        .open(open)
         .collapsible(false)
-        .default_pos(button_response.rect.min)
+        .default_pos(default_pos)
         .show(ui.ctx(), |ui| {
             if ui.small_button("\u{271a}").clicked()
             // \u{271a} = '✚'
             {
-                create_new = true;
+                create = true;
             }
             egui::Grid::new("integrator grid")
-                .striped(true)
+                .striped(false)
                 .show(ui, |ui| {
                     for integration in &canvas_integrations {
-                        ui.label(integration.integrator.label());
+                        swap_integrator = show_integrator_selector(ui, integration, world);
                         ui.label(format!(
                             "{} ({})",
                             integration.step_label,
@@ -124,17 +182,36 @@ fn show_integration_selector(ui: &mut Ui, canvas_id: bevy_ecs::Entity, world: &m
                     }
                 });
         });
-    if create_new {
-        integration::Bundle(
-            integration::Kind,
-            integration::comp::State::new(integration::State::new()),
-            canvas_integrations.first().unwrap().integrator_id,
-            canvas_integrations.first().unwrap().step_size_id,
-            canvas::Entity(canvas_id),
-        )
-        .spawn(world);
-    }
-    if let Some(integration_id) = delete {
-        world.despawn(integration_id).unwrap();
+    (create, delete, swap_integrator)
+}
+
+fn show_integrator_selector(
+    ui: &mut Ui,
+    integration: &integration::Gathered,
+    world: &World,
+) -> Option<(integration::Entity, integrator::Entity)> {
+    let selectable_integrators = world.query::<(bevy_ecs::Entity, &integrator::comp::Integrator)>();
+    let mut selected_integrator = integration.integrator_id.0;
+    egui::combo_box(
+        ui,
+        ui.make_persistent_id(format!("integrator_selector_{:?}", integration.id)),
+        integration.integrator.label(),
+        |ui| {
+            for selectable_integrator in selectable_integrators {
+                ui.selectable_value(
+                    &mut selected_integrator,
+                    selectable_integrator.0,
+                    selectable_integrator.1.label(),
+                );
+            }
+        },
+    );
+    if selected_integrator == integration.integrator_id.0 {
+        None
+    } else {
+        Some((
+            integration::Entity(integration.id),
+            integrator::Entity(selected_integrator),
+        ))
     }
 }
