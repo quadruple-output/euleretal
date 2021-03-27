@@ -105,6 +105,10 @@ impl State {
         }
     }
 
+    pub fn reset(&mut self) {
+        *self = Self::new();
+    }
+
     /// returns (ReferenceSample,ComputedSample)
     pub fn closest_sample(&self, pos: Vec3) -> Option<(Sample, Sample)> {
         if self.reference_samples.is_empty() {
@@ -137,8 +141,7 @@ impl State {
 
 impl<'a> Gathered<'a> {
     pub fn reset(&self) {
-        let mut state = self.state.lock().unwrap();
-        *state = State::new();
+        self.state.lock().unwrap().reset();
     }
 
     pub fn update(
