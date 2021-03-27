@@ -15,8 +15,8 @@ pub struct Entity(pub bevy_ecs::Entity);
 pub struct Bundle(pub Kind, pub State, pub comp::ScenarioId);
 
 impl Bundle {
-    pub fn spawn(self, commands: &mut bevy_ecs::Commands) -> self::Entity {
-        Entity(commands.spawn(self).current_entity().unwrap())
+    pub fn spawn(self, world: &mut bevy_ecs::World) -> self::Entity {
+        Entity(world.spawn(self))
     }
 }
 

@@ -44,8 +44,8 @@ pub struct Gathered<'a> {
 }
 
 impl Bundle {
-    pub fn spawn(self, commands: &mut bevy_ecs::Commands) -> self::Entity {
-        Entity(commands.spawn(self).current_entity().unwrap())
+    pub fn spawn(self, world: &mut bevy_ecs::World) -> self::Entity {
+        Entity(world.spawn(self))
     }
 }
 

@@ -98,22 +98,20 @@ impl App {
     }
 
     fn initialize_scenario(&mut self) {
-        let mut commands = Commands::default();
-        commands.set_entity_reserver(self.world.get_entity_reserver());
         let step_size_id = step_size::Bundle(
             step_size::Kind,
             UserLabel("long".to_string()),
             Duration(ChangeTracker::with(R32::from(0.5))),
             Hsva::from(Color32::YELLOW),
         )
-        .spawn(&mut commands);
+        .spawn(&mut self.world);
 
         let integrator_id = integrator::Bundle(
             integrator::Kind,
             Box::new(integrators::euler::Implicit),
             Stroke::new(1., Hsva::from(Color32::RED)),
         )
-        .spawn(&mut commands);
+        .spawn(&mut self.world);
 
         let scenario_center_mass_id = scenario::Bundle(
             scenario::Kind,
@@ -122,7 +120,7 @@ impl App {
             StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
             Duration(ChangeTracker::with(std::f32::consts::TAU.into())),
         )
-        .spawn(&mut commands);
+        .spawn(&mut self.world);
 
         let scenario_constant_acceleration_id = scenario::Bundle(
             scenario::Kind,
@@ -131,18 +129,18 @@ impl App {
             StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
             Duration(ChangeTracker::with(2_f32.into())),
         )
-        .spawn(&mut commands);
+        .spawn(&mut self.world);
 
         let canvas_center_mass_id =
             canvas::Bundle(canvas::Kind, canvas::State::new(), scenario_center_mass_id)
-                .spawn(&mut commands);
+                .spawn(&mut self.world);
 
         let canvas_constant_acceleration_id = canvas::Bundle(
             canvas::Kind,
             canvas::comp::State::new(),
             scenario_constant_acceleration_id,
         )
-        .spawn(&mut commands);
+        .spawn(&mut self.world);
 
         integration::Bundle(
             integration::Kind,
@@ -151,7 +149,7 @@ impl App {
             step_size_id,
             canvas_center_mass_id,
         )
-        .spawn(&mut commands);
+        .spawn(&mut self.world);
 
         integration::Bundle(
             integration::Kind,
@@ -160,9 +158,7 @@ impl App {
             step_size_id,
             canvas_constant_acceleration_id,
         )
-        .spawn(&mut commands);
-
-        commands.apply(&mut self.world, &mut self.resources);
+        .spawn(&mut self.world);
     }
 }
 
