@@ -3,6 +3,13 @@ use std::marker::PhantomData;
 pub type ChangeCount = u32;
 
 pub trait TrackedChange {
+    /// Checks whether the given remembered change count is older than the
+    /// current change count. Sets the given change count to the current change
+    /// count, such that the method returns `true` only once when called
+    /// repeatedly
+    ///
+    /// Note that a given change count of `0` will never match the current change
+    /// count, such that `true` is returned in this case.
     fn has_changed(&self, remembered_change_count: &mut ChangeCount) -> bool {
         let current_change_count = self.change_count();
         let has_changed = self.change_count() != *remembered_change_count;
@@ -10,6 +17,7 @@ pub trait TrackedChange {
         has_changed
     }
 
+    /// Returns the current change count. Always > 0.
     fn change_count(&self) -> ChangeCount;
 }
 
@@ -56,7 +64,7 @@ where
     pub fn with(value: T) -> ChangeTracker<T, ReadWrite> {
         ChangeTracker::<T, ReadWrite> {
             value,
-            change_count: 1,
+            change_count: 1, // must be > 0, such that an initial value is always unequal
             dummy: PhantomData,
         }
     }

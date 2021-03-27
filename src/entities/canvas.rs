@@ -35,7 +35,7 @@ impl State {
         Self {
             visible_units: 1.,
             focus: Vec3::default(),
-            trajectory: Vec::default(),
+            trajectory: Vec::new(),
             scale: Vec3::default(),
             area_center: Pos2::default(),
             scenario_change_count: 0,
@@ -68,6 +68,11 @@ impl State {
 
     pub fn has_trajectory(&self) -> bool {
         !self.trajectory.is_empty()
+    }
+
+    pub fn reset_scenario(&mut self) {
+        self.trajectory = Vec::new();
+        self.scenario_change_count = 0;
     }
 
     pub fn bbox(&self) -> BoundingBox {

@@ -127,6 +127,11 @@ impl State {
 }
 
 impl<'a> Gathered<'a> {
+    pub fn reset(&self) {
+        let mut state = self.state.lock().unwrap();
+        *state = State::new();
+    }
+
     pub fn update(
         &self,
         acceleration: &dyn Acceleration,

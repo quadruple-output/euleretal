@@ -9,7 +9,7 @@ pub fn render(
     let scenario_id = world.get::<canvas::comp::ScenarioId>(canvas_id).unwrap();
     let scenario = scenario_id.gather_from(world);
 
-    let mut integrations = world
+    let mut integrations: Vec<integration::Gathered> = world
         .query::<integration::Query>()
         .map(|integration| integration.gather_from(world))
         .filter(|integration| integration.canvas_id == canvas_id)
@@ -39,6 +39,9 @@ pub fn render(
         min_dt,
     );
     for integration in &mut integrations {
+        if first_time {
+            integration.reset();
+        }
         integration.update(
             scenario.acceleration,
             &scenario.start_position,
