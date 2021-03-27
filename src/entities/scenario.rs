@@ -82,6 +82,12 @@ impl<'a> super::Gather<'a> for Query<'a> {
     }
 }
 
+impl<'a> Gathered<'a> {
+    pub fn label(&self) -> String {
+        self.acceleration.label()
+    }
+}
+
 const STEPS_PER_DT: usize = 40;
 
 pub fn calculate_trajectory(

@@ -39,26 +39,27 @@ pub fn show(
 }
 
 fn show_scenario_selector(ui: &mut Ui, canvas_id: bevy_ecs::Entity, world: &mut World) {
-    let scenarios: Vec<scenario::Gathered> = world // explicit typing helps rust-analyzer
+    let selectable_scenarios: Vec<scenario::Gathered> = world
         .query::<scenario::Query>()
         .map(|scenario| scenario.gather_from(world))
-        .collect::<Vec<_>>();
+        .collect();
     let canvas_scenario_id = world.get::<canvas::comp::ScenarioId>(canvas_id).unwrap().0;
-    let canvas_scenario = scenarios
+    let canvas_scenario = selectable_scenarios
         .iter()
         .find(|scenario| scenario.id == canvas_scenario_id)
         .unwrap();
+
     let mut selected_scenario_id = canvas_scenario.id;
     egui::combo_box(
         ui,
         ui.make_persistent_id(format!("scenario_selector_{:?}", canvas_id)),
-        canvas_scenario.acceleration.label(),
+        canvas_scenario.label(),
         |ui| {
-            for selectable_scenario in &scenarios {
+            for selectable_scenario in &selectable_scenarios {
                 ui.selectable_value(
                     &mut selected_scenario_id,
                     selectable_scenario.id,
-                    selectable_scenario.acceleration.label(),
+                    selectable_scenario.label(),
                 );
             }
         },
