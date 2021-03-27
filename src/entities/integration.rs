@@ -35,8 +35,10 @@ pub type Query<'a> = (
 pub struct Gathered<'a> {
     pub id: bevy_ecs::Entity,
     pub state: &'a comp::State,
+    pub integrator_id: comp::IntegratorId,
     pub integrator: &'a dyn Integrator,
     pub stroke: &'a integrator::comp::Stroke,
+    pub step_size_id: comp::StepSizeId,
     pub step_duration: ChangeTracker<R32, change_tracker::Read>,
     pub step_label: &'a String,
     pub step_color: step_size::comp::Color,
@@ -74,8 +76,10 @@ impl<'a> super::Gather<'a> for Query<'a> {
         Gathered {
             id,
             state,
+            integrator_id: *integrator_id,
             integrator: &**integrator,
             stroke,
+            step_size_id: *step_size_id,
             step_duration: step_duration.0.copy_read_only(),
             step_label: &step_label.0,
             step_color: *step_color,

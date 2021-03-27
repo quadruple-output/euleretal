@@ -86,17 +86,24 @@ fn show_integration_selector(ui: &mut Ui, canvas_id: bevy_ecs::Entity, world: &m
         canvas_state.ui_integrations_window_open = !canvas_state.ui_integrations_window_open;
     };
 
+    let canvas_integrations: Vec<integration::Gathered> = world
+        .query::<integration::Query>()
+        .map(|integration| integration.gather_from(world))
+        .filter(|integration| integration.canvas_id == canvas_id)
+        .collect();
+    let mut create_new = false;
+    let mut delete: Option<bevy_ecs::Entity> = None;
     egui::Window::new("Integrations")
         .id(ui.make_persistent_id(format!("integrations_button_{:?}", canvas_id)))
         .open(&mut canvas_state.ui_integrations_window_open)
         .collapsible(false)
         .default_pos(button_response.rect.min)
         .show(ui.ctx(), |ui| {
-            let canvas_integrations: Vec<integration::Gathered> = world
-                .query::<integration::Query>()
-                .map(|integration| integration.gather_from(world))
-                .filter(|integration| integration.canvas_id == canvas_id)
-                .collect();
+            if ui.small_button("\u{271a}").clicked()
+            // \u{271a} = '✚'
+            {
+                create_new = true;
+            }
             egui::Grid::new("integrator grid")
                 .striped(true)
                 .show(ui, |ui| {
@@ -108,13 +115,26 @@ fn show_integration_selector(ui: &mut Ui, canvas_id: bevy_ecs::Entity, world: &m
                             integration.step_duration.get()
                         ));
                         if canvas_integrations.len() > 1 {
-                            ui.small_button("\u{2796}"); // \u{2796}='➖', \u{1fsd1} = '🗑'
+                            let delete_button = ui.small_button("\u{2796}"); // \u{2796}='➖', \u{1fsd1} = '🗑'
+                            if delete_button.clicked() {
+                                delete = Some(integration.id);
+                            }
                         }
                         ui.end_row();
                     }
                 });
-            if ui.button("\u{271a}").clicked() { // ✚
-                 //world.spawn(integration::Bundle::from(()));
-            }
         });
+    if create_new {
+        integration::Bundle(
+            integration::Kind,
+            integration::comp::State::new(integration::State::new()),
+            canvas_integrations.first().unwrap().integrator_id,
+            canvas_integrations.first().unwrap().step_size_id,
+            canvas::Entity(canvas_id),
+        )
+        .spawn(world);
+    }
+    if let Some(integration_id) = delete {
+        world.despawn(integration_id).unwrap();
+    }
 }

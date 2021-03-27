@@ -10,15 +10,14 @@ mod step_size_controls;
 
 use crate::{integrators, prelude::*, scenarios};
 use ::core::fmt;
-use bevy_ecs::{Commands, Resources, World};
 use eframe::{egui, epi};
 use egui::{CentralPanel, Rgba, SidePanel};
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct App {
-    world: World,
-    resources: Resources,
+    world: bevy_ecs::World,
+    //resources: Resources,
     control_state: ControlState,
 }
 
@@ -92,7 +91,7 @@ impl App {
     pub fn new() -> Self {
         Self {
             world: World::default(),
-            resources: Resources::default(),
+            //resources: Resources::default(),
             control_state: ControlState::default(),
         }
     }
