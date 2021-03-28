@@ -2,7 +2,7 @@ use super::{BUTTON_GLYPH_ADD, BUTTON_GLYPH_DELETE};
 use crate::prelude::*;
 use egui::{
     color_picker::{color_edit_button_hsva, Alpha},
-    Slider,
+    Slider, TextEdit,
 };
 
 enum StepSizeOperation {
@@ -15,7 +15,15 @@ pub fn show(ui: &mut Ui, world: &mut World) {
     ui.heading("Step Sizes");
     let operation = show_step_size_table(ui, world);
     match operation {
-        StepSizeOperation::Create => {}
+        StepSizeOperation::Create => {
+            step_size::Bundle(
+                step_size::Kind,
+                UserLabel("<unnamed>".into()),
+                Duration(ChangeTracker::with(0.5.into())),
+                step_size::comp::Color::default(),
+            )
+            .spawn(world);
+        }
         StepSizeOperation::Delete(_) => {}
         StepSizeOperation::Noop => (),
     }
@@ -31,9 +39,9 @@ fn show_step_size_table(ui: &mut Ui, world: &mut World) -> StepSizeOperation {
             if ui.small_button(BUTTON_GLYPH_ADD).clicked() {
                 operation = StepSizeOperation::Create;
             }
-            ui.label("Label");
-            ui.label("Color");
             ui.label("Duration");
+            ui.label("Color");
+            ui.label("Label");
             ui.end_row();
 
             // table body:
@@ -52,19 +60,20 @@ fn show_step_size_table(ui: &mut Ui, world: &mut World) -> StepSizeOperation {
                 } else {
                     ui.label("");
                 }
-                // edit label:
-                ui.add(egui::TextEdit::singleline(&mut label.0).desired_width(0.));
-                if label.0.is_empty() {
-                    label.0 = "<unnamed>".to_string();
-                }
-                // edit color:
-                color_edit_button_hsva(&mut ui, &mut *color, Alpha::BlendOrAdditive);
                 // edit dt:
                 let mut dt = duration.0.get().into_inner();
                 ui.add(Slider::f32(&mut dt, 0.01..=2.).logarithmic(true));
                 duration.0.set(R32::from(dt).max(R32::from(0.01)));
+                // edit color:
+                color_edit_button_hsva(&mut ui, &mut *color, Alpha::BlendOrAdditive);
+                // edit label:
+                ui.add(TextEdit::singleline(&mut label.0).desired_width(0.));
+                if label.0.is_empty() {
+                    label.0 = "<unnamed>".to_string();
+                }
+
+                ui.end_row();
             }
-            ui.end_row();
         });
     operation
 }
