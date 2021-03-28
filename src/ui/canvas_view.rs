@@ -93,7 +93,7 @@ fn show_integration_selector(ui: &mut Ui, canvas_id: bevy_ecs::Entity, world: &m
             ui,
             ui.make_persistent_id(format!("integrations_button_{:?}", canvas_id)),
             &mut canvas_state.ui_integrations_window_open,
-            button_response.rect.min,
+            Pos2::new(button_response.rect.left(), button_response.rect.bottom()),
             canvas_id,
             world,
         );
