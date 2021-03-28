@@ -1,11 +1,28 @@
 use crate::prelude::*;
+use bevy_ecs::Entity;
 use egui::Ui;
 
 use super::{layers, BUTTON_GLYPH_ADD, BUTTON_GLYPH_DELETE};
 
+enum Operation {
+    Noop,
+    Create,
+    Delete {
+        integration_id: Entity,
+    },
+    SetIntegrator {
+        integration_id: Entity,
+        integrator_id: Entity,
+    },
+    SetStepSize {
+        integration_id: Entity,
+        step_size_id: Entity,
+    },
+}
+
 pub fn show(
     ui: &mut Ui,
-    canvas_id: bevy_ecs::Entity,
+    canvas_id: Entity,
     world: &mut World,
     size: Vec2,
     control_state: &ControlState,
@@ -39,7 +56,7 @@ pub fn show(
     });
 }
 
-fn show_scenario_selector(ui: &mut Ui, canvas_id: bevy_ecs::Entity, world: &mut World) {
+fn show_scenario_selector(ui: &mut Ui, canvas_id: Entity, world: &mut World) {
     let selectable_scenarios: Vec<scenario::Gathered> = world
         .query::<scenario::Query>()
         .map(|scenario| scenario.gather_from(world))
@@ -75,91 +92,79 @@ fn show_scenario_selector(ui: &mut Ui, canvas_id: bevy_ecs::Entity, world: &mut 
     }
 }
 
-fn show_integration_selector(ui: &mut Ui, canvas_id: bevy_ecs::Entity, world: &mut World) {
-    let operation;
-    {
-        // block makes sure that unsafely acquired canvas_state is not used longer
-        // than expected
-        let button_response = ui.add(egui::Button::new("Integrations"));
-        let mut canvas_state = unsafe {
+fn show_integration_selector(ui: &mut Ui, canvas_id: Entity, world: &mut World) {
+    let mut window_is_open = world
+        .get::<canvas::comp::State>(canvas_id)
+        .unwrap()
+        .ui_integrations_window_is_open;
+    let button_response = ui.add(egui::Button::new("Integrations"));
+    if button_response.clicked() {
+        window_is_open = !window_is_open;
+    };
+    let operation = show_integrations_pop_up(
+        ui,
+        ui.make_persistent_id(format!("integrations_button_{:?}", canvas_id)),
+        &mut window_is_open,
+        Pos2::new(button_response.rect.left(), button_response.rect.bottom()),
+        canvas_id,
+        world,
+    );
+    world
+        .get_mut::<canvas::comp::State>(canvas_id)
+        .unwrap()
+        .ui_integrations_window_is_open = window_is_open;
+
+    match operation {
+        Operation::Create => {
+            let existing_integration = world
+                .query::<integration::Query>()
+                .map(|integration| integration.gather_from(world))
+                .next()
+                .unwrap();
+            integration::Bundle(
+                integration::Kind,
+                integration::comp::State::new(integration::State::new()),
+                existing_integration.integrator_id,
+                existing_integration.step_size_id,
+                canvas::Entity(canvas_id),
+            )
+            .spawn(world);
+        }
+        Operation::Delete { integration_id } => {
+            world.despawn(integration_id).unwrap();
+        }
+        Operation::SetIntegrator {
+            integration_id,
+            integrator_id,
+        } => {
             world
-                .get_mut_unchecked::<canvas::comp::State>(canvas_id)
+                .get_mut::<integration::comp::IntegratorId>(integration_id)
                 .unwrap()
-        };
-        if button_response.clicked() {
-            canvas_state.ui_integrations_window_open = !canvas_state.ui_integrations_window_open;
-        };
-        operation = show_integrations_pop_up(
-            ui,
-            ui.make_persistent_id(format!("integrations_button_{:?}", canvas_id)),
-            &mut canvas_state.ui_integrations_window_open,
-            Pos2::new(button_response.rect.left(), button_response.rect.bottom()),
-            canvas_id,
-            world,
-        );
+                .0 = integrator_id;
+            world
+                .get::<integration::comp::State>(integration_id)
+                .unwrap()
+                .lock()
+                .unwrap()
+                .reset();
+        }
+        Operation::SetStepSize {
+            integration_id,
+            step_size_id,
+        } => {
+            world
+                .get_mut::<integration::comp::StepSizeId>(integration_id)
+                .unwrap()
+                .0 = step_size_id;
+            world
+                .get::<integration::comp::State>(integration_id)
+                .unwrap()
+                .lock()
+                .unwrap()
+                .reset();
+        }
+        Operation::Noop => (),
     }
-
-    #[allow(clippy::single_match, clippy::match_bool)]
-    {
-        match operation.create {
-            true => {
-                let best_integration = world
-                    .query::<integration::Query>()
-                    .map(|integration| integration.gather_from(world))
-                    .next()
-                    .unwrap();
-                integration::Bundle(
-                    integration::Kind,
-                    integration::comp::State::new(integration::State::new()),
-                    best_integration.integrator_id,
-                    best_integration.step_size_id,
-                    canvas::Entity(canvas_id),
-                )
-                .spawn(world);
-            }
-            false => (),
-        }
-        match operation.delete {
-            Some(integration_id) => {
-                world.despawn(integration_id).unwrap();
-            }
-            None => (),
-        }
-        match operation.swap_integrator {
-            Some((integration_id, integrator_id)) => {
-                let mut integration_integrator_id = world
-                    .get_mut::<integration::comp::IntegratorId>(integration_id.0)
-                    .unwrap();
-                *integration_integrator_id = integrator_id;
-                let integration_state = world
-                    .get::<integration::comp::State>(integration_id.0)
-                    .unwrap();
-                integration_state.lock().unwrap().reset();
-            }
-            None => (),
-        }
-        match operation.swap_step_size {
-            Some((integration_id, step_size_id)) => {
-                let mut integration_step_size_id = world
-                    .get_mut::<integration::comp::StepSizeId>(integration_id.0)
-                    .unwrap();
-                *integration_step_size_id = step_size_id;
-                let integration_state = world
-                    .get::<integration::comp::State>(integration_id.0)
-                    .unwrap();
-                integration_state.lock().unwrap().reset();
-            }
-            None => (),
-        }
-    }
-}
-
-#[derive(Default)]
-struct IntegrationsOperation {
-    create: bool,
-    delete: Option<bevy_ecs::Entity>,
-    swap_integrator: Option<(integration::Entity, integrator::Entity)>,
-    swap_step_size: Option<(integration::Entity, step_size::Entity)>,
 }
 
 fn show_integrations_pop_up(
@@ -167,10 +172,10 @@ fn show_integrations_pop_up(
     id: egui::Id,
     open: &mut bool,
     default_pos: Pos2,
-    canvas_id: bevy_ecs::Entity,
-    world: &bevy_ecs::World,
-) -> IntegrationsOperation {
-    let mut operation = IntegrationsOperation::default();
+    canvas_id: Entity,
+    world: &World,
+) -> Operation {
+    let mut operation = Operation::Noop;
 
     let canvas_integrations: Vec<integration::Gathered> = world
         .query::<integration::Query>()
@@ -189,7 +194,7 @@ fn show_integrations_pop_up(
                 .show(ui, |ui| {
                     // table header:
                     if ui.small_button(BUTTON_GLYPH_ADD).clicked() {
-                        operation.create = true;
+                        operation = Operation::Create;
                     }
                     ui.label("Integrator");
                     ui.label("Step Size");
@@ -197,16 +202,29 @@ fn show_integrations_pop_up(
 
                     // table body:
                     for integration in &canvas_integrations {
+                        let integration_id = integration.id;
                         if canvas_integrations.len() > 1 {
                             if ui.small_button(BUTTON_GLYPH_DELETE).clicked() {
-                                operation.delete = Some(integration.id);
+                                operation = Operation::Delete { integration_id };
                             }
                         } else {
                             ui.label("");
                         }
-                        operation.swap_integrator =
-                            show_integrator_selector(ui, integration, world);
-                        operation.swap_step_size = show_step_size_selector(ui, integration, world);
+                        if let Some(integrator_id) =
+                            show_integrator_selector(ui, integration, world)
+                        {
+                            operation = Operation::SetIntegrator {
+                                integration_id,
+                                integrator_id,
+                            };
+                        }
+                        if let Some(step_size_id) = show_step_size_selector(ui, integration, world)
+                        {
+                            operation = Operation::SetStepSize {
+                                integration_id,
+                                step_size_id,
+                            };
+                        }
                         ui.end_row();
                     }
                 });
@@ -218,12 +236,9 @@ fn show_integrator_selector(
     ui: &mut Ui,
     integration: &integration::Gathered,
     world: &World,
-) -> Option<(integration::Entity, integrator::Entity)> {
-    let selectable_integrators = world.query::<(
-        bevy_ecs::Entity,
-        &integrator::Kind,
-        &integrator::comp::Integrator,
-    )>();
+) -> Option<Entity> {
+    let selectable_integrators =
+        world.query::<(Entity, &integrator::Kind, &integrator::comp::Integrator)>();
     let mut selected_integrator = integration.integrator_id.0;
     egui::combo_box(
         ui,
@@ -242,10 +257,7 @@ fn show_integrator_selector(
     if selected_integrator == integration.integrator_id.0 {
         None
     } else {
-        Some((
-            integration::Entity(integration.id),
-            integrator::Entity(selected_integrator),
-        ))
+        Some(selected_integrator)
     }
 }
 
@@ -253,14 +265,8 @@ fn show_step_size_selector(
     ui: &mut Ui,
     integration: &integration::Gathered,
     world: &World,
-) -> Option<(integration::Entity, step_size::Entity)> {
-    let selectable_step_sizes = world.query::<(
-        bevy_ecs::Entity,
-        &step_size::Kind,
-        &step_size::comp::Duration,
-        &step_size::comp::UserLabel,
-    )>();
-    let mut selected_step_size = integration.step_size_id.0;
+) -> Option<Entity> {
+    let mut selected_step_size_id = integration.step_size_id.0;
     egui::combo_box(
         ui,
         ui.make_persistent_id(format!("step_size_selector_{:?}", integration.id)),
@@ -270,25 +276,25 @@ fn show_step_size_selector(
             integration.step_duration.get()
         ),
         |ui| {
-            for selectable_step_size in selectable_step_sizes {
+            for selectable_step_size in world
+                .query::<step_size::Query>()
+                .map(|step_size| step_size.gather_from(world))
+            {
                 ui.selectable_value(
-                    &mut selected_step_size,
-                    selectable_step_size.0,
+                    &mut selected_step_size_id,
+                    selectable_step_size.id,
                     format!(
                         "\"{}\" ({})",
-                        selectable_step_size.3 .0,
-                        selectable_step_size.2 .0.get()
+                        selectable_step_size.label,
+                        selectable_step_size.duration.get()
                     ),
                 );
             }
         },
     );
-    if selected_step_size == integration.step_size_id.0 {
+    if selected_step_size_id == integration.step_size_id.0 {
         None
     } else {
-        Some((
-            integration::Entity(integration.id),
-            step_size::Entity(selected_step_size),
-        ))
+        Some(selected_step_size_id)
     }
 }

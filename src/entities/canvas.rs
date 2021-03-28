@@ -28,7 +28,7 @@ pub struct State {
     trajectory: Vec<Vec3>,
     scenario_change_count: u32,
     trajectory_min_dt: R32,
-    pub ui_integrations_window_open: bool,
+    pub ui_integrations_window_is_open: bool,
 }
 
 impl State {
@@ -41,7 +41,7 @@ impl State {
             area_center: Pos2::default(),
             scenario_change_count: 0,
             trajectory_min_dt: R32::default(),
-            ui_integrations_window_open: false,
+            ui_integrations_window_is_open: false,
         }
     }
 
