@@ -51,9 +51,36 @@ impl<'a> Gather<'a> for Query<'a> {
     }
 }
 
+impl<'a> Gather<'a> for self::Entity {
+    type T = Gathered<'a>;
+
+    fn gather_from(&self, world: &'a World) -> Self::T {
+        Gathered {
+            id: self.0,
+            label: &world.get::<comp::UserLabel>(self.0).unwrap().0,
+            duration: world
+                .get::<comp::Duration>(self.0)
+                .unwrap()
+                .0
+                .copy_read_only(),
+            color: *world.get::<comp::Color>(self.0).unwrap(),
+        }
+    }
+}
+
 pub struct Gathered<'a> {
     pub id: bevy_ecs::Entity,
     pub label: &'a String,
     pub duration: ChangeTracker<R32, change_tracker::Read>,
     pub color: Hsva,
+}
+
+impl std::fmt::Display for Gathered<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.label.is_empty() {
+            write!(f, "{}", self.duration.get())
+        } else {
+            write!(f, "{} \"{}\"", self.duration.get(), self.label)
+        }
+    }
 }

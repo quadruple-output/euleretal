@@ -270,11 +270,7 @@ fn show_step_size_selector(
     egui::combo_box(
         ui,
         ui.make_persistent_id(format!("step_size_selector_{:?}", integration.id)),
-        format!(
-            "\"{}\" ({})",
-            integration.step_label,
-            integration.step_duration.get()
-        ),
+        format!("{}", integration.step_size_id.gather_from(world)),
         |ui| {
             for selectable_step_size in world
                 .query::<step_size::Query>()
@@ -283,11 +279,7 @@ fn show_step_size_selector(
                 ui.selectable_value(
                     &mut selected_step_size_id,
                     selectable_step_size.id,
-                    format!(
-                        "\"{}\" ({})",
-                        selectable_step_size.label,
-                        selectable_step_size.duration.get()
-                    ),
+                    format!("{}", selectable_step_size),
                 );
             }
         },

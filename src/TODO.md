@@ -1,0 +1,1 @@
+- implementations of gather_from should implement lazy world lookups

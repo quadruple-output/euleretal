@@ -21,7 +21,7 @@ pub fn show(ui: &mut Ui, world: &mut World) {
         Operation::Create => {
             step_size::Bundle(
                 step_size::Kind,
-                UserLabel("<unnamed>".into()),
+                UserLabel("".into()),
                 Duration(ChangeTracker::with(0.5.into())),
                 step_size::comp::Color::default(),
             )
