@@ -12,6 +12,10 @@ use crate::{integrators, prelude::*, scenarios};
 use ::core::fmt;
 use eframe::{egui, epi};
 use egui::{CentralPanel, Rgba, SidePanel};
+use std::str;
+
+const BUTTON_GLYPH_ADD: &str = "\u{271a}"; // \u{271a} = '✚'
+const BUTTON_GLYPH_DELETE: &str = "\u{2796}"; // \u{2796}='➖', \u{1fsd1} = '🗑'
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]

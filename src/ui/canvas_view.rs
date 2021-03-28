@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use egui::Ui;
 
-use super::layers;
+use super::{layers, BUTTON_GLYPH_ADD, BUTTON_GLYPH_DELETE};
 
 pub fn show(
     ui: &mut Ui,
@@ -188,9 +188,7 @@ fn show_integrations_pop_up(
                 .striped(false)
                 .show(ui, |ui| {
                     // table header:
-                    if ui.small_button("\u{271a}").clicked()
-                    // \u{271a} = '✚'
-                    {
+                    if ui.small_button(BUTTON_GLYPH_ADD).clicked() {
                         operation.create = true;
                     }
                     ui.label("Integrator");
@@ -200,8 +198,7 @@ fn show_integrations_pop_up(
                     // table body:
                     for integration in &canvas_integrations {
                         if canvas_integrations.len() > 1 {
-                            let delete_button = ui.small_button("\u{2796}"); // \u{2796}='➖', \u{1fsd1} = '🗑'
-                            if delete_button.clicked() {
+                            if ui.small_button(BUTTON_GLYPH_DELETE).clicked() {
                                 operation.delete = Some(integration.id);
                             }
                         } else {
