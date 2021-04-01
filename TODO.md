@@ -12,6 +12,7 @@
 - Button for auto-zoom
 - Dark and Light themes
 - sections in side panel should be collapsible
+- render Integrator formulas in browser (KaTeX or MathJax)
 
 ## Functional Features
 - list of colors which are used for new Step Sizes or Integrators
