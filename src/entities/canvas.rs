@@ -47,7 +47,7 @@ impl State {
 
     pub fn update_trajectory(
         &mut self,
-        acceleration: &dyn Acceleration,
+        acceleration: &dyn AccelerationField,
         start_position: &ChangeTracker<Vec3, impl change_tracker::TRead>,
         start_velocity: &ChangeTracker<Vec3, impl change_tracker::TRead>,
         duration: &ChangeTracker<R32, impl change_tracker::TRead>,

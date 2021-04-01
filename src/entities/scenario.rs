@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 pub struct Kind;
 pub mod comp {
-    pub type Acceleration = Box<dyn super::Acceleration>;
+    pub type Acceleration = Box<dyn super::AccelerationField>;
     pub type StartPosition = super::StartPosition;
     pub type StartVelocity = super::StartVelocity;
     pub type Duration = super::Duration;
@@ -31,7 +31,7 @@ pub type Query<'a> = (
 
 pub struct Gathered<'a> {
     pub id: bevy_ecs::Entity,
-    pub acceleration: &'a dyn Acceleration,
+    pub acceleration: &'a dyn AccelerationField,
     pub start_position: ChangeTracker<Vec3, change_tracker::Read>,
     pub start_velocity: ChangeTracker<Vec3, change_tracker::Read>,
     pub duration: ChangeTracker<R32, change_tracker::Read>,
@@ -91,7 +91,7 @@ impl<'a> Gathered<'a> {
 const STEPS_PER_DT: usize = 40;
 
 pub fn calculate_trajectory(
-    acceleration: &dyn Acceleration,
+    acceleration: &dyn AccelerationField,
     start_position: &ChangeTracker<Vec3, impl change_tracker::TRead>,
     start_velocity: &ChangeTracker<Vec3, impl change_tracker::TRead>,
     duration: &ChangeTracker<R32, impl change_tracker::TRead>,
@@ -113,7 +113,7 @@ pub fn calculate_trajectory(
 }
 
 pub fn calculate_reference_samples(
-    acceleration: &dyn Acceleration,
+    acceleration: &dyn AccelerationField,
     start_position: Vec3,
     start_velocity: Vec3,
     duration: R32,
@@ -138,7 +138,7 @@ pub fn calculate_reference_samples(
 
 /// returns (trajectory, samples)
 fn calculate_trajectory_and_samples(
-    acceleration: &dyn Acceleration,
+    acceleration: &dyn AccelerationField,
     start_position: Vec3,
     start_velocity: Vec3,
     iterations: usize,

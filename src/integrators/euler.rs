@@ -4,7 +4,7 @@ use crate::prelude::*;
 pub struct Implicit;
 
 impl Integrator for Implicit {
-    fn integrate_step(&self, a: &dyn Acceleration, sample: Sample, dt: R32) -> Sample {
+    fn integrate_step(&self, a: &dyn AccelerationField, sample: Sample, dt: R32) -> Sample {
         let s0 = sample.s;
         let v0 = sample.v;
         let a0 = sample.a;

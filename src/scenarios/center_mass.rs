@@ -3,7 +3,7 @@ use crate::prelude::*;
 #[derive(Clone, Copy)]
 pub struct CenterMass;
 
-impl Acceleration for CenterMass {
+impl AccelerationField for CenterMass {
     fn value_at(&self, pos: Vec3) -> Vec3 {
         let distance_squared = pos.length_squared();
         if distance_squared > f32::EPSILON {

@@ -3,11 +3,11 @@ use crate::prelude::*;
 pub trait Integrator: Send + Sync {
     fn label(&self) -> String;
 
-    fn integrate_step(&self, a: &dyn Acceleration, sample: Sample, dt: R32) -> Sample;
+    fn integrate_step(&self, a: &dyn AccelerationField, sample: Sample, dt: R32) -> Sample;
 
     fn integrate(
         &self,
-        acceleration: &dyn Acceleration,
+        acceleration: &dyn AccelerationField,
         start_position: Vec3,
         start_velocity: Vec3,
         duration: R32,

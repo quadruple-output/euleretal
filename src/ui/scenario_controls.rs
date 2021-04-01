@@ -5,7 +5,8 @@ use egui::{Slider, Ui};
 #[allow(clippy::borrowed_box)]
 pub fn show(ui: &mut Ui, world: &mut World) {
     ui.heading("Scenarios");
-    for (acceleration, mut duration) in world.query_mut::<(&Box<dyn Acceleration>, &mut Duration)>()
+    for (acceleration, mut duration) in
+        world.query_mut::<(&Box<dyn AccelerationField>, &mut Duration)>()
     {
         ui.horizontal(|ui| {
             ui.label(acceleration.label());
