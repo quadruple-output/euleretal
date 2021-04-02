@@ -1,4 +1,7 @@
-use crate::prelude::*;
+use crate::{
+    core::samples::{NewSample, WithoutCalibrationPoints},
+    prelude::*,
+};
 
 pub struct Kind;
 pub mod comp {
@@ -118,19 +121,20 @@ pub fn calculate_reference_samples(
     start_velocity: Vec3,
     duration: R32,
     dt: R32,
-) -> Vec<Sample> {
+) -> Samples {
     #[allow(clippy::cast_sign_loss)]
+    let num_iterations = (duration / dt).into_inner() as usize;
     let (trajectory, samples) = calculate_trajectory_and_samples(
         acceleration,
         start_position,
         start_velocity,
-        (duration / dt).into_inner() as usize,
+        num_iterations,
         dt,
         STEPS_PER_DT,
     );
     log::info!(
         "Calculated {} reference samples, using trajectory with {} segments",
-        samples.len(),
+        samples.step_points().len(),
         trajectory.len(),
     );
     samples
@@ -144,16 +148,22 @@ fn calculate_trajectory_and_samples(
     iterations: usize,
     dt: R32,
     steps_per_dt: usize,
-) -> (Vec<Vec3>, Vec<Sample>) {
+) -> (Vec<Vec3>, Samples) {
     let mut trajectory = Vec::with_capacity(iterations * steps_per_dt + 1);
-    let mut samples = Vec::with_capacity(iterations + 1);
+    let mut samples = Samples::<WithoutCalibrationPoints>::with_capacity(iterations);
 
     let mut t0 = R32::from(0.);
     let mut s0 = start_position;
     let mut v0 = start_velocity;
     let mut a0 = acceleration.value_at(s0);
     trajectory.push(s0);
-    samples.push((0, t0, dt, s0, v0, a0).into());
+    samples.push_sample(&NewSample {
+        time: t0,
+        dt,
+        position: s0,
+        velocity: v0,
+        acceleration: a0,
+    });
 
     for step in 1..=iterations {
         let t1 = R32::from(step as f32) * dt;
@@ -178,7 +188,13 @@ fn calculate_trajectory_and_samples(
             trajectory.push(s0);
         }
         t0 = t1;
-        samples.push((step, t0, dt, s0, v0, a0).into());
+        samples.push_sample(&NewSample {
+            time: t0,
+            dt,
+            position: s0,
+            velocity: v0,
+            acceleration: a0,
+        });
     }
-    (trajectory, samples)
+    (trajectory, samples.finalize())
 }

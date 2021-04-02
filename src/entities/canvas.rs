@@ -88,8 +88,8 @@ impl State {
         self.visible_units = bbox.diameter() * 1.2;
     }
 
-    pub fn draw_sample_trajectory(&self, samples: &[Sample], stroke: Stroke, painter: &Painter) {
-        self.draw_connected_samples(samples.iter().map(|sample| &sample.s), stroke, painter)
+    pub fn draw_sample_trajectory(&self, samples: &Samples, stroke: Stroke, painter: &Painter) {
+        self.draw_connected_samples(samples.step_points().iter(), stroke, painter)
     }
 
     pub fn draw_trajectory(&self, stroke: Stroke, painter: &Painter) {
@@ -111,10 +111,11 @@ impl State {
         });
     }
 
-    pub fn draw_sample_dots(&self, samples: &[Sample], color: Color32, painter: &Painter) {
+    pub fn draw_sample_dots(&self, samples: &Samples, color: Color32, painter: &Painter) {
         samples
+            .step_points()
             .iter()
-            .map(|sample| self.user_to_screen(sample.s))
+            .map(|position| self.user_to_screen(*position))
             .fold(Pos2::new(f32::MAX, f32::MAX), |u0, u1| {
                 if (u0.x - u1.x).abs() > 1. || (u0.y - u1.y).abs() > 1. {
                     painter.circle_filled(u1, 2.5, color);

@@ -89,18 +89,18 @@ impl<'a> super::Gather<'a> for Query<'a> {
 }
 
 pub struct State {
-    samples: Vec<Sample>,
+    samples: Option<Samples>,
     samples_change_count: ChangeCount,
-    reference_samples: Vec<Sample>,
+    reference_samples: Option<Samples>,
     ref_samples_change_count: ChangeCount,
 }
 
 impl State {
     pub fn new() -> Self {
         Self {
-            samples: Vec::new(),
+            samples: None,
             samples_change_count: ChangeCount::default(),
-            reference_samples: Vec::new(),
+            reference_samples: None,
             ref_samples_change_count: ChangeCount::default(),
         }
     }
@@ -110,32 +110,41 @@ impl State {
     }
 
     /// returns (ReferenceSample,ComputedSample)
-    pub fn closest_sample(&self, pos: Vec3) -> Option<(Sample, Sample)> {
-        if self.reference_samples.is_empty() {
-            None
-        } else {
-            let (closest_reference, dist_ref) = Self::find_closest(&self.reference_samples, pos);
-            let (closest_sample, dist_sample) = Self::find_closest(&self.samples, pos);
-            if dist_ref < dist_sample {
-                Some((closest_reference, self.samples[closest_reference.n]))
+    pub fn closest_sample(&self, pos: Vec3) -> Option<(CompleteSample, CompleteSample)> {
+        if let Some(references) = self.reference_samples {
+            if let Some(samples) = self.samples {
+                let (idx_reference, dist_reference) =
+                    Self::find_closest(&references.step_points(), pos);
+                let (idx_sample, dist_sample) = Self::find_closest(&samples.step_points(), pos);
+                if dist_reference < dist_sample {
+                    Some((references.at(idx_reference), samples.at(idx_reference)))
+                } else {
+                    Some((references.at(idx_sample), samples.at(idx_sample)))
+                }
             } else {
-                Some((self.reference_samples[closest_sample.n], closest_sample))
+                None
             }
+        } else {
+            None
         }
     }
 
-    fn find_closest(samples: &[Sample], pos: Vec3) -> (Sample, f32) {
-        assert!(!samples.is_empty());
-        samples
+    fn find_closest(points: &[Position], search_pos: Position) -> (usize, f32) {
+        assert!(points.len() > 0);
+        points
             .iter()
-            .map(|s| (s, (s.s - pos).length_squared()))
-            .fold((Sample::default(), f32::MAX), |(s0, d0), (&s1, d1)| {
-                if d0 < d1 {
-                    (s0, d0)
-                } else {
-                    (s1, d1)
-                }
-            })
+            .map(|pos| (*pos - search_pos).length_squared())
+            .enumerate()
+            .fold(
+                (0, f32::MAX),
+                |(idx0, d0), (idx1, d1)| {
+                    if d0 < d1 {
+                        (idx0, d0)
+                    } else {
+                        (idx1, d1)
+                    }
+                },
+            )
     }
 }
 
@@ -160,22 +169,23 @@ impl<'a> Gathered<'a> {
             + duration.change_count();
         let samples_change_count = ref_samples_change_count; // + integrator.change_count();
         if state.samples_change_count != samples_change_count {
-            state.samples = integrator.integrate(
+            state.samples = Some(crate::core::integrator::execute(
+                integrator,
                 acceleration,
                 start_position.get(),
                 start_velocity.get(),
                 duration.get(),
                 step_size.get(),
-            );
+            ));
             state.samples_change_count = samples_change_count;
             if state.ref_samples_change_count != ref_samples_change_count {
-                state.reference_samples = scenario::calculate_reference_samples(
+                state.reference_samples = Some(scenario::calculate_reference_samples(
                     acceleration,
                     start_position.get(),
                     start_velocity.get(),
                     duration.get(),
                     step_size.get(),
-                );
+                ));
                 state.ref_samples_change_count = ref_samples_change_count;
             }
         }
@@ -183,14 +193,12 @@ impl<'a> Gathered<'a> {
 
     pub fn stretch_bbox(&self, bbox: &mut BoundingBox) {
         let state = self.state.lock().unwrap();
-        state
-            .reference_samples
-            .iter()
-            .for_each(|&sample| bbox.expand_to(sample.s));
-        state
-            .samples
-            .iter()
-            .for_each(|&sample| bbox.expand_to(sample.s));
+        for samples in state.reference_samples.iter().chain(state.samples.iter()) {
+            samples
+                .step_points()
+                .iter()
+                .for_each(|&point| bbox.expand_to(point));
+        }
     }
 
     pub fn draw_on(
@@ -201,8 +209,11 @@ impl<'a> Gathered<'a> {
         painter: &egui::Painter,
     ) {
         let state = self.state.lock().unwrap();
-        canvas.draw_sample_trajectory(&state.samples, stroke, painter);
-        canvas.draw_sample_dots(&state.reference_samples, sample_color, painter);
-        canvas.draw_sample_dots(&state.samples, sample_color, painter);
+        if let Some(samples) = state.samples {
+            canvas.draw_sample_trajectory(&samples, stroke, painter);
+        }
+        for samples in state.reference_samples.iter().chain(state.samples.iter()) {
+            canvas.draw_sample_dots(samples, sample_color, painter);
+        }
     }
 }

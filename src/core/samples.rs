@@ -1,14 +1,9 @@
-use std::{marker::PhantomData, ops::Index};
-
 use crate::prelude::*;
+use std::marker::PhantomData;
 
-pub type Point = Vec3;
-pub type Acceleration = Vec3;
-pub type Velocity = Vec3;
-
-pub struct Samples<C: CalibrationPointConstraint> {
+pub struct Samples<C: CalibrationPointConstraint = FinalizedCalibrationPoints> {
     steps: Vec<StepContext>,
-    step_points: Vec<Point>,
+    step_points: Vec<Position>,
     calibration_points_per_step: usize,
     calibration_points: Vec<CalibrationPoint>,
     point_dependencies: Vec<PointDependency>,
@@ -16,9 +11,18 @@ pub struct Samples<C: CalibrationPointConstraint> {
 }
 
 pub trait CalibrationPointConstraint {}
+pub trait ConcreteCalibrationPointConstraint: CalibrationPointConstraint {}
+
+pub enum FinalizedCalibrationPoints {}
 pub enum WithoutCalibrationPoints {}
 pub enum WithCalibrationPoints<const N: usize> {}
+
+impl CalibrationPointConstraint for FinalizedCalibrationPoints {}
+
+impl ConcreteCalibrationPointConstraint for WithoutCalibrationPoints {}
 impl CalibrationPointConstraint for WithoutCalibrationPoints {}
+
+impl<const N: usize> ConcreteCalibrationPointConstraint for WithCalibrationPoints<N> {}
 impl<const N: usize> CalibrationPointConstraint for WithCalibrationPoints<N> {}
 
 struct StepContext {
@@ -30,7 +34,7 @@ struct StepContext {
 
 #[derive(Clone)]
 pub struct CalibrationPoint {
-    pub position: Point,
+    pub position: Position,
     pub dt: Fraction,
     pub acceleration: Acceleration,
     // todo: do we need a Velocity here?
@@ -71,7 +75,13 @@ impl Samples<WithoutCalibrationPoints> {
     }
 
     pub fn push_sample(&mut self, sample: &NewSample) {
-        todo!()
+        self.step_points.push(sample.position);
+        self.steps.push(StepContext {
+            time: sample.time,
+            dt: sample.dt,
+            velocity: sample.velocity,
+            acceleration: sample.acceleration,
+        });
     }
 }
 
@@ -106,8 +116,8 @@ impl<const N: usize> Samples<WithCalibrationPoints<N>> {
     }
 }
 
-impl<C: CalibrationPointConstraint> Samples<C> {
-    pub fn step_points(&self) -> &Vec<Point> {
+impl Samples<FinalizedCalibrationPoints> {
+    pub fn step_points(&self) -> &Vec<Position> {
         &self.step_points
     }
 
@@ -131,10 +141,30 @@ impl<C: CalibrationPointConstraint> Samples<C> {
     }
 }
 
+impl<C: ConcreteCalibrationPointConstraint> Samples<C> {
+    pub fn finalize(self, sample: NewSample) -> Samples<FinalizedCalibrationPoints> {
+        self.step_points.push(sample.position);
+        self.steps.push(StepContext {
+            time: sample.time,
+            dt: sample.dt,
+            velocity: sample.velocity,
+            acceleration: sample.acceleration,
+        });
+        Samples {
+            steps: self.steps,
+            step_points: self.step_points,
+            calibration_points_per_step: self.calibration_points_per_step,
+            calibration_points: self.calibration_points,
+            point_dependencies: self.point_dependencies,
+            calibration_point_constraint: PhantomData::<FinalizedCalibrationPoints>,
+        }
+    }
+}
+
 pub struct NewSample {
     pub time: R32,
     pub dt: R32,
-    pub position: Point,
+    pub position: Position,
     pub velocity: Velocity,
     pub acceleration: Acceleration,
 }
@@ -142,7 +172,7 @@ pub struct NewSample {
 pub struct NewSampleWithPoints<const N: usize> {
     pub time: R32,
     pub dt: R32,
-    pub position: Point,
+    pub position: Position,
     pub velocity: Velocity,
     pub acceleration: Acceleration,
     pub calibration_points: [CalibrationPoint; N],
@@ -162,33 +192,4 @@ pub struct CompleteSample<'a> {
     /// Position
     pub s: Vec3,
     pub calibration_points: Vec<&'a CalibrationPoint>,
-}
-
-#[derive(Clone, Copy, Debug, Default)]
-pub struct Sample {
-    /// Step Number
-    pub n: usize,
-    /// Time
-    pub t: R32,
-    /// delta t:
-    pub dt: R32,
-    /// Position
-    pub s: Vec3,
-    /// Velocity
-    pub v: Vec3,
-    /// Acceleration
-    pub a: Vec3,
-}
-
-impl From<(usize, R32, R32, Vec3, Vec3, Vec3)> for Sample {
-    fn from(tuple: (usize, R32, R32, Vec3, Vec3, Vec3)) -> Self {
-        Self {
-            n: tuple.0,
-            t: tuple.1,
-            dt: tuple.2,
-            s: tuple.3,
-            v: tuple.4,
-            a: tuple.5,
-        }
-    }
 }
