@@ -109,7 +109,21 @@ impl App {
         )
         .spawn(&mut self.world);
 
-        let integrator_id = integrator::Bundle(
+        let _exact_for_const_id = integrator::Bundle(
+            integrator::Kind,
+            Box::new(integrators::exact_for_const::ExactForConst::new()),
+            Stroke::new(1., Hsva::from(Color32::BLUE)),
+        )
+        .spawn(&mut self.world);
+
+        let _explicit_euler_id = integrator::Bundle(
+            integrator::Kind,
+            Box::new(integrators::euler::Explicit::new()),
+            Stroke::new(1., Hsva::from(Color32::BLUE)),
+        )
+        .spawn(&mut self.world);
+
+        let implicit_euler_id = integrator::Bundle(
             integrator::Kind,
             Box::new(integrators::euler::Implicit::new()),
             Stroke::new(1., Hsva::from(Color32::RED)),
@@ -148,7 +162,7 @@ impl App {
         integration::Bundle(
             integration::Kind,
             integration::comp::State::new(integration::State::new()),
-            integrator_id,
+            implicit_euler_id,
             step_size_id,
             canvas_center_mass_id,
         )
@@ -157,7 +171,7 @@ impl App {
         integration::Bundle(
             integration::Kind,
             integration::comp::State::new(integration::State::new()), // TODO: make this more elegant
-            integrator_id,
+            implicit_euler_id,
             step_size_id,
             canvas_constant_acceleration_id,
         )
