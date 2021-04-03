@@ -126,21 +126,18 @@ impl State {
     }
 
     fn find_closest(points: &[Position], search_pos: Position) -> (usize, f32) {
-        assert!(!points.is_empty());
         points
             .iter()
             .map(|pos| (*pos - search_pos).length_squared())
             .enumerate()
-            .fold(
-                (0, f32::MAX),
-                |(idx0, d0), (idx1, d1)| {
-                    if d0 < d1 {
-                        (idx0, d0)
-                    } else {
-                        (idx1, d1)
-                    }
-                },
-            )
+            .reduce(|closest_so_far, current| {
+                if closest_so_far.1 <= current.1 {
+                    closest_so_far
+                } else {
+                    current
+                }
+            })
+            .unwrap()
     }
 }
 

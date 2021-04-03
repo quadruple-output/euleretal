@@ -103,7 +103,7 @@ impl Samples<FinalizedCalibrationPoints> {
 
     pub fn at(&self, idx: usize) -> CompleteSample {
         let step = &self.steps[idx];
-        let result = CompleteSample {
+        CompleteSample {
             n: idx,
             t: step.time,
             dt: step.dt,
@@ -116,8 +116,7 @@ impl Samples<FinalizedCalibrationPoints> {
                 .skip(self.calibration_points_per_step * idx)
                 .take(self.calibration_points_per_step)
                 .collect(),
-        };
-        result
+        }
     }
 }
 
