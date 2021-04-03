@@ -1,4 +1,4 @@
-use crate::{core::integrator::StartCondition, prelude::*};
+use crate::{core::samples::StartCondition, prelude::*};
 
 pub struct Kind;
 
@@ -165,17 +165,23 @@ impl<'a> Gathered<'a> {
             + duration.change_count();
         let samples_change_count = ref_samples_change_count; // + integrator.change_count();
         if state.samples_change_count != samples_change_count {
-            state.samples = Some(integrator.execute(
+            #[allow(clippy::cast_sign_loss)]
+            let num_steps = (duration.get() / step_size.get()).into_inner() as usize;
+
+            state.samples = Some(integrator.integrate(
                 acceleration,
                 &StartCondition {
-                    s: start_position.get(),
-                    v: start_velocity.get(),
-                    a: acceleration.value_at(start_position.get()),
+                    position: start_position.get(),
+                    velocity: start_velocity.get(),
+                    acceleration: acceleration.value_at(start_position.get()),
                 },
-                duration.get(),
+                num_steps,
                 step_size.get(),
             ));
             state.samples_change_count = samples_change_count;
+            let num_samples = state.samples.as_ref().unwrap().step_points().len();
+            assert!(num_samples == num_steps + 1);
+
             if state.ref_samples_change_count != ref_samples_change_count {
                 state.reference_samples = Some(scenario::calculate_reference_samples(
                     acceleration,
@@ -185,6 +191,13 @@ impl<'a> Gathered<'a> {
                     step_size.get(),
                 ));
                 state.ref_samples_change_count = ref_samples_change_count;
+                let num_refs = state
+                    .reference_samples
+                    .as_ref()
+                    .unwrap()
+                    .step_points()
+                    .len();
+                assert!(num_refs == num_samples);
             }
         }
     }

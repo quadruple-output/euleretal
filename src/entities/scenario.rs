@@ -1,8 +1,5 @@
 use crate::{
-    core::{
-        integrator::StartCondition,
-        samples::{NewSample, WithoutCalibrationPoints},
-    },
+    core::samples::{NewSample, StartCondition, WithoutCalibrationPoints},
     prelude::*,
 };
 
@@ -161,9 +158,9 @@ fn calculate_trajectory_and_samples(
     trajectory.push(s0);
     let mut samples = Samples::<WithoutCalibrationPoints>::new(
         &StartCondition {
-            s: s0,
-            v: v0,
-            a: a0,
+            position: s0,
+            velocity: v0,
+            acceleration: a0,
         },
         iterations,
     );

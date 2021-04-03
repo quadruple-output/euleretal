@@ -1,8 +1,6 @@
 use crate::prelude::*;
 use std::marker::PhantomData;
 
-use super::integrator::StartCondition;
-
 pub struct Samples<C: CalibrationPointConstraint = FinalizedCalibrationPoints> {
     steps: Vec<StepContext>,
     step_points: Vec<Position>,
@@ -124,6 +122,26 @@ impl Samples<FinalizedCalibrationPoints> {
 }
 
 impl<C: ConcreteCalibrationPointConstraint> Samples<C> {
+    pub fn current(&self) -> StartCondition {
+        let current_step = self.steps.last().unwrap();
+        StartCondition {
+            position: *self.step_points.last().unwrap(),
+            velocity: current_step.velocity,
+            acceleration: current_step.acceleration,
+        }
+    }
+
+    pub fn finalized(self) -> Samples<FinalizedCalibrationPoints> {
+        Samples {
+            steps: self.steps,
+            step_points: self.step_points,
+            calibration_points_per_step: self.calibration_points_per_step,
+            calibration_points: self.calibration_points,
+            point_dependencies: self.point_dependencies,
+            calibration_point_constraint: PhantomData::<FinalizedCalibrationPoints>,
+        }
+    }
+
     fn with_capacity<const N: usize>(capa_samples: usize) -> Self {
         Self {
             steps: Vec::with_capacity(capa_samples + 1), // +1 for the Endpoint
@@ -137,12 +155,12 @@ impl<C: ConcreteCalibrationPointConstraint> Samples<C> {
     }
 
     fn initialize(mut self, start_condition: &StartCondition) -> Self {
-        self.step_points.push(start_condition.s);
+        self.step_points.push(start_condition.position);
         self.steps.push(StepContext {
             time: 0.0.into(), // start time is always zero
             dt: 0.0.into(),   // initial sample has no delta
-            velocity: start_condition.v,
-            acceleration: start_condition.a,
+            velocity: start_condition.velocity,
+            acceleration: start_condition.acceleration,
         });
         self
     }
@@ -157,17 +175,13 @@ impl<C: ConcreteCalibrationPointConstraint> Samples<C> {
             acceleration: sample.acceleration,
         });
     }
+}
 
-    pub fn finalized(self) -> Samples<FinalizedCalibrationPoints> {
-        Samples {
-            steps: self.steps,
-            step_points: self.step_points,
-            calibration_points_per_step: self.calibration_points_per_step,
-            calibration_points: self.calibration_points,
-            point_dependencies: self.point_dependencies,
-            calibration_point_constraint: PhantomData::<FinalizedCalibrationPoints>,
-        }
-    }
+#[derive(Clone)]
+pub struct StartCondition {
+    pub position: Position,
+    pub velocity: Velocity,
+    pub acceleration: Acceleration,
 }
 
 pub struct NewSample {
@@ -192,11 +206,22 @@ pub struct CompleteSample<'a> {
     pub t: R32,
     /// delta t:
     pub dt: R32,
+    /// Position
+    pub s: Position,
     /// Velocity
     pub v: Velocity,
     /// Acceleration
     pub a: Acceleration,
-    /// Position
-    pub s: Position,
     pub calibration_points: Vec<&'a CalibrationPoint>,
+}
+
+impl Default for NewSample {
+    fn default() -> Self {
+        NewSample {
+            dt: R32::default(),
+            position: Position::default(),
+            velocity: Velocity::default(),
+            acceleration: Acceleration::default(),
+        }
+    }
 }

@@ -1,45 +1,45 @@
-use super::samples;
+use super::samples::{self, NewSample, StartCondition, WithoutCalibrationPoints};
 use crate::prelude::*;
-
-#[derive(Clone)]
-pub struct StartCondition {
-    pub s: Position,
-    pub v: Velocity,
-    pub a: Acceleration,
-}
 
 pub trait Integrator: Send + Sync {
     fn label(&self) -> String;
 
-    fn stepper(&self, start_condition: &StartCondition, num_steps: usize) -> Box<dyn Stepper>;
-
-    fn execute(
+    fn integrate(
         &self,
         acceleration_field: &dyn AccelerationField,
         start_condition: &StartCondition,
-        duration: R32,
+        num_steps: usize,
         dt: R32,
-    ) -> Samples<samples::FinalizedCalibrationPoints> {
-        #[allow(clippy::cast_sign_loss)]
-        let num_steps = (duration / dt).into_inner() as usize;
-        let mut stepper = self.stepper(start_condition, num_steps);
-        let mut start_condition = (*start_condition).clone();
-        for _ in 1..=num_steps {
-            start_condition = stepper.integrate_step(acceleration_field, &start_condition, dt);
-        }
-        let samples = stepper.samples();
-        assert!(samples.step_points().len() == num_steps + 1);
-        samples
-    }
+    ) -> Samples<samples::FinalizedCalibrationPoints>;
 }
 
-pub trait Stepper {
-    fn integrate_step(
-        &mut self,
+pub trait ZeroKnowledge {
+    fn integrate(
         acceleration_field: &dyn AccelerationField,
-        start: &StartCondition,
+        start_condition: &StartCondition,
+        num_steps: usize,
         dt: R32,
-    ) -> StartCondition;
+    ) -> Samples<samples::FinalizedCalibrationPoints> {
+        let mut samples = Samples::<WithoutCalibrationPoints>::new(start_condition, num_steps);
+        for _ in 0..num_steps {
+            let current = samples.current();
+            let mut next = NewSample {
+                dt,
+                ..NewSample::default()
+            };
 
-    fn samples(&mut self) -> Samples<samples::FinalizedCalibrationPoints>;
+            Self::integrate_step(&current, &mut next, dt.into(), acceleration_field);
+
+            next.acceleration = acceleration_field.value_at(next.position);
+            samples.push_sample(&next);
+        }
+        samples.finalized()
+    }
+
+    fn integrate_step(
+        current: &StartCondition,
+        next: &mut NewSample,
+        dt: f32,
+        acceleration_field: &dyn AccelerationField,
+    );
 }
