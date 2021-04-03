@@ -6,6 +6,7 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::multiple_crate_versions)]
 //#![deny(missing_docs)]
+#![feature(box_syntax)]
 
 mod components;
 mod core;

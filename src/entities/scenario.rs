@@ -1,5 +1,8 @@
 use crate::{
-    core::samples::{NewSample, WithoutCalibrationPoints},
+    core::{
+        integrator::StartCondition,
+        samples::{NewSample, WithoutCalibrationPoints},
+    },
     prelude::*,
 };
 
@@ -149,21 +152,21 @@ fn calculate_trajectory_and_samples(
     dt: R32,
     steps_per_dt: usize,
 ) -> (Vec<Vec3>, Samples) {
-    let mut trajectory = Vec::with_capacity(iterations * steps_per_dt + 1);
-    let mut samples = Samples::<WithoutCalibrationPoints>::with_capacity(iterations);
-
     let mut t0 = R32::from(0.);
     let mut s0 = start_position;
     let mut v0 = start_velocity;
     let mut a0 = acceleration.value_at(s0);
+
+    let mut trajectory = Vec::with_capacity(iterations * steps_per_dt + 1);
     trajectory.push(s0);
-    samples.push_sample(&NewSample {
-        time: t0,
-        dt,
-        position: s0,
-        velocity: v0,
-        acceleration: a0,
-    });
+    let mut samples = Samples::<WithoutCalibrationPoints>::new(
+        &StartCondition {
+            s: s0,
+            v: v0,
+            a: a0,
+        },
+        iterations,
+    );
 
     for step in 1..=iterations {
         let t1 = R32::from(step as f32) * dt;
@@ -189,12 +192,12 @@ fn calculate_trajectory_and_samples(
         }
         t0 = t1;
         samples.push_sample(&NewSample {
-            time: t0,
             dt,
             position: s0,
             velocity: v0,
             acceleration: a0,
         });
     }
-    (trajectory, samples.finalize())
+
+    (trajectory, samples.finalized())
 }

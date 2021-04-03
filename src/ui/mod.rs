@@ -111,7 +111,7 @@ impl App {
 
         let integrator_id = integrator::Bundle(
             integrator::Kind,
-            Box::new(integrators::euler::Implicit),
+            Box::new(integrators::euler::Implicit::new()),
             Stroke::new(1., Hsva::from(Color32::RED)),
         )
         .spawn(&mut self.world);

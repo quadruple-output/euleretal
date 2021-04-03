@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::{core::integrator::StartCondition, prelude::*};
 
 pub struct Kind;
 
@@ -111,26 +111,22 @@ impl State {
 
     /// returns (ReferenceSample,ComputedSample)
     pub fn closest_sample(&self, pos: Vec3) -> Option<(CompleteSample, CompleteSample)> {
-        if let Some(references) = self.reference_samples {
-            if let Some(samples) = self.samples {
+        self.reference_samples.as_ref().and_then(|references| {
+            self.samples.as_ref().map(|samples| {
                 let (idx_reference, dist_reference) =
                     Self::find_closest(&references.step_points(), pos);
                 let (idx_sample, dist_sample) = Self::find_closest(&samples.step_points(), pos);
                 if dist_reference < dist_sample {
-                    Some((references.at(idx_reference), samples.at(idx_reference)))
+                    (references.at(idx_reference), samples.at(idx_reference))
                 } else {
-                    Some((references.at(idx_sample), samples.at(idx_sample)))
+                    (references.at(idx_sample), samples.at(idx_sample))
                 }
-            } else {
-                None
-            }
-        } else {
-            None
-        }
+            })
+        })
     }
 
     fn find_closest(points: &[Position], search_pos: Position) -> (usize, f32) {
-        assert!(points.len() > 0);
+        assert!(!points.is_empty());
         points
             .iter()
             .map(|pos| (*pos - search_pos).length_squared())
@@ -169,11 +165,13 @@ impl<'a> Gathered<'a> {
             + duration.change_count();
         let samples_change_count = ref_samples_change_count; // + integrator.change_count();
         if state.samples_change_count != samples_change_count {
-            state.samples = Some(crate::core::integrator::execute(
-                integrator,
+            state.samples = Some(integrator.execute(
                 acceleration,
-                start_position.get(),
-                start_velocity.get(),
+                &StartCondition {
+                    s: start_position.get(),
+                    v: start_velocity.get(),
+                    a: acceleration.value_at(start_position.get()),
+                },
                 duration.get(),
                 step_size.get(),
             ));
@@ -209,7 +207,7 @@ impl<'a> Gathered<'a> {
         painter: &egui::Painter,
     ) {
         let state = self.state.lock().unwrap();
-        if let Some(samples) = state.samples {
+        if let Some(ref samples) = state.samples {
             canvas.draw_sample_trajectory(&samples, stroke, painter);
         }
         for samples in state.reference_samples.iter().chain(state.samples.iter()) {
