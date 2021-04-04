@@ -26,15 +26,32 @@ pub fn show(ui: &mut Ui, world: &mut World, control_state: &ControlState) {
 
     match operation {
         CanvasOperation::Create => {
-            if let Some((any_scenario, _)) =
+            if let Some((any_scenario_id, _)) =
                 world.query::<(bevy_ecs::Entity, &scenario::Kind)>().next()
             {
-                canvas::Bundle(
+                let new_canvas_id = canvas::Bundle(
                     canvas::Kind,
                     canvas::State::new(),
-                    scenario::Entity(any_scenario),
+                    scenario::Entity(any_scenario_id),
                 )
                 .spawn(world);
+                if let Some((any_integrator_id, _)) = world
+                    .query::<(bevy_ecs::Entity, &integrator::Kind)>()
+                    .next()
+                {
+                    if let Some((any_step_size_id, _)) =
+                        world.query::<(bevy_ecs::Entity, &step_size::Kind)>().next()
+                    {
+                        integration::Bundle(
+                            integration::Kind,
+                            integration::comp::State::new(integration::State::new()),
+                            integrator::Entity(any_integrator_id),
+                            step_size::Entity(any_step_size_id),
+                            new_canvas_id,
+                        )
+                        .spawn(world);
+                    }
+                }
             }
         }
         CanvasOperation::Close { canvas_id } => {
