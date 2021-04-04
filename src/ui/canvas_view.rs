@@ -1,10 +1,9 @@
+use super::{layers, BUTTON_GLYPH_ADD, BUTTON_GLYPH_DELETE};
 use crate::prelude::*;
 use bevy_ecs::Entity;
 use egui::{InnerResponse, Layout, Ui};
 
-use super::{layers, BUTTON_GLYPH_ADD, BUTTON_GLYPH_DELETE};
-
-enum Operation {
+enum IntegrationOperation {
     Noop,
     Create,
     Delete {
@@ -18,6 +17,13 @@ enum Operation {
         integration_id: Entity,
         step_size_id: Entity,
     },
+}
+
+#[derive(PartialEq)]
+pub enum CanvasOperation {
+    Noop,
+    Create,
+    Close { canvas_id: Entity },
 }
 
 pub fn show_canvas(
@@ -50,27 +56,31 @@ pub fn show_canvas(
     });
 }
 
-/// returns the response to the `Close` button as `inner`
+/// returns the `CanvasOperation` as `inner`
 pub fn show_header_bar(
     ui: &mut Ui,
     canvas_id: Entity,
     world: &mut World,
     can_close: bool,
-) -> InnerResponse<Option<egui::Response>> {
+    can_create: bool,
+) -> InnerResponse<CanvasOperation> {
     ui.horizontal(|ui| {
         ui.with_layout(Layout::left_to_right(), |ui| {
             show_scenario_selector(ui, canvas_id, world);
             show_integration_selector(ui, canvas_id, world);
         });
         ui.with_layout(Layout::right_to_left(), |ui| {
-            if can_close {
-                Some(ui.small_button(BUTTON_GLYPH_DELETE))
-            } else {
-                None
+            let mut operation = CanvasOperation::Noop;
+            if can_close && ui.small_button(BUTTON_GLYPH_DELETE).clicked() {
+                operation = CanvasOperation::Close { canvas_id };
             }
+            if can_create && ui.small_button(BUTTON_GLYPH_ADD).clicked() {
+                operation = CanvasOperation::Create;
+            }
+            operation
         })
+        .inner
     })
-    .inner
 }
 
 fn show_scenario_selector(ui: &mut Ui, canvas_id: Entity, world: &mut World) {
@@ -132,7 +142,7 @@ fn show_integration_selector(ui: &mut Ui, canvas_id: Entity, world: &mut World) 
         .ui_integrations_window_is_open = window_is_open;
 
     match operation {
-        Operation::Create => {
+        IntegrationOperation::Create => {
             let existing_integration = world
                 .query::<integration::Query>()
                 .map(|integration| integration.gather_from(world))
@@ -147,10 +157,10 @@ fn show_integration_selector(ui: &mut Ui, canvas_id: Entity, world: &mut World) 
             )
             .spawn(world);
         }
-        Operation::Delete { integration_id } => {
+        IntegrationOperation::Delete { integration_id } => {
             world.despawn(integration_id).unwrap();
         }
-        Operation::SetIntegrator {
+        IntegrationOperation::SetIntegrator {
             integration_id,
             integrator_id,
         } => {
@@ -165,7 +175,7 @@ fn show_integration_selector(ui: &mut Ui, canvas_id: Entity, world: &mut World) 
                 .unwrap()
                 .reset();
         }
-        Operation::SetStepSize {
+        IntegrationOperation::SetStepSize {
             integration_id,
             step_size_id,
         } => {
@@ -180,7 +190,7 @@ fn show_integration_selector(ui: &mut Ui, canvas_id: Entity, world: &mut World) 
                 .unwrap()
                 .reset();
         }
-        Operation::Noop => (),
+        IntegrationOperation::Noop => (),
     }
 }
 
@@ -191,8 +201,8 @@ fn show_integrations_pop_up(
     default_pos: Pos2,
     canvas_id: Entity,
     world: &World,
-) -> Operation {
-    let mut operation = Operation::Noop;
+) -> IntegrationOperation {
+    let mut operation = IntegrationOperation::Noop;
 
     let canvas_integrations: Vec<integration::Gathered> = world
         .query::<integration::Query>()
@@ -211,7 +221,7 @@ fn show_integrations_pop_up(
                 .show(ui, |ui| {
                     // table header:
                     if ui.small_button(BUTTON_GLYPH_ADD).clicked() {
-                        operation = Operation::Create;
+                        operation = IntegrationOperation::Create;
                     }
                     ui.label("Integrator");
                     ui.label("Step Size");
@@ -222,7 +232,7 @@ fn show_integrations_pop_up(
                         let integration_id = integration.id;
                         if canvas_integrations.len() > 1 {
                             if ui.small_button(BUTTON_GLYPH_DELETE).clicked() {
-                                operation = Operation::Delete { integration_id };
+                                operation = IntegrationOperation::Delete { integration_id };
                             }
                         } else {
                             ui.label("");
@@ -230,14 +240,14 @@ fn show_integrations_pop_up(
                         if let Some(integrator_id) =
                             show_integrator_selector(ui, integration, world)
                         {
-                            operation = Operation::SetIntegrator {
+                            operation = IntegrationOperation::SetIntegrator {
                                 integration_id,
                                 integrator_id,
                             };
                         }
                         if let Some(step_size_id) = show_step_size_selector(ui, integration, world)
                         {
-                            operation = Operation::SetStepSize {
+                            operation = IntegrationOperation::SetStepSize {
                                 integration_id,
                                 step_size_id,
                             };

@@ -1,4 +1,4 @@
-use super::canvas_view;
+use super::canvas_view::{show_canvas, show_header_bar, CanvasOperation};
 use crate::prelude::*;
 use bevy_ecs::World;
 use egui::Ui;
@@ -12,18 +12,34 @@ pub fn show(ui: &mut Ui, world: &mut World, control_state: &ControlState) {
         .map(|(canvas_id, _)| canvas_id)
         .collect::<Vec<_>>(); // have to `collect()` because `mut world` is used in loop below
     let can_close = canvas_count > 1;
-    let mut canvas_to_close = None;
+    let can_create = canvas_count < 4;
+    let mut operation = CanvasOperation::Noop;
+
     for canvas_id in canvas_ids {
-        let header_bar = canvas_view::show_header_bar(ui, canvas_id, world, can_close);
-        header_bar.inner.map(|close_button| {
-            close_button
-                .clicked()
-                .then(|| canvas_to_close = Some(canvas_id))
-        });
+        let header_bar = show_header_bar(ui, canvas_id, world, can_close, can_create);
+        if header_bar.inner != CanvasOperation::Noop {
+            operation = header_bar.inner;
+        }
         let inner_size = Vec2::new(view_size.x, view_size.y - header_bar.response.rect.height());
-        canvas_view::show_canvas(ui, canvas_id, world, inner_size, control_state);
+        show_canvas(ui, canvas_id, world, inner_size, control_state);
     }
-    if let Some(canvas_to_close) = canvas_to_close {
-        world.despawn(canvas_to_close).unwrap();
+
+    match operation {
+        CanvasOperation::Create => {
+            if let Some((any_scenario, _)) =
+                world.query::<(bevy_ecs::Entity, &scenario::Kind)>().next()
+            {
+                canvas::Bundle(
+                    canvas::Kind,
+                    canvas::State::new(),
+                    scenario::Entity(any_scenario),
+                )
+                .spawn(world);
+            }
+        }
+        CanvasOperation::Close { canvas_id } => {
+            world.despawn(canvas_id).unwrap();
+        }
+        CanvasOperation::Noop => (),
     }
 }
