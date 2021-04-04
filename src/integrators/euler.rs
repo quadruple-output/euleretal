@@ -2,22 +2,22 @@ use crate::core::integrator::ZeroKnowledge;
 use crate::core::samples::{FinalizedCalibrationPoints, NewSample, StartCondition};
 use crate::prelude::*;
 
-pub struct Deferred {}
+pub struct Broken {}
 
-impl Deferred {
+impl Broken {
     pub fn new() -> Self {
-        Deferred {}
+        Broken {}
     }
 }
 
-impl Integrator for Deferred {
+impl Integrator for Broken {
     fn label(&self) -> String {
-        "Deferred Euler".to_string()
+        "Broken Euler".to_string()
     }
 
     fn description(&self) -> String {
-        "s' = s + v dt\n\
-         v' = v + a dt"
+        "v' = v + a dt\n\
+         s' = s + v dt"
             .to_string()
     }
 
@@ -32,7 +32,7 @@ impl Integrator for Deferred {
     }
 }
 
-impl ZeroKnowledge for Deferred {
+impl ZeroKnowledge for Broken {
     fn integrate_step(
         current: &StartCondition,
         next: &mut NewSample,
@@ -59,7 +59,8 @@ impl Integrator for Euler {
 
     fn description(&self) -> String {
         "v' = v + a dt\n\
-         s' = s + v' dt"
+         s' = s + v' dt\n\
+             = s + v dt + a dt²" // !! this string contains non-breaking spaces
             .to_string()
     }
 

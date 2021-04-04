@@ -17,7 +17,7 @@ impl Integrator for ExactForConst {
 
     fn description(&self) -> String {
         "v' = v + a dt\n\
-         s' = s + v' dt + ½ a dt²"
+         s' = s + v dt + ½ a dt²"
             .to_string()
     }
 

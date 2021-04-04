@@ -118,7 +118,7 @@ impl App {
 
         let _explicit_euler_id = integrator::Bundle(
             integrator::Kind,
-            Box::new(integrators::euler::Deferred::new()),
+            Box::new(integrators::euler::Broken::new()),
             Stroke::new(1., Hsva::from(Color32::BLUE)),
         )
         .spawn(&mut self.world);
