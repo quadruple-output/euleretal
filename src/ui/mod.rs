@@ -119,7 +119,21 @@ impl App {
         let _explicit_euler_id = integrator::Bundle(
             integrator::Kind,
             Box::new(integrators::euler::Broken::new()),
-            Stroke::new(1., Hsva::from(Color32::BLUE)),
+            Stroke::new(1., Hsva::from(Color32::from_rgb(255, 0, 255))), // 255,0,255: magenta
+        )
+        .spawn(&mut self.world);
+
+        let _mid_point_euler_id = integrator::Bundle(
+            integrator::Kind,
+            Box::new(integrators::mid_point::Euler::new()),
+            Stroke::new(1., Hsva::from(Color32::YELLOW)),
+        )
+        .spawn(&mut self.world);
+
+        let _mid_point_second_order_id = integrator::Bundle(
+            integrator::Kind,
+            Box::new(integrators::mid_point::SecondOrder::new()),
+            Stroke::new(1., Hsva::from(Color32::GREEN)),
         )
         .spawn(&mut self.world);
 
