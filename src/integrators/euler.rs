@@ -16,8 +16,8 @@ impl Integrator for Deferred {
     }
 
     fn description(&self) -> String {
-        "s' = s + v * dt\n
-         v' = v + a * dt"
+        "s' = s + v dt\n\
+         v' = v + a dt"
             .to_string()
     }
 
@@ -58,8 +58,8 @@ impl Integrator for Euler {
     }
 
     fn description(&self) -> String {
-        "v' = v + a * dt\n
-         s' = s + v' * dt"
+        "v' = v + a dt\n\
+         s' = s + v' dt"
             .to_string()
     }
 

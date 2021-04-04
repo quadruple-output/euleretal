@@ -18,9 +18,9 @@ pub fn my_stroke_ui(ui: &mut crate::Ui, stroke: &mut egui::Stroke, text: &str, t
         ui.painter().line_segment([left, right], (*width, *color));
 
         if tooltip.is_empty() {
-            ui.label(text).on_hover_text(tooltip);
-        } else {
             ui.label(text);
+        } else {
+            ui.label(text).on_hover_text(tooltip);
         }
     });
 }
