@@ -250,7 +250,8 @@ fn show_integrator_selector(
                     &mut selected_integrator,
                     selectable_integrator.0,
                     selectable_integrator.2.label(),
-                );
+                )
+                .on_hover_text(selectable_integrator.2.description());
             }
         },
     );

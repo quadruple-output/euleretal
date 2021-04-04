@@ -15,6 +15,12 @@ impl Integrator for ExactForConst {
         "Exact for const. acceleration".to_string()
     }
 
+    fn description(&self) -> String {
+        "v' = v + a dt\n
+         s' = s + v' dt + ½ a dt"
+            .to_string()
+    }
+
     fn integrate(
         &self,
         acceleration_field: &dyn AccelerationField,

@@ -118,14 +118,14 @@ impl App {
 
         let _explicit_euler_id = integrator::Bundle(
             integrator::Kind,
-            Box::new(integrators::euler::Explicit::new()),
+            Box::new(integrators::euler::Deferred::new()),
             Stroke::new(1., Hsva::from(Color32::BLUE)),
         )
         .spawn(&mut self.world);
 
         let implicit_euler_id = integrator::Bundle(
             integrator::Kind,
-            Box::new(integrators::euler::Implicit::new()),
+            Box::new(integrators::euler::Euler::new()),
             Stroke::new(1., Hsva::from(Color32::RED)),
         )
         .spawn(&mut self.world);

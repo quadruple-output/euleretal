@@ -1,13 +1,22 @@
-use super::ControlState;
-use crate::egui::{stroke_ui, Ui};
+use crate::prelude::*;
 
 pub fn show(ui: &mut Ui, state: &mut ControlState) {
     ui.heading("Colors");
     ui.vertical(|ui| {
-        stroke_ui(ui, &mut state.strokes.trajectory, "Exact Trajectory");
-        stroke_ui(ui, &mut state.strokes.acceleration, "Acceleration (Field)");
-        stroke_ui(ui, &mut state.strokes.coordinates, "Coordinates");
-        stroke_ui(ui, &mut state.strokes.focussed_acceleration, "Acceleration");
-        stroke_ui(ui, &mut state.strokes.focussed_velocity, "Velocity");
+        my_stroke_ui(ui, &mut state.strokes.trajectory, "Exact Trajectory", "");
+        my_stroke_ui(
+            ui,
+            &mut state.strokes.acceleration,
+            "Acceleration (Field)",
+            "",
+        );
+        my_stroke_ui(ui, &mut state.strokes.coordinates, "Coordinates", "");
+        my_stroke_ui(
+            ui,
+            &mut state.strokes.focussed_acceleration,
+            "Acceleration",
+            "",
+        );
+        my_stroke_ui(ui, &mut state.strokes.focussed_velocity, "Velocity", "");
     });
 }

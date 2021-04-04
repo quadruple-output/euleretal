@@ -4,6 +4,8 @@ use crate::prelude::*;
 pub trait Integrator: Send + Sync {
     fn label(&self) -> String;
 
+    fn description(&self) -> String;
+
     fn integrate(
         &self,
         acceleration_field: &dyn AccelerationField,

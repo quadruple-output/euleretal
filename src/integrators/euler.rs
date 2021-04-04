@@ -2,17 +2,23 @@ use crate::core::integrator::ZeroKnowledge;
 use crate::core::samples::{FinalizedCalibrationPoints, NewSample, StartCondition};
 use crate::prelude::*;
 
-pub struct Explicit {}
+pub struct Deferred {}
 
-impl Explicit {
+impl Deferred {
     pub fn new() -> Self {
-        Explicit {}
+        Deferred {}
     }
 }
 
-impl Integrator for Explicit {
+impl Integrator for Deferred {
     fn label(&self) -> String {
-        "Explicit Euler".to_string()
+        "Deferred Euler".to_string()
+    }
+
+    fn description(&self) -> String {
+        "s' = s + v * dt\n
+         v' = v + a * dt"
+            .to_string()
     }
 
     fn integrate(
@@ -26,7 +32,7 @@ impl Integrator for Explicit {
     }
 }
 
-impl ZeroKnowledge for Explicit {
+impl ZeroKnowledge for Deferred {
     fn integrate_step(
         current: &StartCondition,
         next: &mut NewSample,
@@ -38,17 +44,23 @@ impl ZeroKnowledge for Explicit {
     }
 }
 
-pub struct Implicit {}
+pub struct Euler {}
 
-impl Implicit {
+impl Euler {
     pub fn new() -> Self {
-        Implicit {}
+        Euler {}
     }
 }
 
-impl Integrator for Implicit {
+impl Integrator for Euler {
     fn label(&self) -> String {
-        "Implicit Euler".to_string()
+        "Euler".to_string()
+    }
+
+    fn description(&self) -> String {
+        "v' = v + a * dt\n
+         s' = s + v' * dt"
+            .to_string()
     }
 
     fn integrate(
@@ -62,7 +74,7 @@ impl Integrator for Implicit {
     }
 }
 
-impl ZeroKnowledge for Implicit {
+impl ZeroKnowledge for Euler {
     fn integrate_step(
         current: &StartCondition,
         next: &mut NewSample,

@@ -3,6 +3,7 @@
 #![warn(clippy::pedantic)]
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cast_precision_loss)]
+#![allow(clippy::non_ascii_literal)]
 #![warn(clippy::cargo)]
 #![allow(clippy::multiple_crate_versions)]
 //#![deny(missing_docs)]
