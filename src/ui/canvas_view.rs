@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use bevy_ecs::Entity;
-use egui::Ui;
+use egui::{InnerResponse, Layout, Ui};
 
 use super::{layers, BUTTON_GLYPH_ADD, BUTTON_GLYPH_DELETE};
 
@@ -20,7 +20,7 @@ enum Operation {
     },
 }
 
-pub fn show(
+pub fn show_canvas(
     ui: &mut Ui,
     canvas_id: Entity,
     world: &mut World,
@@ -28,14 +28,8 @@ pub fn show(
     control_state: &ControlState,
 ) {
     ui.vertical(|ui| {
-        let response = ui.horizontal(|ui| {
-            show_scenario_selector(ui, canvas_id, world);
-            show_integration_selector(ui, canvas_id, world);
-        });
-
-        let inner_size = Vec2::new(size.x, size.y - response.response.rect.height());
         let mut canvas = world.get_mut::<canvas::comp::State>(canvas_id).unwrap();
-        let (response, painter) = canvas.allocate_painter(ui, inner_size);
+        let (response, painter) = canvas.allocate_painter(ui, size);
 
         if control_state.layerflags.coordinates {
             layers::coordinates::render(world, &control_state, canvas_id, &response.rect, &painter);
@@ -54,6 +48,29 @@ pub fn show(
             layers::inspector::render(world, &control_state, canvas_id, &response, &painter);
         }
     });
+}
+
+/// returns the response to the `Close` button as `inner`
+pub fn show_header_bar(
+    ui: &mut Ui,
+    canvas_id: Entity,
+    world: &mut World,
+    can_close: bool,
+) -> InnerResponse<Option<egui::Response>> {
+    ui.horizontal(|ui| {
+        ui.with_layout(Layout::left_to_right(), |ui| {
+            show_scenario_selector(ui, canvas_id, world);
+            show_integration_selector(ui, canvas_id, world);
+        });
+        ui.with_layout(Layout::right_to_left(), |ui| {
+            if can_close {
+                Some(ui.small_button(BUTTON_GLYPH_DELETE))
+            } else {
+                None
+            }
+        })
+    })
+    .inner
 }
 
 fn show_scenario_selector(ui: &mut Ui, canvas_id: Entity, world: &mut World) {
