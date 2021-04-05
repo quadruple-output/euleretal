@@ -153,7 +153,7 @@ impl App {
         )
         .spawn(&mut self.world);
 
-        let scenario_constant_acceleration_id = scenario::Bundle(
+        let _scenario_constant_acceleration_id = scenario::Bundle(
             scenario::Kind,
             Box::new(scenarios::ConstantAcceleration),
             StartPosition(ChangeTracker::with(Vec3::new(0., 0., 0.))),
@@ -166,13 +166,6 @@ impl App {
             canvas::Bundle(canvas::Kind, canvas::State::new(), scenario_center_mass_id)
                 .spawn(&mut self.world);
 
-        let canvas_constant_acceleration_id = canvas::Bundle(
-            canvas::Kind,
-            canvas::comp::State::new(),
-            scenario_constant_acceleration_id,
-        )
-        .spawn(&mut self.world);
-
         integration::Bundle(
             integration::Kind,
             integration::comp::State::new(integration::State::new()),
@@ -182,14 +175,21 @@ impl App {
         )
         .spawn(&mut self.world);
 
-        integration::Bundle(
-            integration::Kind,
-            integration::comp::State::new(integration::State::new()), // TODO: make this more elegant
-            implicit_euler_id,
-            step_size_id,
-            canvas_constant_acceleration_id,
-        )
-        .spawn(&mut self.world);
+        // let canvas_constant_acceleration_id = canvas::Bundle(
+        //     canvas::Kind,
+        //     canvas::comp::State::new(),
+        //     scenario_constant_acceleration_id,
+        // )
+        // .spawn(&mut self.world);
+
+        // integration::Bundle(
+        //     integration::Kind,
+        //     integration::comp::State::new(integration::State::new()), // TODO: make this more elegant
+        //     implicit_euler_id,
+        //     step_size_id,
+        //     canvas_constant_acceleration_id,
+        // )
+        // .spawn(&mut self.world);
     }
 }
 
