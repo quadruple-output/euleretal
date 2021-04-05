@@ -32,10 +32,10 @@ struct StepContext {
     acceleration: Acceleration,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct CalibrationPoint {
+    pub dt_fraction: Fraction,
     pub position: Position,
-    pub dt: Fraction,
     pub acceleration: Acceleration,
     // todo: do we need a Velocity here?
 }
@@ -56,12 +56,6 @@ pub enum Successor {
     CalibrationPoint(usize),
 }
 
-#[derive(Clone)]
-pub struct Fraction {
-    pub numerator: usize,
-    pub denominator: usize,
-}
-
 impl Samples<WithoutCalibrationPoints> {
     pub fn new(start_condition: &StartCondition, sample_capacity: usize) -> Self {
         let instance = Self::with_capacity::<0>(sample_capacity);
@@ -73,7 +67,10 @@ impl Samples<WithoutCalibrationPoints> {
     }
 }
 
-impl<const N: usize> Samples<WithCalibrationPoints<N>> {
+impl<const N: usize> Samples<WithCalibrationPoints<N>>
+where
+    [CalibrationPoint; N]: Default,
+{
     pub fn new(start_condition: &StartCondition, sample_capacity: usize) -> Self {
         let instance = Self::with_capacity::<N>(sample_capacity);
         instance.initialize(start_condition)
@@ -183,6 +180,7 @@ pub struct StartCondition {
     pub acceleration: Acceleration,
 }
 
+#[derive(Default)]
 pub struct NewSample {
     pub dt: R32,
     pub position: Position,
@@ -190,7 +188,11 @@ pub struct NewSample {
     pub acceleration: Acceleration,
 }
 
-pub struct NewSampleWithPoints<const N: usize> {
+#[derive(Default)]
+pub struct NewSampleWithPoints<const N: usize>
+where
+    [CalibrationPoint; N]: Default,
+{
     pub dt: R32,
     pub position: Position,
     pub velocity: Velocity,
@@ -212,15 +214,4 @@ pub struct CompleteSample<'a> {
     /// Acceleration
     pub a: Acceleration,
     pub calibration_points: Vec<&'a CalibrationPoint>,
-}
-
-impl Default for NewSample {
-    fn default() -> Self {
-        NewSample {
-            dt: R32::default(),
-            position: Position::default(),
-            velocity: Velocity::default(),
-            acceleration: Acceleration::default(),
-        }
-    }
 }

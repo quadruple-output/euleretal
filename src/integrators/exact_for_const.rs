@@ -1,4 +1,4 @@
-use crate::core::integrator::ZeroKnowledge;
+use crate::core::integrator::OneStepDirect;
 use crate::core::samples::{FinalizedCalibrationPoints, NewSample, StartCondition};
 use crate::prelude::*;
 
@@ -28,11 +28,11 @@ impl Integrator for ExactForConst {
         num_steps: usize,
         dt: R32,
     ) -> Samples<FinalizedCalibrationPoints> {
-        <Self as ZeroKnowledge>::integrate(acceleration_field, start_condition, num_steps, dt)
+        <Self as OneStepDirect>::integrate(acceleration_field, start_condition, num_steps, dt)
     }
 }
 
-impl ZeroKnowledge for ExactForConst {
+impl OneStepDirect for ExactForConst {
     fn integrate_step(
         current: &StartCondition,
         next: &mut NewSample,

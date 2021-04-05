@@ -1,5 +1,6 @@
-use crate::core::integrator::ZeroKnowledge;
-use crate::core::samples::{FinalizedCalibrationPoints, NewSample, StartCondition};
+use crate::core::integrator::OneStepWithCalibrationPoints;
+use crate::core::samples::{FinalizedCalibrationPoints, NewSampleWithPoints, StartCondition};
+#[macro_use]
 use crate::prelude::*;
 
 pub struct Euler {}
@@ -12,7 +13,7 @@ impl Euler {
 
 impl Integrator for Euler {
     fn label(&self) -> String {
-        "Mid Point (Euler)".to_string()
+        "Midpoint (explicit, Euler)".to_string()
     }
 
     fn description(&self) -> String {
@@ -32,22 +33,35 @@ impl Integrator for Euler {
         num_steps: usize,
         dt: R32,
     ) -> Samples<FinalizedCalibrationPoints> {
-        <Self as ZeroKnowledge>::integrate(acceleration_field, start_condition, num_steps, dt)
+        <Self as OneStepWithCalibrationPoints<1>>::integrate(
+            acceleration_field,
+            start_condition,
+            num_steps,
+            dt,
+        )
     }
 }
 
-impl ZeroKnowledge for Euler {
+impl OneStepWithCalibrationPoints<1> for Euler {
     fn integrate_step(
         current: &StartCondition,
-        next: &mut NewSample,
+        next: &mut NewSampleWithPoints<1>,
         dt: f32,
         acceleration_field: &dyn AccelerationField,
     ) {
-        let mid_point_position =
-            current.position + current.velocity * 0.5 * dt + current.acceleration * 0.25 * dt * dt;
+        let mid_point_fraction = fraction!(1 / 2);
+        let mid_point_dt = mid_point_fraction * dt;
+
+        let mid_point_position = current.position
+            + (current.velocity + current.acceleration * mid_point_dt) * mid_point_dt;
         let mid_point_acceleration = acceleration_field.value_at(mid_point_position);
+
         next.velocity = current.velocity + mid_point_acceleration * dt;
         next.position = current.position + next.velocity * dt;
+
+        next.calibration_points[0].dt_fraction = mid_point_fraction;
+        next.calibration_points[0].acceleration = mid_point_acceleration;
+        next.calibration_points[0].position = mid_point_position;
     }
 }
 
@@ -61,7 +75,7 @@ impl SecondOrder {
 
 impl Integrator for SecondOrder {
     fn label(&self) -> String {
-        "Mid Point (SecondOrder)".to_string()
+        "Midpoint (explicit, SecondOrder)".to_string()
     }
 
     fn description(&self) -> String {
@@ -79,21 +93,30 @@ impl Integrator for SecondOrder {
         num_steps: usize,
         dt: R32,
     ) -> Samples<FinalizedCalibrationPoints> {
-        <Self as ZeroKnowledge>::integrate(acceleration_field, start_condition, num_steps, dt)
+        <Self as OneStepWithCalibrationPoints<1>>::integrate(
+            acceleration_field,
+            start_condition,
+            num_steps,
+            dt,
+        )
     }
 }
 
-impl ZeroKnowledge for SecondOrder {
+impl OneStepWithCalibrationPoints<1> for SecondOrder {
     fn integrate_step(
         current: &StartCondition,
-        next: &mut NewSample,
+        next: &mut NewSampleWithPoints<1>,
         dt: f32,
         acceleration_field: &dyn AccelerationField,
     ) {
+        let mid_point_fraction = fraction!(1 / 2);
+        let mid_point_dt = mid_point_fraction * dt;
+
         let mid_point_position = current.position
-            + current.velocity * 0.5 * dt
-            + 0.5 * current.acceleration * 0.25 * dt * dt;
+            + current.velocity * mid_point_dt
+            + 0.5 * current.acceleration * mid_point_dt * mid_point_dt;
         let mid_point_acceleration = acceleration_field.value_at(mid_point_position);
+
         next.velocity = current.velocity + mid_point_acceleration * dt;
         next.position =
             current.position + current.velocity * dt + 0.5 * mid_point_acceleration * dt * dt;

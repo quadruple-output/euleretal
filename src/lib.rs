@@ -9,11 +9,12 @@
 //#![deny(missing_docs)]
 #![feature(box_syntax)]
 
+#[macro_use]
+mod misc; // modules with macros must be listed first
 mod components;
 mod core;
 mod entities;
 mod integrators;
-mod misc;
 mod scenarios;
 pub mod ui;
 
