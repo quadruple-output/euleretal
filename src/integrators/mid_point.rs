@@ -16,7 +16,8 @@ impl Integrator for Euler {
     }
 
     fn description(&self) -> String {
-        "s₁ = s + ½ v dt\n\
+        "v₁ = v + a ½dt\n\
+         s₁ = s + v₁ ½dt\n\
          a₁ = a(s₁)\n\
          v' = v + a₁ dt\n\
          s' = s + v' dt\n\
@@ -42,7 +43,8 @@ impl ZeroKnowledge for Euler {
         dt: f32,
         acceleration_field: &dyn AccelerationField,
     ) {
-        let mid_point_position = current.position + current.velocity * 0.5 * dt;
+        let mid_point_position =
+            current.position + current.velocity * 0.5 * dt + current.acceleration * 0.25 * dt * dt;
         let mid_point_acceleration = acceleration_field.value_at(mid_point_position);
         next.velocity = current.velocity + mid_point_acceleration * dt;
         next.position = current.position + next.velocity * dt;
