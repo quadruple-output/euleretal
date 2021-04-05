@@ -22,7 +22,7 @@ enum IntegrationOperation {
 #[derive(PartialEq)]
 pub enum CanvasOperation {
     Noop,
-    Create,
+    Create { source_canvas_id: Entity },
     Close { canvas_id: Entity },
 }
 
@@ -75,7 +75,9 @@ pub fn show_header_bar(
                 operation = CanvasOperation::Close { canvas_id };
             }
             if can_create && ui.small_button(BUTTON_GLYPH_ADD).clicked() {
-                operation = CanvasOperation::Create;
+                operation = CanvasOperation::Create {
+                    source_canvas_id: canvas_id,
+                };
             }
             operation
         })

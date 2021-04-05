@@ -1,6 +1,6 @@
 use super::canvas_view::{show_canvas, show_header_bar, CanvasOperation};
 use crate::prelude::*;
-use bevy_ecs::World;
+use bevy_ecs::{Entity, World};
 use egui::Ui;
 
 pub fn show(ui: &mut Ui, world: &mut World, control_state: &ControlState) {
@@ -8,7 +8,7 @@ pub fn show(ui: &mut Ui, world: &mut World, control_state: &ControlState) {
     let canvas_count = world.query::<&canvas::Kind>().count();
     let view_size = Vec2::new(panel_size.x, panel_size.y / canvas_count as f32);
     let canvas_ids = world
-        .query::<(bevy_ecs::Entity, &canvas::Kind)>()
+        .query::<(Entity, &canvas::Kind)>()
         .map(|(canvas_id, _)| canvas_id)
         .collect::<Vec<_>>(); // have to `collect()` because `mut world` is used in loop below
     let can_close = canvas_count > 1;
@@ -25,36 +25,50 @@ pub fn show(ui: &mut Ui, world: &mut World, control_state: &ControlState) {
     }
 
     match operation {
-        CanvasOperation::Create => {
-            if let Some((any_scenario_id, _)) =
-                world.query::<(bevy_ecs::Entity, &scenario::Kind)>().next()
-            {
+        CanvasOperation::Create { source_canvas_id } => {
+            if let Some((any_scenario_id, _)) = world.query::<(Entity, &scenario::Kind)>().next() {
+                // new canvas:
                 let new_canvas_id = canvas::Bundle(
                     canvas::Kind,
                     canvas::State::new(),
                     scenario::Entity(any_scenario_id),
                 )
                 .spawn(world);
-                if let Some((any_integrator_id, _)) = world
-                    .query::<(bevy_ecs::Entity, &integrator::Kind)>()
-                    .next()
-                {
-                    if let Some((any_step_size_id, _)) =
-                        world.query::<(bevy_ecs::Entity, &step_size::Kind)>().next()
-                    {
-                        integration::Bundle(
-                            integration::Kind,
-                            integration::comp::State::new(integration::State::new()),
-                            integrator::Entity(any_integrator_id),
-                            step_size::Entity(any_step_size_id),
-                            new_canvas_id,
-                        )
-                        .spawn(world);
-                    }
+                // copy canvas integrations:
+                let source_canvas_integrations = world
+                    .query::<(
+                        &integration::Kind,
+                        &integration::comp::IntegratorId,
+                        &integration::comp::StepSizeId,
+                        &integration::comp::CanvasId,
+                    )>()
+                    .filter(|(_, _, _, integration_canvas_id)| {
+                        integration_canvas_id.0 == source_canvas_id
+                    })
+                    .map(|(_, integrator_id, step_size_id, _)| (*integrator_id, *step_size_id))
+                    .collect::<Vec<_>>();
+                for (integrator_id, step_size_id) in source_canvas_integrations {
+                    integration::Bundle(
+                        integration::Kind,
+                        integration::comp::State::new(integration::State::new()),
+                        integrator_id,
+                        step_size_id,
+                        new_canvas_id,
+                    )
+                    .spawn(world);
                 }
             }
         }
+
         CanvasOperation::Close { canvas_id } => {
+            let dependent_entities = world
+                .query::<(Entity, &integration::comp::CanvasId)>()
+                .filter(|(_, dependent_canvas_id)| dependent_canvas_id.0 == canvas_id)
+                .map(|(entity, _)| entity)
+                .collect::<Vec<_>>();
+            for dependent_entity in dependent_entities {
+                world.despawn(dependent_entity).unwrap();
+            }
             world.despawn(canvas_id).unwrap();
         }
         CanvasOperation::Noop => (),
