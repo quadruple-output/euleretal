@@ -7,7 +7,7 @@
 - "Integrations" Pop-Up should be restricted to be placed inside its parent
   canvas
 - Drop-Downs (Combo boxes) in "Integrations" Pop-Up are sometimes clipped away
-- Description tool tips sometips break text too early → increase width
+- Description tool tips sometimes break text too early → increase width
 
 ## UI features
 - support for mobile devices (touch gestures)
