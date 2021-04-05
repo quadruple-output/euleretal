@@ -120,5 +120,9 @@ impl OneStepWithCalibrationPoints<1> for SecondOrder {
         next.velocity = current.velocity + mid_point_acceleration * dt;
         next.position =
             current.position + current.velocity * dt + 0.5 * mid_point_acceleration * dt * dt;
+
+        next.calibration_points[0].dt_fraction = mid_point_fraction;
+        next.calibration_points[0].acceleration = mid_point_acceleration;
+        next.calibration_points[0].position = mid_point_position;
     }
 }

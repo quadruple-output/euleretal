@@ -49,6 +49,16 @@ pub fn render(
                     painter,
                 );
 
+                // calibration Points:
+                for point in calc_sample.calibration_points {
+                    canvas.draw_vector(
+                        point.position,
+                        0.5 * point.acceleration * calc_sample_dt * calc_sample_dt,
+                        state.strokes.focussed_acceleration,
+                        painter,
+                    );
+                }
+
                 ui.label("Inspector");
                 ui.separator();
                 ui.label(format!(
