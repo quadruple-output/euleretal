@@ -65,7 +65,7 @@ impl Integrator for SecondOrder {
     }
 
     fn description(&self) -> String {
-        "s₁ = s + ½ v dt\n\
+        "s₁ = s + v ½dt + ½ a (½dt)²\n\
          a₁ = a(s₁)\n\
          v' = v + a₁ dt\n\
          s' = s + v dt + ½ a₁ dt²" // !! string contains non-breakable spaces
@@ -90,7 +90,9 @@ impl ZeroKnowledge for SecondOrder {
         dt: f32,
         acceleration_field: &dyn AccelerationField,
     ) {
-        let mid_point_position = current.position + current.velocity * 0.5 * dt;
+        let mid_point_position = current.position
+            + current.velocity * 0.5 * dt
+            + 0.5 * current.acceleration * 0.25 * dt * dt;
         let mid_point_acceleration = acceleration_field.value_at(mid_point_position);
         next.velocity = current.velocity + mid_point_acceleration * dt;
         next.position =
