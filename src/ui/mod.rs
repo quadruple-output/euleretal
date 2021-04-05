@@ -76,11 +76,8 @@ impl epi::App for App {
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::CtxRef, _frame: &mut epi::Frame<'_>) {
         SidePanel::left("side_panel", 200.0).show(ctx, |ui| {
-            //CollapsingHeader::new("Colors")
-            //.default_open(false)
-            //.show(ui, |ui| {
             ui.collapsing("Layer Visibility", |ui| {
-                layer_controls::show(ui, &mut self.control_state)
+                layer_controls::show(ui, &mut self.control_state);
             });
             CollapsingHeader::new("Scenarios")
                 .default_open(true)
@@ -92,9 +89,9 @@ impl epi::App for App {
                 .show(ui, |ui| {
                     integrator_controls::show(ui, &mut self.world);
                 });
-            ui.collapsing("Step Sizes", |ui| {
-                step_size_controls::show(ui, &mut self.world)
-            });
+            CollapsingHeader::new("Step Sizes")
+                .default_open(true)
+                .show(ui, |ui| step_size_controls::show(ui, &mut self.world));
             ui.collapsing("Colors", |ui| {
                 color_controls::show(ui, &mut self.control_state);
             });
