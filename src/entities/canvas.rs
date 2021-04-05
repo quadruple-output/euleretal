@@ -118,7 +118,7 @@ impl State {
             .map(|position| self.user_to_screen(*position))
             .fold(Pos2::new(f32::MAX, f32::MAX), |u0, u1| {
                 if (u0.x - u1.x).abs() > 1. || (u0.y - u1.y).abs() > 1. {
-                    painter.circle_filled(u1, 2.5, color);
+                    painter.circle_filled(u1, crate::ui::SAMPLE_DOT_RADIUS, color);
                     u1
                 } else {
                     u0

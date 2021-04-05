@@ -16,6 +16,7 @@ use std::str;
 
 const BUTTON_GLYPH_ADD: &str = "\u{271a}"; // \u{271a} = '✚'
 const BUTTON_GLYPH_DELETE: &str = "\u{2796}"; // \u{2796}='➖', \u{1fsd1} = '🗑'
+pub const SAMPLE_DOT_RADIUS: f32 = 2.5; // todo: this might become configurable later
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
@@ -117,7 +118,7 @@ impl App {
     fn initialize_scenario(&mut self) {
         let step_size_id = step_size::Bundle(
             step_size::Kind,
-            UserLabel("long".to_string()),
+            UserLabel("default".to_string()),
             Duration(ChangeTracker::with(R32::from(0.5))),
             Hsva::from(Color32::YELLOW),
         )

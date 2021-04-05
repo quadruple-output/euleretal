@@ -1,4 +1,5 @@
 use super::{layers, BUTTON_GLYPH_ADD, BUTTON_GLYPH_DELETE};
+use crate::misc::my_stroke_ui;
 use crate::prelude::*;
 use bevy_ecs::Entity;
 use egui::{InnerResponse, Layout, Ui};
@@ -225,6 +226,7 @@ fn show_integrations_pop_up(
                     if ui.small_button(BUTTON_GLYPH_ADD).clicked() {
                         operation = IntegrationOperation::Create;
                     }
+                    ui.label("Line");
                     ui.label("Integrator");
                     ui.label("Step Size");
                     ui.end_row();
@@ -239,14 +241,22 @@ fn show_integrations_pop_up(
                         } else {
                             ui.label("");
                         }
-                        if let Some(integrator_id) =
-                            show_integrator_selector(ui, integration, world)
-                        {
-                            operation = IntegrationOperation::SetIntegrator {
-                                integration_id,
-                                integrator_id,
-                            };
-                        }
+                        my_stroke_ui::my_stroke_preview(
+                            ui,
+                            *integration.stroke,
+                            Some(integration.step_color.into()),
+                        );
+                        // wrappind the combobox in a horizontal ui help aligning the grid
+                        ui.horizontal(|ui| {
+                            if let Some(integrator_id) =
+                                show_integrator_selector(ui, integration, world)
+                            {
+                                operation = IntegrationOperation::SetIntegrator {
+                                    integration_id,
+                                    integrator_id,
+                                };
+                            }
+                        });
                         if let Some(step_size_id) = show_step_size_selector(ui, integration, world)
                         {
                             operation = IntegrationOperation::SetStepSize {
@@ -283,7 +293,8 @@ fn show_integrator_selector(
                 .on_hover_text(selectable_integrator.2.description());
             }
         },
-    );
+    )
+    .on_hover_text(integration.integrator.description());
     if selected_integrator == integration.integrator_id.0 {
         None
     } else {

@@ -1,7 +1,7 @@
-use eframe::egui;
+use crate::prelude::*;
 
-pub fn my_stroke_ui(ui: &mut crate::Ui, stroke: &mut egui::Stroke, text: &str, tooltip: &str) {
-    let egui::Stroke { width, color } = stroke;
+pub fn my_stroke_ui(ui: &mut Ui, stroke: &mut Stroke, text: &str, tooltip: &str) {
+    let Stroke { width, color } = stroke;
     ui.horizontal(|ui| {
         ui.color_edit_button_srgba(color);
         ui.add(
@@ -11,11 +11,7 @@ pub fn my_stroke_ui(ui: &mut crate::Ui, stroke: &mut egui::Stroke, text: &str, t
         )
         .on_hover_text("Width");
 
-        // stroke preview:
-        let (_id, stroke_rect) = ui.allocate_space(ui.spacing().interact_size);
-        let left = stroke_rect.left_center();
-        let right = stroke_rect.right_center();
-        ui.painter().line_segment([left, right], (*width, *color));
+        my_stroke_preview(ui, (*width, *color), None);
 
         if tooltip.is_empty() {
             ui.label(text);
@@ -23,4 +19,18 @@ pub fn my_stroke_ui(ui: &mut crate::Ui, stroke: &mut egui::Stroke, text: &str, t
             ui.label(text).on_hover_text(tooltip);
         }
     });
+}
+
+pub fn my_stroke_preview(ui: &mut Ui, stroke: impl Into<Stroke>, dot_color: Option<Color32>) {
+    let (_id, stroke_rect) = ui.allocate_space(ui.spacing().interact_size);
+    let left = stroke_rect.left_center();
+    let right = stroke_rect.right_center();
+    ui.painter().line_segment([left, right], stroke);
+    if let Some(dot_color) = dot_color {
+        ui.painter().circle_filled(
+            stroke_rect.center(),
+            crate::ui::SAMPLE_DOT_RADIUS,
+            dot_color,
+        );
+    }
 }
