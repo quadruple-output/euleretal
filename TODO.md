@@ -11,7 +11,6 @@
 
 ## UI features
 - support for mobile devices (touch gestures)
-- sections in side panel should be collapsible
 - Button for auto-zoom
 - render Integrator formulas in browser (KaTeX or MathJax)
 - Dark and Light themes
