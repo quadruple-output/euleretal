@@ -15,7 +15,6 @@ enum Operation {
 }
 
 pub fn show(ui: &mut Ui, world: &mut World) {
-    ui.heading("Step Sizes");
     let operation = show_step_size_table(ui, world);
     match operation {
         Operation::Create => {
@@ -62,7 +61,7 @@ fn show_step_size_table(ui: &mut Ui, world: &World) -> Operation {
             if ui.small_button(BUTTON_GLYPH_ADD).clicked() {
                 operation = Operation::Create;
             }
-            ui.label("Duration");
+            ui.label("Step Size (dt)");
             ui.label("Color");
             ui.label("Label");
             ui.end_row();

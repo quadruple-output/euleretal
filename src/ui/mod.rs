@@ -11,7 +11,7 @@ mod step_size_controls;
 use crate::{integrators, prelude::*, scenarios};
 use ::core::fmt;
 use eframe::{egui, epi};
-use egui::{CentralPanel, Rgba, SidePanel};
+use egui::{CentralPanel, CollapsingHeader, Rgba, SidePanel};
 use std::str;
 
 const BUTTON_GLYPH_ADD: &str = "\u{271a}"; // \u{271a} = '✚'
@@ -76,12 +76,29 @@ impl epi::App for App {
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::CtxRef, _frame: &mut epi::Frame<'_>) {
         SidePanel::left("side_panel", 200.0).show(ctx, |ui| {
-            layer_controls::show(ui, &mut self.control_state);
-            settings::show(ui, &mut self.control_state);
-            color_controls::show(ui, &mut self.control_state);
-            step_size_controls::show(ui, &mut self.world);
-            integrator_controls::show(ui, &mut self.world);
-            scenario_controls::show(ui, &mut self.world);
+            //CollapsingHeader::new("Colors")
+            //.default_open(false)
+            //.show(ui, |ui| {
+            ui.collapsing("Layer Visibility", |ui| {
+                layer_controls::show(ui, &mut self.control_state)
+            });
+            CollapsingHeader::new("Scenarios")
+                .default_open(true)
+                .show(ui, |ui| {
+                    scenario_controls::show(ui, &mut self.world);
+                });
+            CollapsingHeader::new("Integrators")
+                .default_open(true)
+                .show(ui, |ui| {
+                    integrator_controls::show(ui, &mut self.world);
+                });
+            ui.collapsing("Step Sizes", |ui| {
+                step_size_controls::show(ui, &mut self.world)
+            });
+            ui.collapsing("Colors", |ui| {
+                color_controls::show(ui, &mut self.control_state);
+            });
+            //settings::show(ui, &mut self.control_state);
         });
 
         CentralPanel::default().show(ctx, |ui| {
