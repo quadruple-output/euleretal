@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use ::eframe::egui::{clamp, Painter, PointerButton, Response, Sense, Shape};
+use ::eframe::egui::{Painter, PointerButton, Response, Sense, Shape};
 
 pub struct Kind;
 
@@ -144,7 +144,7 @@ impl State {
             let input = ui.input();
             if input.modifiers.command {
                 let Vec2 { x: _, y: scroll_y } = input.pointer.delta();
-                self.visible_units = clamp(self.visible_units * 1.01_f32.powf(scroll_y), 0.1..=20.);
+                self.visible_units = (self.visible_units * 1.01_f32.powf(scroll_y)).clamp(0.1, 20.);
             } else if input.pointer.button_down(PointerButton::Primary) {
                 let mouse_delta = ui.input().pointer.delta();
                 let screen_focus = self.user_to_screen(self.focus);
@@ -167,7 +167,7 @@ impl State {
                 &response.ctx,
                 response.id.with("tooltip"),
                 |ui| {
-                    if let Some(mouse_pos) = ui.input().pointer.tooltip_pos() {
+                    if let Some(mouse_pos) = ui.input().pointer.hover_pos() {
                         add_contents(ui, self.screen_to_user(mouse_pos));
                     }
                 },

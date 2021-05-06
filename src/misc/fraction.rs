@@ -21,7 +21,7 @@ impl Fraction {
         }
     }
 
-    pub fn to_f32(&self) -> f32 {
+    pub fn to_f32(self) -> f32 {
         self.as_float
     }
 }

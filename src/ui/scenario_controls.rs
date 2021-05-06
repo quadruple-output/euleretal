@@ -16,7 +16,7 @@ pub fn show(ui: &mut Ui, world: &mut World) {
                 world.query_mut::<(&Box<dyn AccelerationField>, &mut Duration)>()
             {
                 let mut duration_for_edit = duration.0.get().into_inner();
-                ui.add(Slider::f32(&mut duration_for_edit, 0.1..=50.).logarithmic(true));
+                ui.add(Slider::new(&mut duration_for_edit, 0.1..=50.).logarithmic(true));
                 duration.0.set(duration_for_edit.into());
 
                 ui.label(acceleration.label());

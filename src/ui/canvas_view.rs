@@ -98,20 +98,19 @@ fn show_scenario_selector(ui: &mut Ui, canvas_id: Entity, world: &mut World) {
         .unwrap();
 
     let mut selected_scenario_id = canvas_scenario.id;
-    egui::combo_box(
-        ui,
+    egui::ComboBox::from_id_source(
         ui.make_persistent_id(format!("scenario_selector_{:?}", canvas_id)),
-        canvas_scenario.label(),
-        |ui| {
-            for selectable_scenario in &selectable_scenarios {
-                ui.selectable_value(
-                    &mut selected_scenario_id,
-                    selectable_scenario.id,
-                    selectable_scenario.label(),
-                );
-            }
-        },
-    );
+    )
+    .selected_text(canvas_scenario.label())
+    .show_ui(ui, |ui| {
+        for selectable_scenario in &selectable_scenarios {
+            ui.selectable_value(
+                &mut selected_scenario_id,
+                selectable_scenario.id,
+                selectable_scenario.label(),
+            );
+        }
+    });
     if selected_scenario_id != canvas_scenario.id {
         let mut canvas_scenario_id = world
             .get_mut::<canvas::comp::ScenarioId>(canvas_id)
@@ -279,22 +278,23 @@ fn show_integrator_selector(
     let selectable_integrators =
         world.query::<(Entity, &integrator::Kind, &integrator::comp::Integrator)>();
     let mut selected_integrator = integration.integrator_id.0;
-    egui::combo_box(
-        ui,
+
+    egui::ComboBox::from_id_source(
         ui.make_persistent_id(format!("integrator_selector_{:?}", integration.id)),
-        integration.integrator.label(),
-        |ui| {
-            for selectable_integrator in selectable_integrators {
-                ui.selectable_value(
-                    &mut selected_integrator,
-                    selectable_integrator.0,
-                    selectable_integrator.2.label(),
-                )
-                .on_hover_text(selectable_integrator.2.description());
-            }
-        },
     )
+    .selected_text(integration.integrator.label())
+    .show_ui(ui, |ui| {
+        for selectable_integrator in selectable_integrators {
+            ui.selectable_value(
+                &mut selected_integrator,
+                selectable_integrator.0,
+                selectable_integrator.2.label(),
+            )
+            .on_hover_text(selectable_integrator.2.description());
+        }
+    })
     .on_hover_text(integration.integrator.description());
+
     if selected_integrator == integration.integrator_id.0 {
         None
     } else {
@@ -308,23 +308,23 @@ fn show_step_size_selector(
     world: &World,
 ) -> Option<Entity> {
     let mut selected_step_size_id = integration.step_size_id.0;
-    egui::combo_box(
-        ui,
+    egui::ComboBox::from_id_source(
         ui.make_persistent_id(format!("step_size_selector_{:?}", integration.id)),
-        format!("{}", integration.step_size_id.gather_from(world)),
-        |ui| {
-            for selectable_step_size in world
-                .query::<step_size::Query>()
-                .map(|step_size| step_size.gather_from(world))
-            {
-                ui.selectable_value(
-                    &mut selected_step_size_id,
-                    selectable_step_size.id,
-                    format!("{}", selectable_step_size),
-                );
-            }
-        },
-    );
+    )
+    .selected_text(format!("{}", integration.step_size_id.gather_from(world)))
+    .show_ui(ui, |ui| {
+        for selectable_step_size in world
+            .query::<step_size::Query>()
+            .map(|step_size| step_size.gather_from(world))
+        {
+            ui.selectable_value(
+                &mut selected_step_size_id,
+                selectable_step_size.id,
+                format!("{}", selectable_step_size),
+            );
+        }
+    });
+
     if selected_step_size_id == integration.step_size_id.0 {
         None
     } else {

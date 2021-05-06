@@ -5,7 +5,7 @@ pub fn my_stroke_ui(ui: &mut Ui, stroke: &mut Stroke, text: &str, tooltip: &str)
     ui.horizontal(|ui| {
         ui.color_edit_button_srgba(color);
         ui.add(
-            egui::DragValue::f32(width)
+            egui::DragValue::new(width)
                 .speed(0.1)
                 .clamp_range(0.0..=5.0),
         )

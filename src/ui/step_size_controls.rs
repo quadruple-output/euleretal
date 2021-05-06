@@ -82,7 +82,7 @@ fn show_step_size_table(ui: &mut Ui, world: &World) -> Operation {
                 // edit dt:
                 let mut dt = step_size.duration.get().into_inner();
                 if ui
-                    .add(Slider::f32(&mut dt, 0.01..=2.).logarithmic(true))
+                    .add(Slider::new(&mut dt, 0.01..=2.).logarithmic(true))
                     .changed()
                 {
                     operation = Operation::SetDuration(step_size.id, dt.into());
@@ -108,8 +108,7 @@ fn show_step_size_table(ui: &mut Ui, world: &World) -> Operation {
 }
 
 fn is_deletion_allowed(step_size_id: bevy_ecs::Entity, world: &World) -> bool {
-    world
+    !world
         .query::<(&integration::Kind, &integration::comp::StepSizeId)>()
-        .find(|(_, candidate_step_size_id)| candidate_step_size_id.0 == step_size_id)
-        .is_none()
+        .any(|(_, candidate_step_size_id)| candidate_step_size_id.0 == step_size_id)
 }

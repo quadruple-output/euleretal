@@ -1,6 +1,5 @@
 use crate::core::integrator::OneStepWithCalibrationPoints;
 use crate::core::samples::{FinalizedCalibrationPoints, NewSampleWithPoints, StartCondition};
-#[macro_use]
 use crate::prelude::*;
 
 pub struct Euler {}
