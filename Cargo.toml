@@ -12,9 +12,9 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-eframe = "0.11.0" # Gives us egui, epi and web+native backends
+eframe = "0.12" # Gives us egui, epi and web+native backends
 serde = { version = "1", features = ["derive"], optional = true }
-bevy_math = "0.4"
+bevy_math = "0.5"
 decorum = "0.3"
 flexi_logger = "0.17"
 log = "0.4"

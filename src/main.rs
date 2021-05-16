@@ -17,5 +17,5 @@ fn main() {
     }
 
     let app = euleretal::ui::App::default();
-    eframe::run_native(Box::new(app));
+    eframe::run_native(Box::new(app), eframe::epi::NativeOptions::default());
 }
