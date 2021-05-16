@@ -21,7 +21,7 @@ pub const SAMPLE_DOT_RADIUS: f32 = 2.5; // todo: this might become configurable 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct App {
-    world: bevy_ecs::World,
+    world: World,
     //resources: Resources,
     control_state: ControlState,
 }
@@ -116,95 +116,57 @@ impl App {
     }
 
     fn initialize_scenario(&mut self) {
-        let step_size_id = step_size::Bundle(
-            step_size::Kind,
-            UserLabel("default".to_string()),
-            Duration(ChangeTracker::with(R32::from(0.5))),
-            Hsva::from(Color32::YELLOW),
-        )
-        .spawn(&mut self.world);
+        let step_size = Rc::clone(self.world.add_step_size(StepSize {
+            user_label: UserLabel("default".to_string()),
+            duration: Duration(ChangeTracker::with(R32::from(0.5))),
+            color: Hsva::from(Color32::YELLOW),
+        }));
 
-        let _exact_for_const_id = integrator::Bundle(
-            integrator::Kind,
-            Box::new(integrators::exact_for_const::ExactForConst::new()),
-            Stroke::new(1., Hsva::from(Color32::BLUE)),
-        )
-        .spawn(&mut self.world);
+        let _exact_for_const = self.world.add_configured_integrator(ConfiguredIntegrator {
+            integrator: Box::new(integrators::exact_for_const::ExactForConst::new()),
+            stroke: Stroke::new(1., Hsva::from(Color32::BLUE)),
+        });
 
-        let _explicit_euler_id = integrator::Bundle(
-            integrator::Kind,
-            Box::new(integrators::euler::Broken::new()),
-            Stroke::new(1., Hsva::from(Color32::from_rgb(255, 0, 255))), // 255,0,255: magenta
-        )
-        .spawn(&mut self.world);
+        let _explicit_euler = self.world.add_configured_integrator(ConfiguredIntegrator {
+            integrator: Box::new(integrators::euler::Broken::new()),
+            stroke: Stroke::new(1., Hsva::from(Color32::from_rgb(255, 0, 255))), // 255,0,255: magenta
+        });
 
-        let _mid_point_euler_id = integrator::Bundle(
-            integrator::Kind,
-            Box::new(integrators::mid_point::Euler::new()),
-            Stroke::new(1., Hsva::from(Color32::YELLOW)),
-        )
-        .spawn(&mut self.world);
+        let _mid_point_euler = self.world.add_configured_integrator(ConfiguredIntegrator {
+            integrator: Box::new(integrators::mid_point::Euler::new()),
+            stroke: Stroke::new(1., Hsva::from(Color32::YELLOW)),
+        });
 
-        let _mid_point_second_order_id = integrator::Bundle(
-            integrator::Kind,
-            Box::new(integrators::mid_point::SecondOrder::new()),
-            Stroke::new(1., Hsva::from(Color32::GREEN)),
-        )
-        .spawn(&mut self.world);
+        let _mid_point_second_order = self.world.add_configured_integrator(ConfiguredIntegrator {
+            integrator: Box::new(integrators::mid_point::SecondOrder::new()),
+            stroke: Stroke::new(1., Hsva::from(Color32::GREEN)),
+        });
 
-        let implicit_euler_id = integrator::Bundle(
-            integrator::Kind,
-            Box::new(integrators::euler::Euler::new()),
-            Stroke::new(1., Hsva::from(Color32::RED)),
-        )
-        .spawn(&mut self.world);
+        let implicit_euler =
+            Rc::clone(self.world.add_configured_integrator(ConfiguredIntegrator {
+                integrator: Box::new(integrators::euler::Euler::new()),
+                stroke: Stroke::new(1., Hsva::from(Color32::RED)),
+            }));
 
-        let scenario_center_mass_id = scenario::Bundle(
-            scenario::Kind,
-            Box::new(scenarios::CenterMass),
-            StartPosition(ChangeTracker::with(Vec3::new(0., 1., 0.))),
-            StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
-            Duration(ChangeTracker::with(std::f32::consts::TAU.into())),
-        )
-        .spawn(&mut self.world);
+        let scenario_center_mass = Rc::clone(self.world.add_scenario(Scenario {
+            acceleration: Box::new(scenarios::CenterMass),
+            start_position: StartPosition(ChangeTracker::with(Vec3::new(0., 1., 0.))),
+            start_velocity: StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
+            duration: Duration(ChangeTracker::with(std::f32::consts::TAU.into())),
+        }));
 
-        let _scenario_constant_acceleration_id = scenario::Bundle(
-            scenario::Kind,
-            Box::new(scenarios::ConstantAcceleration),
-            StartPosition(ChangeTracker::with(Vec3::new(0., 0., 0.))),
-            StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
-            Duration(ChangeTracker::with(2_f32.into())),
-        )
-        .spawn(&mut self.world);
+        let _scenario_constant_acceleration = self.world.add_scenario(Scenario {
+            acceleration: Box::new(scenarios::ConstantAcceleration),
+            start_position: StartPosition(ChangeTracker::with(Vec3::new(0., 0., 0.))),
+            start_velocity: StartVelocity(ChangeTracker::with(Vec3::new(1., 0., 0.))),
+            duration: Duration(ChangeTracker::with(2_f32.into())),
+        });
 
-        let canvas_center_mass_id =
-            canvas::Bundle(canvas::Kind, canvas::State::new(), scenario_center_mass_id)
-                .spawn(&mut self.world);
+        let canvas_center_mass = self.world.add_canvas(Canvas::new(scenario_center_mass));
 
-        integration::Bundle(
-            integration::Kind,
-            integration::comp::State::new(integration::State::new()),
-            implicit_euler_id,
-            step_size_id,
-            canvas_center_mass_id,
-        )
-        .spawn(&mut self.world);
-
-        // let canvas_constant_acceleration_id = canvas::Bundle(
-        //     canvas::Kind,
-        //     canvas::comp::State::new(),
-        //     scenario_constant_acceleration_id,
-        // )
-        // .spawn(&mut self.world);
-
-        // integration::Bundle(
-        //     integration::Kind,
-        //     integration::comp::State::new(integration::State::new()), // TODO: make this more elegant
-        //     implicit_euler_id,
-        //     step_size_id,
-        //     canvas_constant_acceleration_id,
-        // )
-        // .spawn(&mut self.world);
+        canvas_center_mass
+            .borrow_mut()
+            .add_integration(Integration::new(implicit_euler, step_size));
     }
 }
 

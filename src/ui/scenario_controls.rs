@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use bevy_ecs::World;
 use egui::{Slider, Ui};
 
 #[allow(clippy::borrowed_box)]
@@ -12,15 +11,20 @@ pub fn show(ui: &mut Ui, world: &mut World) {
             ui.label("Scenario");
             ui.end_row();
 
-            for (acceleration, mut duration) in
-                world.query_mut::<(&Box<dyn AccelerationField>, &mut Duration)>()
-            {
-                let mut duration_for_edit = duration.0.get().into_inner();
+            world.scenarios().for_each(|scenario| {
+                //for (acceleration, mut duration) in
+                //world.query_mut::<(&Box<dyn AccelerationField>, &mut Duration)>()
+                //{
+                let mut duration_for_edit = scenario.borrow().duration.0.get().into_inner();
                 ui.add(Slider::new(&mut duration_for_edit, 0.1..=50.).logarithmic(true));
-                duration.0.set(duration_for_edit.into());
+                scenario
+                    .borrow_mut()
+                    .duration
+                    .0
+                    .set(duration_for_edit.into());
 
-                ui.label(acceleration.label());
+                ui.label(scenario.borrow().acceleration.label());
                 ui.end_row();
-            }
+            });
         });
 }

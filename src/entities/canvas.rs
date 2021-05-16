@@ -1,26 +1,13 @@
+use std::{cell::RefCell, rc::Rc, slice::Iter};
+
 use crate::prelude::*;
 use ::eframe::egui::{Painter, PointerButton, Response, Sense, Shape};
 
-pub struct Kind;
+use super::integration::Integration;
 
-pub mod comp {
-    pub type State = super::State;
-    pub type ScenarioId = crate::scenario::Entity;
-}
-
-#[derive(Clone, Copy)]
-pub struct Entity(pub bevy_ecs::Entity);
-
-#[derive(bevy_ecs::Bundle)]
-pub struct Bundle(pub Kind, pub State, pub comp::ScenarioId);
-
-impl Bundle {
-    pub fn spawn(self, world: &mut bevy_ecs::World) -> self::Entity {
-        Entity(world.spawn(self))
-    }
-}
-
-pub struct State {
+pub struct Canvas {
+    scenario: Obj<Scenario>,
+    integrations: Vec<Obj<Integration>>,
     visible_units: f32,
     focus: Vec3,
     scale: Vec3,
@@ -31,9 +18,11 @@ pub struct State {
     pub ui_integrations_window_is_open: bool,
 }
 
-impl State {
-    pub fn new() -> Self {
+impl Canvas {
+    pub fn new(scenario: Obj<Scenario>) -> Self {
         Self {
+            scenario,
+            integrations: Vec::default(),
             visible_units: 1.,
             focus: Vec3::default(),
             trajectory: Vec::new(),
@@ -45,16 +34,40 @@ impl State {
         }
     }
 
+    pub fn scenario(&self) -> &Obj<Scenario> {
+        &self.scenario
+    }
+
+    pub fn set_scenario(&mut self, new_scenario: Obj<Scenario>) {
+        self.scenario = new_scenario;
+        self.trajectory = Vec::new();
+        self.scenario_change_count = 0;
+    }
+
+    pub fn integrations(&self) -> Iter<Obj<Integration>> {
+        self.integrations.iter()
+    }
+
+    pub fn add_integration(&mut self, integration: Integration) {
+        self.integrations.push(Rc::new(RefCell::new(integration)));
+    }
+
+    pub fn remove_integration(&mut self, integration: Obj<Integration>) {
+        self.integrations
+            .retain(|candidate| !Rc::ptr_eq(candidate, &integration));
+    }
+
     pub fn update_trajectory(
         &mut self,
         acceleration: &dyn AccelerationField,
-        start_position: &ChangeTracker<Vec3, impl change_tracker::TRead>,
-        start_velocity: &ChangeTracker<Vec3, impl change_tracker::TRead>,
-        duration: &ChangeTracker<R32, impl change_tracker::TRead>,
+        start_position: &StartPosition,
+        start_velocity: &StartVelocity,
+        duration: &Duration,
         min_dt: R32,
     ) {
-        let scenario_change_count =
-            start_position.change_count() + start_velocity.change_count() + duration.change_count();
+        let scenario_change_count = start_position.0.change_count()
+            + start_velocity.0.change_count()
+            + duration.0.change_count();
         if self.scenario_change_count != scenario_change_count || self.trajectory_min_dt > min_dt {
             self.trajectory = scenario::calculate_trajectory(
                 acceleration,
@@ -70,11 +83,6 @@ impl State {
 
     pub fn has_trajectory(&self) -> bool {
         !self.trajectory.is_empty()
-    }
-
-    pub fn reset_scenario(&mut self) {
-        self.trajectory = Vec::new();
-        self.scenario_change_count = 0;
     }
 
     pub fn bbox(&self) -> BoundingBox {

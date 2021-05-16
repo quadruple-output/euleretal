@@ -1,13 +1,12 @@
 use crate::prelude::*;
 
 pub fn render(
-    world: &World,
     state: &ControlState,
-    canvas_id: bevy_ecs::Entity,
+    canvas: &Obj<Canvas>,
     paint_area: &egui::Rect,
     painter: &egui::Painter,
 ) {
-    let canvas = world.get::<canvas::comp::State>(canvas_id).unwrap();
+    let canvas = canvas.borrow();
     canvas.draw_hline(0., state.strokes.coordinates, paint_area, painter);
     canvas.draw_vline(0., state.strokes.coordinates, paint_area, painter);
     let min = canvas.min(paint_area);

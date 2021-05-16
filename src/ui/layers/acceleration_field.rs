@@ -1,10 +1,8 @@
 use crate::prelude::*;
-use bevy_ecs::World;
 
 pub fn render(
-    world: &World,
     state: &ControlState,
-    canvas_id: bevy_ecs::Entity,
+    canvas: &Obj<Canvas>,
     response: &egui::Response,
     painter: &egui::Painter,
 ) {
@@ -12,11 +10,9 @@ pub fn render(
         return;
     }
 
-    let canvas = world.get::<canvas::comp::State>(canvas_id).unwrap();
-    let scenario_id = world.get::<canvas::comp::ScenarioId>(canvas_id).unwrap();
-    let acceleration = world
-        .get::<scenario::comp::Acceleration>(scenario_id.0)
-        .unwrap();
+    let canvas = canvas.borrow();
+    let scenario = canvas.scenario().borrow();
+    let acceleration = &scenario.acceleration;
 
     let min = canvas.min(&response.rect);
     let max = canvas.max(&response.rect);

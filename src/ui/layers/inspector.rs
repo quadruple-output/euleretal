@@ -1,20 +1,15 @@
 use crate::prelude::*;
 
 pub fn render(
-    world: &World,
     state: &ControlState,
-    canvas_id: bevy_ecs::Entity,
+    canvas: &Obj<Canvas>,
     response: &egui::Response,
     painter: &egui::Painter,
 ) {
-    let canvas = world.get::<canvas::comp::State>(canvas_id).unwrap();
-    for (integration, _) in world
-        .query::<(&integration::comp::State, &integration::comp::CanvasId)>()
-        .filter(|(_, integration_canvas_id)| integration_canvas_id.0 == canvas_id)
-    {
+    let canvas = canvas.borrow();
+    canvas.integrations().for_each(|integration| {
         canvas.on_hover_ui(response, |ui, mouse_pos| {
-            if let Some((ref_sample, calc_sample)) =
-                integration.lock().unwrap().closest_sample(mouse_pos)
+            if let Some((ref_sample, calc_sample)) = integration.borrow().closest_sample(mouse_pos)
             {
                 // *** reference sample:
                 let ref_sample_dt = ref_sample.dt.into_inner();
@@ -80,5 +75,5 @@ pub fn render(
                 ));
             }
         });
-    }
+    })
 }

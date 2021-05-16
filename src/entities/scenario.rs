@@ -3,89 +3,14 @@ use crate::{
     prelude::*,
 };
 
-pub struct Kind;
-pub mod comp {
-    pub type Acceleration = Box<dyn super::AccelerationField>;
-    pub type StartPosition = super::StartPosition;
-    pub type StartVelocity = super::StartVelocity;
-    pub type Duration = super::Duration;
+pub struct Scenario {
+    pub acceleration: Box<dyn AccelerationField>,
+    pub start_position: StartPosition,
+    pub start_velocity: StartVelocity,
+    pub duration: Duration,
 }
 
-#[derive(Clone, Copy)]
-pub struct Entity(pub bevy_ecs::Entity);
-
-#[derive(bevy_ecs::Bundle)]
-pub struct Bundle(
-    pub Kind,
-    pub comp::Acceleration,
-    pub comp::StartPosition,
-    pub comp::StartVelocity,
-    pub comp::Duration,
-);
-
-pub type Query<'a> = (
-    bevy_ecs::Entity,
-    &'a Kind,
-    &'a comp::Acceleration,
-    &'a comp::StartPosition,
-    &'a comp::StartVelocity,
-    &'a comp::Duration,
-);
-
-pub struct Gathered<'a> {
-    pub id: bevy_ecs::Entity,
-    pub acceleration: &'a dyn AccelerationField,
-    pub start_position: ChangeTracker<Vec3, change_tracker::Read>,
-    pub start_velocity: ChangeTracker<Vec3, change_tracker::Read>,
-    pub duration: ChangeTracker<R32, change_tracker::Read>,
-}
-
-impl Bundle {
-    pub fn spawn(self, world: &mut bevy_ecs::World) -> self::Entity {
-        Entity(world.spawn(self))
-    }
-}
-
-impl<'a> super::Gather<'a> for Entity {
-    type T = Gathered<'a>;
-
-    fn gather_from(&self, world: &'a World) -> Gathered<'a> {
-        // enforce type check for assignments:
-        let acceleration = world.get::<comp::Acceleration>(self.0).unwrap();
-        let start_position = world.get::<comp::StartPosition>(self.0).unwrap();
-        let start_velocity = world.get::<comp::StartVelocity>(self.0).unwrap();
-        let duration = world.get::<comp::Duration>(self.0).unwrap();
-        Gathered {
-            id: self.0,
-            acceleration: &**acceleration,
-            start_position: start_position.0.copy_read_only(),
-            start_velocity: start_velocity.0.copy_read_only(),
-            duration: duration.0.copy_read_only(),
-        }
-    }
-}
-
-impl<'a> super::Gather<'a> for Query<'a> {
-    type T = Gathered<'a>;
-
-    fn gather_from(&self, _: &'a World) -> Gathered<'a> {
-        // enforce type check for assignments:
-        let id: bevy_ecs::Entity = self.0;
-        let acceleration: &'a comp::Acceleration = self.2;
-        let start_position: &comp::StartPosition = self.3;
-        let start_velocity: &comp::StartVelocity = self.4;
-        let duration: &comp::Duration = self.5;
-        Gathered {
-            id,
-            acceleration: &**acceleration,
-            start_position: start_position.0.copy_read_only(),
-            start_velocity: start_velocity.0.copy_read_only(),
-            duration: duration.0.copy_read_only(),
-        }
-    }
-}
-
-impl<'a> Gathered<'a> {
+impl Scenario {
     pub fn label(&self) -> String {
         self.acceleration.label()
     }
@@ -95,9 +20,10 @@ const STEPS_PER_DT: usize = 40;
 
 pub fn calculate_trajectory(
     acceleration: &dyn AccelerationField,
-    start_position: &ChangeTracker<Vec3, impl change_tracker::TRead>,
-    start_velocity: &ChangeTracker<Vec3, impl change_tracker::TRead>,
-    duration: &ChangeTracker<R32, impl change_tracker::TRead>,
+    // todo: don't use ChangeTracker but StartPosition. Impl. Deref for StartPosition
+    start_position: &StartPosition,
+    start_velocity: &StartVelocity,
+    duration: &Duration,
     min_dt: R32,
 ) -> Vec<Vec3> {
     #[allow(clippy::cast_sign_loss)]
@@ -105,8 +31,8 @@ pub fn calculate_trajectory(
         (duration.get() / min_dt * R32::from(STEPS_PER_DT as f32)).into_inner() as usize;
     let (trajectory, _samples) = calculate_trajectory_and_samples(
         acceleration,
-        start_position.get(),
-        start_velocity.get(),
+        start_position.0.get(),
+        start_velocity.0.get(),
         1,
         duration.get(),
         num_steps,

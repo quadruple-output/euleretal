@@ -11,12 +11,14 @@
 
 #[macro_use]
 mod misc; // modules with macros must be listed first
+
 mod components;
 mod core;
 mod entities;
 mod integrators;
 mod scenarios;
 pub mod ui;
+mod world;
 
 mod prelude {
     pub use super::components::prelude::*;
@@ -24,11 +26,12 @@ mod prelude {
     pub use super::entities::prelude::*;
     pub use super::misc::prelude::*;
     pub use super::ui::ControlState;
-    pub use bevy_ecs::World;
+    pub use super::world::World;
     pub use bevy_math::Vec3;
     pub use decorum::R32;
     pub use eframe::egui;
     pub use eframe::egui::{color::Hsva, Color32, Pos2, Stroke, Ui, Vec2};
+    pub use std::rc::Rc;
 }
 
 use self::prelude::*;
