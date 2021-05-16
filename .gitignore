@@ -1,5 +1,3 @@
 /.vscode
 /target
 workspace.code-workspace
-/docs/euleretal.js
-/docs/euleretal_bg.wasm
