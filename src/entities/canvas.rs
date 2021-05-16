@@ -148,25 +148,28 @@ impl Canvas {
     }
 
     fn interact(&mut self, ui: &Ui, response: &Response) {
-        if response.hovered() {
-            let input = ui.input();
-            self.visible_units *= input.zoom_delta();
-            if input.scroll_delta != Vec2::ZERO {
+        let input = ui.input();
+        // todo: propose pull request to integrate the below check for `touch.start_pos` into
+        // `response.hovered()`
+        if response.hovered()
+            || input
+                .multi_touch()
+                .map_or(false, |touch| response.rect.contains(touch.start_pos))
+        {
+            let zoom = input.zoom_delta();
+            let translation = input
+                .multi_touch()
+                .map_or(input.scroll_delta, |touch| touch.translation_delta);
+
+            self.visible_units /= zoom;
+            if translation != Vec2::ZERO {
                 let screen_focus = self.user_to_screen(self.focus);
-                self.focus = self.screen_to_user(screen_focus - input.scroll_delta);
+                self.focus = self.screen_to_user(screen_focus - translation);
             }
         }
     }
 
     pub fn on_hover_ui(&self, response: &Response, add_contents: impl FnOnce(&mut Ui, Vec3)) {
-        //** this used to work with bevy_egui, before switching to eframe, but now
-        //** the tooltip is placed _below_ the current paint area:
-        //
-        // response.clone().on_hover_ui(|ui| {
-        //     if let Some(mouse_pos) = ui.input().pointer.tooltip_pos() {
-        //         add_contents(ui, self.screen_to_user(mouse_pos));
-        //     }
-        // });
         if response.hovered() && response.ctx.input().pointer.has_pointer() {
             egui::popup::show_tooltip_at_pointer(
                 &response.ctx,
