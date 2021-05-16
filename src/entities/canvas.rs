@@ -150,13 +150,10 @@ impl Canvas {
     fn interact(&mut self, ui: &Ui, response: &Response) {
         if response.hovered() {
             let input = ui.input();
-            if input.modifiers.command {
-                let Vec2 { x: _, y: scroll_y } = input.pointer.delta();
-                self.visible_units = (self.visible_units * 1.01_f32.powf(scroll_y)).clamp(0.1, 20.);
-            } else if input.pointer.button_down(PointerButton::Primary) {
-                let mouse_delta = ui.input().pointer.delta();
+            self.visible_units *= input.zoom_delta();
+            if input.scroll_delta != Vec2::ZERO {
                 let screen_focus = self.user_to_screen(self.focus);
-                self.focus = self.screen_to_user(screen_focus - mouse_delta);
+                self.focus = self.screen_to_user(screen_focus - input.scroll_delta);
             }
         }
     }
