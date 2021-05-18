@@ -1,9 +1,7 @@
 use std::{cell::RefCell, rc::Rc, slice::Iter};
 
 use crate::prelude::*;
-use ::eframe::egui::{Painter, PointerButton, Response, Sense, Shape};
-
-use super::integration::Integration;
+use eframe::egui::{Painter, PointerButton, Response, Sense, Shape};
 
 pub struct Canvas {
     scenario: Obj<Scenario>,

@@ -10,7 +10,7 @@ impl Broken {
     }
 }
 
-impl Integrator for Broken {
+impl core::Integrator for Broken {
     fn label(&self) -> String {
         "Broken Euler".to_string()
     }
@@ -52,7 +52,7 @@ impl Euler {
     }
 }
 
-impl Integrator for Euler {
+impl core::Integrator for Euler {
     fn label(&self) -> String {
         "Euler".to_string()
     }

@@ -1,5 +1,5 @@
 use super::canvas_view::{show_canvas, show_header_bar, CanvasOperation};
-use crate::{entities::integration::Integration, prelude::*};
+use crate::prelude::*;
 use egui::Ui;
 use std::rc::Rc;
 

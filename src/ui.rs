@@ -1,6 +1,8 @@
+mod canvas;
 mod canvas_grid;
 mod canvas_view;
 mod color_controls;
+mod entities;
 mod integrator_controls;
 mod layer_controls;
 mod layers;
@@ -10,8 +12,11 @@ mod step_size_controls;
 
 use crate::{integrators, prelude::*, scenarios};
 use ::core::fmt;
+pub use canvas::Canvas;
 use eframe::{egui, epi};
 use egui::{CentralPanel, CollapsingHeader, Rgba, SidePanel};
+// todo: do not publish `entities`. (needs quite a few refactorings)
+pub use entities::*;
 use std::str;
 
 const BUTTON_GLYPH_ADD: &str = "\u{271a}"; // \u{271a} = '✚'
@@ -122,31 +127,30 @@ impl App {
             color: Hsva::from(Color32::YELLOW),
         }));
 
-        let _exact_for_const = self.world.add_configured_integrator(ConfiguredIntegrator {
+        let _exact_for_const = self.world.add_configured_integrator(ui::Integrator {
             integrator: Box::new(integrators::exact_for_const::ExactForConst::new()),
             stroke: Stroke::new(1., Hsva::from(Color32::BLUE)),
         });
 
-        let _explicit_euler = self.world.add_configured_integrator(ConfiguredIntegrator {
+        let _explicit_euler = self.world.add_configured_integrator(ui::Integrator {
             integrator: Box::new(integrators::euler::Broken::new()),
             stroke: Stroke::new(1., Hsva::from(Color32::from_rgb(255, 0, 255))), // 255,0,255: magenta
         });
 
-        let _mid_point_euler = self.world.add_configured_integrator(ConfiguredIntegrator {
+        let _mid_point_euler = self.world.add_configured_integrator(ui::Integrator {
             integrator: Box::new(integrators::mid_point::Euler::new()),
             stroke: Stroke::new(1., Hsva::from(Color32::YELLOW)),
         });
 
-        let _mid_point_second_order = self.world.add_configured_integrator(ConfiguredIntegrator {
+        let _mid_point_second_order = self.world.add_configured_integrator(ui::Integrator {
             integrator: Box::new(integrators::mid_point::SecondOrder::new()),
             stroke: Stroke::new(1., Hsva::from(Color32::GREEN)),
         });
 
-        let implicit_euler =
-            Rc::clone(self.world.add_configured_integrator(ConfiguredIntegrator {
-                integrator: Box::new(integrators::euler::Euler::new()),
-                stroke: Stroke::new(1., Hsva::from(Color32::RED)),
-            }));
+        let implicit_euler = Rc::clone(self.world.add_configured_integrator(ui::Integrator {
+            integrator: Box::new(integrators::euler::Euler::new()),
+            stroke: Stroke::new(1., Hsva::from(Color32::RED)),
+        }));
 
         let scenario_center_mass = Rc::clone(self.world.add_scenario(Scenario {
             acceleration: Box::new(scenarios::CenterMass),

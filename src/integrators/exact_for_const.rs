@@ -10,7 +10,7 @@ impl ExactForConst {
     }
 }
 
-impl Integrator for ExactForConst {
+impl core::Integrator for ExactForConst {
     fn label(&self) -> String {
         "Exact for const. acceleration".to_string()
     }

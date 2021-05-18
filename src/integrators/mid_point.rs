@@ -10,7 +10,7 @@ impl Euler {
     }
 }
 
-impl Integrator for Euler {
+impl core::Integrator for Euler {
     fn label(&self) -> String {
         "Midpoint (explicit, Euler)".to_string()
     }
@@ -72,7 +72,7 @@ impl SecondOrder {
     }
 }
 
-impl Integrator for SecondOrder {
+impl core::Integrator for SecondOrder {
     fn label(&self) -> String {
         "Midpoint (explicit, SecondOrder)".to_string()
     }

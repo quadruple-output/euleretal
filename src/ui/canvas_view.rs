@@ -12,7 +12,7 @@ enum IntegrationOperation {
     },
     SetIntegrator {
         integration: Obj<Integration>,
-        integrator: Obj<ConfiguredIntegrator>,
+        integrator: Obj<ui::Integrator>,
     },
     SetStepSize {
         integration: Obj<Integration>,
@@ -216,7 +216,7 @@ fn show_integrator_selector(
     ui: &mut Ui,
     integration: &Obj<Integration>,
     world: &World,
-) -> Option<Obj<ConfiguredIntegrator>> {
+) -> Option<Obj<ui::Integrator>> {
     let integration_ptr = integration.as_ptr();
     let current_integrator_conf = &integration.borrow().integrator_conf;
     let mut selected_integrator_ptr = current_integrator_conf.as_ptr();

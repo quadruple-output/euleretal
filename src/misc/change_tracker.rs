@@ -1,5 +1,7 @@
 use std::marker::PhantomData;
 
+// todo: turn struct ChangeTracker into a Trait that can be implemented by any `Obj`
+
 pub type ChangeCount = u32;
 
 pub trait TrackedChange {

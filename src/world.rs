@@ -5,7 +5,7 @@ use std::{cell::RefCell, rc::Rc, slice::Iter};
 pub struct World {
     canvases: Vec<Obj<Canvas>>,
     scenarios: Vec<Obj<Scenario>>,
-    configured_integrators: Vec<Obj<ConfiguredIntegrator>>,
+    configured_integrators: Vec<Obj<ui::Integrator>>,
     step_sizes: Vec<Obj<StepSize>>,
     // integrations are not here! They are managed by their canvases.
 }
@@ -19,7 +19,7 @@ impl World {
         self.scenarios.iter()
     }
 
-    pub fn configured_integrators(&self) -> Iter<Obj<ConfiguredIntegrator>> {
+    pub fn configured_integrators(&self) -> Iter<Obj<ui::Integrator>> {
         self.configured_integrators.iter()
     }
 
@@ -44,8 +44,8 @@ impl World {
 
     pub fn add_configured_integrator(
         &mut self,
-        configured_integrator: ConfiguredIntegrator,
-    ) -> &Obj<ConfiguredIntegrator> {
+        configured_integrator: ui::Integrator,
+    ) -> &Obj<ui::Integrator> {
         self.configured_integrators
             .push(Rc::new(RefCell::new(configured_integrator)));
         self.configured_integrators.last().unwrap()

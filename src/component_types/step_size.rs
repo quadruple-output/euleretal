@@ -1,5 +1,6 @@
 use crate::prelude::*;
 
+// todo: move StepSize to ui::entities, and let the `Integration` only keep a reference to the Duration
 pub struct StepSize {
     pub user_label: UserLabel,
     pub duration: Duration,

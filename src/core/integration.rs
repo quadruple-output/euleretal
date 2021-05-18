@@ -1,7 +1,7 @@
 use crate::{core::samples::StartCondition, prelude::*};
 
 pub struct Integration {
-    pub integrator_conf: Obj<ConfiguredIntegrator>,
+    pub integrator_conf: Obj<ui::Integrator>, // todo: change to `core::Integrator` and move contained `Stroke` up to `Canvas`
     pub step_size: Obj<StepSize>,
     state: State,
 }
@@ -14,7 +14,7 @@ pub struct State {
 }
 
 impl Integration {
-    pub fn new(integrator_conf: Obj<ConfiguredIntegrator>, step_size: Obj<StepSize>) -> Self {
+    pub fn new(integrator_conf: Obj<ui::Integrator>, step_size: Obj<StepSize>) -> Self {
         Self {
             integrator_conf,
             step_size,
@@ -22,7 +22,7 @@ impl Integration {
         }
     }
 
-    pub fn set_integrator(&mut self, integrator_conf: Obj<ConfiguredIntegrator>) {
+    pub fn set_integrator(&mut self, integrator_conf: Obj<ui::Integrator>) {
         self.integrator_conf = integrator_conf;
         self.reset();
     }

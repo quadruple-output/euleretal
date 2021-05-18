@@ -12,20 +12,18 @@
 #[macro_use]
 mod misc; // modules with macros must be listed first
 
-mod components;
-mod core;
-mod entities;
+mod component_types;
+pub mod core;
 mod integrators;
 mod scenarios;
 pub mod ui;
 mod world;
 
 mod prelude {
-    pub use super::components::prelude::*;
-    pub use super::core::prelude::*;
-    pub use super::entities::prelude::*;
+    pub use super::component_types::prelude::*;
+    pub use super::core::{self, prelude::*};
     pub use super::misc::prelude::*;
-    pub use super::ui::ControlState;
+    pub use super::ui::{self, Canvas, ControlState};
     pub use super::world::World;
     pub use bevy_math::Vec3;
     pub use decorum::R32;
