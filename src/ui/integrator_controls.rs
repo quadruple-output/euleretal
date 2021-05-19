@@ -1,8 +1,9 @@
+use super::{misc::my_stroke_ui, World};
 use crate::prelude::*;
 
 #[allow(clippy::borrowed_box)]
 pub fn show(ui: &mut Ui, world: &mut World) {
-    world.configured_integrators().for_each(|integrator| {
+    world.integrators().for_each(|integrator| {
         let label = integrator.borrow().integrator.label();
         let description = integrator.borrow().integrator.description();
         my_stroke_ui(

@@ -1,11 +1,12 @@
 use crate::{core::samples::StartCondition, prelude::*};
 
 pub struct Integration {
-    pub integrator_conf: Obj<ui::Integrator>, // todo: change to `core::Integrator` and move contained `Stroke` up to `Canvas`
+    pub integrator_conf: Obj<crate::ui::Integrator>, // todo: change to `core::Integrator` and move contained `Stroke` up to `Canvas`
     pub step_size: Obj<StepSize>,
     state: State,
 }
 
+#[derive(Default)]
 pub struct State {
     samples: Option<Samples>,
     samples_change_count: ChangeCount,
@@ -14,7 +15,7 @@ pub struct State {
 }
 
 impl Integration {
-    pub fn new(integrator_conf: Obj<ui::Integrator>, step_size: Obj<StepSize>) -> Self {
+    pub fn new(integrator_conf: Obj<crate::ui::Integrator>, step_size: Obj<StepSize>) -> Self {
         Self {
             integrator_conf,
             step_size,
@@ -22,7 +23,7 @@ impl Integration {
         }
     }
 
-    pub fn set_integrator(&mut self, integrator_conf: Obj<ui::Integrator>) {
+    pub fn set_integrator(&mut self, integrator_conf: Obj<crate::ui::Integrator>) {
         self.integrator_conf = integrator_conf;
         self.reset();
     }
@@ -32,10 +33,12 @@ impl Integration {
         self.reset();
     }
 
+    #[must_use]
     pub fn get_stroke(&self) -> Stroke {
         self.integrator_conf.borrow().stroke
     }
 
+    #[must_use]
     pub fn get_step_color(&self) -> Hsva {
         self.step_size.borrow().color
     }
@@ -44,6 +47,7 @@ impl Integration {
         self.state = State::new();
     }
 
+    #[allow(clippy::missing_panics_doc)]
     pub fn update(
         &mut self,
         acceleration: &dyn AccelerationField,
@@ -63,7 +67,7 @@ impl Integration {
             #[allow(clippy::cast_sign_loss)]
             let num_steps = (duration.get() / step_duration.get()).into_inner() as usize;
 
-            state.samples = Some(integrator.integrate(
+            let samples = integrator.integrate(
                 acceleration,
                 &StartCondition {
                     position: start_position.0.get(),
@@ -72,32 +76,29 @@ impl Integration {
                 },
                 num_steps,
                 step_duration.get(),
-            ));
-            state.samples_change_count = samples_change_count;
-            let num_samples = state.samples.as_ref().unwrap().step_points().len();
+            );
+            let num_samples = samples.step_points().len();
             assert!(num_samples == num_steps + 1);
+            state.samples = Some(samples);
+            state.samples_change_count = samples_change_count;
 
             if state.ref_samples_change_count != ref_samples_change_count {
-                state.reference_samples = Some(scenario::calculate_reference_samples(
+                let reference_samples = scenario::calculate_reference_samples(
                     acceleration,
                     start_position.0.get(),
                     start_velocity.0.get(),
                     duration.get(),
                     step_duration.0.get(),
-                ));
-                state.ref_samples_change_count = ref_samples_change_count;
-                let num_refs = state
-                    .reference_samples
-                    .as_ref()
-                    .unwrap()
-                    .step_points()
-                    .len();
+                );
+                let num_refs = reference_samples.step_points().len();
                 assert!(num_refs == num_samples);
+                state.reference_samples = Some(reference_samples);
+                state.ref_samples_change_count = ref_samples_change_count;
             }
         }
     }
 
-    pub fn stretch_bbox(&self, bbox: &mut BoundingBox) {
+    pub fn stretch_bbox(&self, bbox: &mut crate::ui::BoundingBox) {
         for samples in self
             .state
             .reference_samples
@@ -113,7 +114,7 @@ impl Integration {
 
     pub fn draw_on(
         &self,
-        canvas: &Canvas,
+        canvas: &crate::ui::Canvas,
         sample_color: Color32,
         stroke: Stroke,
         painter: &egui::Painter,
@@ -128,6 +129,7 @@ impl Integration {
     }
 
     /// returns (ReferenceSample,ComputedSample)
+    #[must_use]
     pub fn closest_sample(&self, pos: Vec3) -> Option<(CompleteSample, CompleteSample)> {
         self.state
             .reference_samples
@@ -163,6 +165,7 @@ impl Integration {
 }
 
 impl State {
+    #[must_use]
     pub fn new() -> Self {
         Self {
             samples: None,

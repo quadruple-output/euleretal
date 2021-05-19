@@ -1,5 +1,6 @@
-use super::{layers, BUTTON_GLYPH_ADD, BUTTON_GLYPH_DELETE};
-use crate::misc::my_stroke_ui;
+use super::{
+    layers, Canvas, ControlState, Integrator, World, BUTTON_GLYPH_ADD, BUTTON_GLYPH_DELETE,
+};
 use crate::prelude::*;
 use egui::{InnerResponse, Layout, Ui};
 use std::rc::Rc;
@@ -12,7 +13,7 @@ enum IntegrationOperation {
     },
     SetIntegrator {
         integration: Obj<Integration>,
-        integrator: Obj<ui::Integrator>,
+        integrator: Obj<Integrator>,
     },
     SetStepSize {
         integration: Obj<Integration>,
@@ -120,7 +121,7 @@ fn show_integration_selector(ui: &mut Ui, canvas: &Obj<Canvas>, world: &World) {
     match operation {
         IntegrationOperation::Create => {
             canvas.borrow_mut().add_integration(Integration::new(
-                Rc::clone(world.configured_integrators().next().unwrap()),
+                Rc::clone(world.integrators().next().unwrap()),
                 Rc::clone(world.step_sizes().next().unwrap()),
             ));
         }
@@ -183,7 +184,7 @@ fn show_integrations_pop_up(
                         } else {
                             ui.label("");
                         }
-                        my_stroke_ui::my_stroke_preview(
+                        super::misc::my_stroke_preview(
                             ui,
                             integration.borrow().get_stroke(),
                             Some(integration.borrow().get_step_color().into()),
@@ -216,7 +217,7 @@ fn show_integrator_selector(
     ui: &mut Ui,
     integration: &Obj<Integration>,
     world: &World,
-) -> Option<Obj<ui::Integrator>> {
+) -> Option<Obj<Integrator>> {
     let integration_ptr = integration.as_ptr();
     let current_integrator_conf = &integration.borrow().integrator_conf;
     let mut selected_integrator_ptr = current_integrator_conf.as_ptr();
@@ -226,16 +227,14 @@ fn show_integrator_selector(
     )
     .selected_text(current_integrator_conf.borrow().integrator.label())
     .show_ui(ui, |ui| {
-        world
-            .configured_integrators()
-            .for_each(|selectable_integrator| {
-                ui.selectable_value(
-                    &mut selected_integrator_ptr,
-                    selectable_integrator.as_ptr(),
-                    selectable_integrator.borrow().integrator.label(),
-                )
-                .on_hover_text(selectable_integrator.borrow().integrator.description());
-            })
+        world.integrators().for_each(|selectable_integrator| {
+            ui.selectable_value(
+                &mut selected_integrator_ptr,
+                selectable_integrator.as_ptr(),
+                selectable_integrator.borrow().integrator.label(),
+            )
+            .on_hover_text(selectable_integrator.borrow().integrator.description());
+        })
     })
     .on_hover_text(
         integration
@@ -250,7 +249,7 @@ fn show_integrator_selector(
         None
     } else {
         world
-            .configured_integrators()
+            .integrators()
             .find(|candidate| candidate.as_ptr() == selected_integrator_ptr)
             .map(|found| Rc::clone(found))
     }

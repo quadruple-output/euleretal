@@ -6,22 +6,26 @@ mod entities;
 mod integrator_controls;
 mod layer_controls;
 mod layers;
+mod misc;
 mod scenario_controls;
 mod settings;
 mod step_size_controls;
+mod world;
 
 use crate::{integrators, prelude::*, scenarios};
 use ::core::fmt;
 pub use canvas::Canvas;
 use eframe::{egui, epi};
 use egui::{CentralPanel, CollapsingHeader, Rgba, SidePanel};
-// todo: do not publish `entities`. (needs quite a few refactorings)
-pub use entities::*;
+pub use misc::BoundingBox; // todo: should not be pub
+                           // todo: do not publish `entities`. (needs quite a few refactorings)
+pub use entities::*; // todo: should not be pub
 use std::str;
+use world::World;
 
 const BUTTON_GLYPH_ADD: &str = "\u{271a}"; // \u{271a} = '✚'
 const BUTTON_GLYPH_DELETE: &str = "\u{2796}"; // \u{2796}='➖', \u{1fsd1} = '🗑'
-pub const SAMPLE_DOT_RADIUS: f32 = 2.5; // todo: this might become configurable later
+pub const SAMPLE_DOT_RADIUS: f32 = 2.5; // todo: this might become configurable later // todo: should not be pub
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
@@ -127,27 +131,27 @@ impl App {
             color: Hsva::from(Color32::YELLOW),
         }));
 
-        let _exact_for_const = self.world.add_configured_integrator(ui::Integrator {
+        let _exact_for_const = self.world.add_integrator(Integrator {
             integrator: Box::new(integrators::exact_for_const::ExactForConst::new()),
             stroke: Stroke::new(1., Hsva::from(Color32::BLUE)),
         });
 
-        let _explicit_euler = self.world.add_configured_integrator(ui::Integrator {
+        let _explicit_euler = self.world.add_integrator(Integrator {
             integrator: Box::new(integrators::euler::Broken::new()),
             stroke: Stroke::new(1., Hsva::from(Color32::from_rgb(255, 0, 255))), // 255,0,255: magenta
         });
 
-        let _mid_point_euler = self.world.add_configured_integrator(ui::Integrator {
+        let _mid_point_euler = self.world.add_integrator(Integrator {
             integrator: Box::new(integrators::mid_point::Euler::new()),
             stroke: Stroke::new(1., Hsva::from(Color32::YELLOW)),
         });
 
-        let _mid_point_second_order = self.world.add_configured_integrator(ui::Integrator {
+        let _mid_point_second_order = self.world.add_integrator(Integrator {
             integrator: Box::new(integrators::mid_point::SecondOrder::new()),
             stroke: Stroke::new(1., Hsva::from(Color32::GREEN)),
         });
 
-        let implicit_euler = Rc::clone(self.world.add_configured_integrator(ui::Integrator {
+        let implicit_euler = Rc::clone(self.world.add_integrator(Integrator {
             integrator: Box::new(integrators::euler::Euler::new()),
             stroke: Stroke::new(1., Hsva::from(Color32::RED)),
         }));

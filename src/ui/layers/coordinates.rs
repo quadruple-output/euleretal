@@ -1,3 +1,4 @@
+use super::super::{Canvas, ControlState};
 use crate::prelude::*;
 
 pub fn render(

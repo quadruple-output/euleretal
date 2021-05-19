@@ -1,7 +1,8 @@
 use std::{cell::RefCell, rc::Rc, slice::Iter};
 
+use super::BoundingBox;
 use crate::prelude::*;
-use eframe::egui::{Painter, PointerButton, Response, Sense, Shape};
+use eframe::egui::{Painter, Response, Sense, Shape};
 
 pub struct Canvas {
     scenario: Obj<Scenario>,
@@ -32,6 +33,7 @@ impl Canvas {
         }
     }
 
+    #[must_use]
     pub fn scenario(&self) -> &Obj<Scenario> {
         &self.scenario
     }
@@ -42,6 +44,7 @@ impl Canvas {
         self.scenario_change_count = 0;
     }
 
+    #[must_use]
     pub fn integrations(&self) -> Iter<Obj<Integration>> {
         self.integrations.iter()
     }
@@ -50,6 +53,7 @@ impl Canvas {
         self.integrations.push(Rc::new(RefCell::new(integration)));
     }
 
+    #[allow(clippy::needless_pass_by_value)]
     pub fn remove_integration(&mut self, integration: Obj<Integration>) {
         self.integrations
             .retain(|candidate| !Rc::ptr_eq(candidate, &integration));
@@ -79,10 +83,12 @@ impl Canvas {
         }
     }
 
+    #[must_use]
     pub fn has_trajectory(&self) -> bool {
         !self.trajectory.is_empty()
     }
 
+    #[must_use]
     pub fn bbox(&self) -> BoundingBox {
         let mut bbox = BoundingBox::default();
         self.trajectory.iter().for_each(|&s| bbox.expand_to(s));
@@ -232,6 +238,7 @@ impl Canvas {
         );
     }
 
+    #[must_use]
     pub fn min(&self, paint_area: &egui::Rect) -> Vec3 {
         self.screen_to_user(Pos2::new(
             paint_area.min.x,
@@ -239,6 +246,7 @@ impl Canvas {
         ))
     }
 
+    #[must_use]
     pub fn max(&self, paint_area: &egui::Rect) -> Vec3 {
         self.screen_to_user(Pos2::new(
             paint_area.max.x,

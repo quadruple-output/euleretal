@@ -1,3 +1,4 @@
+use super::{Canvas, Integrator};
 use crate::prelude::*;
 use std::{cell::RefCell, rc::Rc, slice::Iter};
 
@@ -5,7 +6,7 @@ use std::{cell::RefCell, rc::Rc, slice::Iter};
 pub struct World {
     canvases: Vec<Obj<Canvas>>,
     scenarios: Vec<Obj<Scenario>>,
-    configured_integrators: Vec<Obj<ui::Integrator>>,
+    integrators: Vec<Obj<Integrator>>,
     step_sizes: Vec<Obj<StepSize>>,
     // integrations are not here! They are managed by their canvases.
 }
@@ -19,8 +20,8 @@ impl World {
         self.scenarios.iter()
     }
 
-    pub fn configured_integrators(&self) -> Iter<Obj<ui::Integrator>> {
-        self.configured_integrators.iter()
+    pub fn integrators(&self) -> Iter<Obj<Integrator>> {
+        self.integrators.iter()
     }
 
     pub fn step_sizes(&self) -> Iter<Obj<StepSize>> {
@@ -42,20 +43,19 @@ impl World {
         self.step_sizes.last().unwrap()
     }
 
-    pub fn add_configured_integrator(
-        &mut self,
-        configured_integrator: ui::Integrator,
-    ) -> &Obj<ui::Integrator> {
-        self.configured_integrators
+    pub fn add_integrator(&mut self, configured_integrator: Integrator) -> &Obj<Integrator> {
+        self.integrators
             .push(Rc::new(RefCell::new(configured_integrator)));
-        self.configured_integrators.last().unwrap()
+        self.integrators.last().unwrap()
     }
 
+    #[allow(clippy::needless_pass_by_value)]
     pub fn remove_canvas(&mut self, canvas: Obj<Canvas>) {
         self.canvases
             .retain(|candidate| !Rc::ptr_eq(&canvas, candidate));
     }
 
+    #[allow(clippy::needless_pass_by_value)]
     pub fn remove_step_size(&mut self, step_size: Obj<StepSize>) {
         self.step_sizes
             .retain(|candidate| !Rc::ptr_eq(&step_size, candidate));

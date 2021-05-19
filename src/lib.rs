@@ -17,14 +17,11 @@ pub mod core;
 mod integrators;
 mod scenarios;
 pub mod ui;
-mod world;
 
 mod prelude {
     pub use super::component_types::prelude::*;
     pub use super::core::{self, prelude::*};
     pub use super::misc::prelude::*;
-    pub use super::ui::{self, Canvas, ControlState};
-    pub use super::world::World;
     pub use bevy_math::Vec3;
     pub use decorum::R32;
     pub use eframe::egui;

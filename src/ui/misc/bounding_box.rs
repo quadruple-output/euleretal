@@ -16,10 +16,12 @@ impl BoundingBox {
         self.max.z = self.max.z.max(s.z);
     }
 
+    #[must_use]
     pub fn center(&self) -> Vec3 {
         0.5 * (self.max + self.min)
     }
 
+    #[must_use]
     pub fn diameter(&self) -> f32 {
         (self.max.x - self.min.x)
             .max(self.max.y - self.min.y)

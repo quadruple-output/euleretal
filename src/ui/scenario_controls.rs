@@ -1,3 +1,4 @@
+use super::World;
 use crate::prelude::*;
 use egui::{Slider, Ui};
 

@@ -1,8 +1,5 @@
 # Euleretal TODO list
 
-## Code Quality
-- implementations of `gather_from` should implement lazy world lookups
-
 ## Bugs
 - "Integrations" Pop-Up should be restricted to be placed inside its parent
   canvas
@@ -25,3 +22,8 @@
 - save/restore state automatically
 - customizable Integrators
 - save/load state in file
+
+## Clean Code
+- Stritly separate `core` from `ui`. `ui` should not publish anything.  Some
+  `core` types must get a `ui`-twin with additional data relevant for `ui` only
+  (like color, label, and stroke, but also `ChangeTracker`)

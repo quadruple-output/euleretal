@@ -11,6 +11,7 @@ pub struct Scenario {
 }
 
 impl Scenario {
+    #[must_use]
     pub fn label(&self) -> String {
         self.acceleration.label()
     }

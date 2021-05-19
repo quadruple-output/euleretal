@@ -27,7 +27,7 @@ pub trait OneStepDirect {
     ) -> Samples<FinalizedCalibrationPoints> {
         let mut samples = Samples::<WithoutCalibrationPoints>::new(start_condition, num_steps);
         for _ in 0..num_steps {
-            let current = samples.current();
+            let current = samples.current().unwrap();
             let mut next = NewSample {
                 dt,
                 ..NewSample::default()
@@ -61,7 +61,7 @@ where
     ) -> Samples<FinalizedCalibrationPoints> {
         let mut samples = Samples::<WithCalibrationPoints<N>>::new(start_condition, num_steps);
         for _ in 0..num_steps {
-            let current = samples.current();
+            let current = samples.current().unwrap();
             let mut next = NewSampleWithPoints {
                 dt,
                 ..NewSampleWithPoints::default()

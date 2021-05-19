@@ -1,4 +1,4 @@
-use super::{BUTTON_GLYPH_ADD, BUTTON_GLYPH_DELETE};
+use super::{World, BUTTON_GLYPH_ADD, BUTTON_GLYPH_DELETE};
 use crate::prelude::*;
 use egui::{
     color_picker::{color_edit_button_hsva, Alpha},
@@ -22,7 +22,7 @@ pub fn show(ui: &mut Ui, world: &mut World) {
             world.add_step_size(StepSize {
                 user_label: UserLabel("".into()),
                 duration: Duration(ChangeTracker::with(0.5.into())),
-                color: Default::default(),
+                color: Hsva::default(),
             });
         }
         Operation::Delete(step_size) => {

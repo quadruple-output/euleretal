@@ -57,6 +57,7 @@ pub enum Successor {
 }
 
 impl Samples<WithoutCalibrationPoints> {
+    #[must_use]
     pub fn new(start_condition: &StartCondition, sample_capacity: usize) -> Self {
         let instance = Self::with_capacity::<0>(sample_capacity);
         instance.initialize(start_condition)
@@ -71,6 +72,7 @@ impl<const N: usize> Samples<WithCalibrationPoints<N>>
 where
     [CalibrationPoint; N]: Default,
 {
+    #[must_use]
     pub fn new(start_condition: &StartCondition, sample_capacity: usize) -> Self {
         let instance = Self::with_capacity::<N>(sample_capacity);
         instance.initialize(start_condition)
@@ -94,10 +96,12 @@ where
 }
 
 impl Samples<FinalizedCalibrationPoints> {
+    #[must_use]
     pub fn step_points(&self) -> &Vec<Position> {
         &self.step_points
     }
 
+    #[must_use]
     pub fn at(&self, idx: usize) -> CompleteSample {
         let step = &self.steps[idx];
         CompleteSample {
@@ -118,15 +122,22 @@ impl Samples<FinalizedCalibrationPoints> {
 }
 
 impl<C: ConcreteCalibrationPointConstraint> Samples<C> {
-    pub fn current(&self) -> StartCondition {
-        let current_step = self.steps.last().unwrap();
-        StartCondition {
-            position: *self.step_points.last().unwrap(),
-            velocity: current_step.velocity,
-            acceleration: current_step.acceleration,
+    #[must_use]
+    pub fn current(&self) -> Option<StartCondition> {
+        if let (Some(current_step), Some(current_point)) =
+            (self.steps.last(), self.step_points.last())
+        {
+            Some(StartCondition {
+                position: *current_point,
+                velocity: current_step.velocity,
+                acceleration: current_step.acceleration,
+            })
+        } else {
+            None
         }
     }
 
+    #[must_use]
     pub fn finalized(self) -> Samples<FinalizedCalibrationPoints> {
         Samples {
             steps: self.steps,

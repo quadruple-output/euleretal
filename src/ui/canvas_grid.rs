@@ -1,4 +1,5 @@
 use super::canvas_view::{show_canvas, show_header_bar, CanvasOperation};
+use super::{Canvas, ControlState, World};
 use crate::prelude::*;
 use egui::Ui;
 use std::rc::Rc;
