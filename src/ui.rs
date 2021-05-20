@@ -17,9 +17,9 @@ use ::core::fmt;
 pub use canvas::Canvas;
 use eframe::{egui, epi};
 use egui::{CentralPanel, CollapsingHeader, Rgba, SidePanel};
-pub use misc::BoundingBox; // todo: should not be pub
-                           // todo: do not publish `entities`. (needs quite a few refactorings)
 pub use entities::*; // todo: should not be pub
+pub use misc::BoundingBox; // todo: should not be pub
+pub use misc::UserLabel; // todo: should not be pub
 use std::str;
 use world::World;
 

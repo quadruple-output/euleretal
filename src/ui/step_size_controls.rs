@@ -1,4 +1,4 @@
-use super::{World, BUTTON_GLYPH_ADD, BUTTON_GLYPH_DELETE};
+use super::{UserLabel, World, BUTTON_GLYPH_ADD, BUTTON_GLYPH_DELETE};
 use crate::prelude::*;
 use egui::{
     color_picker::{color_edit_button_hsva, Alpha},
