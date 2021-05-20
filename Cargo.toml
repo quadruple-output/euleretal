@@ -37,4 +37,4 @@ opt-level = 2 # fast and small wasm
 # eframe = { git = "https://github.com/emilk/egui", branch = "master" }
 
 # If you fork https://github.com/emilk/egui you can test with:
-eframe = { path = "../egui/eframe" }
+# eframe = { path = "../egui/eframe" }
