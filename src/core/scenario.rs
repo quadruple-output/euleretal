@@ -2,6 +2,7 @@ use crate::{
     core::samples::{NewSample, StartCondition, WithoutCalibrationPoints},
     prelude::*,
 };
+use std::{collections::hash_map::DefaultHasher, hash::Hash};
 
 pub struct Scenario {
     pub acceleration: Box<dyn AccelerationField>,
@@ -19,27 +20,29 @@ impl Scenario {
 
 const STEPS_PER_DT: usize = 40;
 
-pub fn calculate_trajectory(
-    acceleration: &dyn AccelerationField,
-    // todo: don't use ChangeTracker but StartPosition. Impl. Deref for StartPosition
-    start_position: &StartPosition,
-    start_velocity: &StartVelocity,
-    duration: &Duration,
-    min_dt: R32,
-) -> Vec<Vec3> {
-    #[allow(clippy::cast_sign_loss)]
-    let num_steps =
-        (duration.get() / min_dt * R32::from(STEPS_PER_DT as f32)).into_inner() as usize;
-    let (trajectory, _samples) = calculate_trajectory_and_samples(
-        acceleration,
-        start_position.0.get(),
-        start_velocity.0.get(),
-        1,
-        duration.get(),
-        num_steps,
-    );
-    log::info!("Calculated trajectory with {} segments", trajectory.len(),);
-    trajectory
+impl Scenario {
+    pub fn hash(&self, state: &mut DefaultHasher) {
+        self.acceleration.hash(state);
+        self.start_position.hash(state);
+        self.start_velocity.hash(state);
+        self.duration.hash(state);
+    }
+
+    pub fn calculate_trajectory(&self, min_dt: R32) -> Vec<Vec3> {
+        #[allow(clippy::cast_sign_loss)]
+        let num_steps =
+            (self.duration.get() / min_dt * R32::from(STEPS_PER_DT as f32)).into_inner() as usize;
+        let (trajectory, _samples) = calculate_trajectory_and_samples(
+            &*self.acceleration,
+            self.start_position.0.get(),
+            self.start_velocity.0.get(),
+            1,
+            self.duration.get(),
+            num_steps,
+        );
+        log::info!("Calculated trajectory with {} segments", trajectory.len(),);
+        trajectory
+    }
 }
 
 pub fn calculate_reference_samples(

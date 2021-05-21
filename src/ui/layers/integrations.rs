@@ -12,19 +12,14 @@ pub fn render(state: &ControlState, canvas: &Obj<Canvas>, painter: &egui::Painte
     let scenario_obj = Rc::clone(canvas.borrow().scenario());
     let scenario = scenario_obj.borrow();
     let first_time = !canvas.borrow().has_trajectory();
-    canvas.borrow_mut().update_trajectory(
-        &*scenario.acceleration,
-        &scenario.start_position,
-        &scenario.start_velocity,
-        &scenario.duration,
-        min_dt,
-    );
+    canvas.borrow_mut().update_trajectory(min_dt);
     canvas.borrow().integrations().for_each(|integration| {
         let mut integration = integration.borrow_mut();
         if first_time {
             integration.reset();
         }
         integration.update(
+            // todo: replace 4 params by a single one
             &*scenario.acceleration,
             &scenario.start_position,
             &scenario.start_velocity,
@@ -32,12 +27,14 @@ pub fn render(state: &ControlState, canvas: &Obj<Canvas>, painter: &egui::Painte
         );
     });
     if first_time {
-        let mut bbox = canvas.borrow().bbox();
-        canvas
-            .borrow()
-            .integrations()
-            .for_each(|integration| integration.borrow().stretch_bbox(&mut bbox));
-        canvas.borrow_mut().set_visible_bbox(&bbox);
+        let bbox = canvas.borrow().bbox(); // need this extra assignment to drop the borrowed canvas
+        if let Some(mut bbox) = bbox {
+            canvas
+                .borrow()
+                .integrations()
+                .for_each(|integration| integration.borrow().stretch_bbox(&mut bbox));
+            canvas.borrow_mut().set_visible_bbox(&bbox);
+        }
     }
 
     canvas

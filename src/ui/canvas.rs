@@ -1,4 +1,10 @@
-use std::{cell::RefCell, rc::Rc, slice::Iter};
+use std::{
+    cell::RefCell,
+    collections::hash_map::DefaultHasher,
+    hash::{Hash, Hasher},
+    rc::Rc,
+    slice::Iter,
+};
 
 use super::BoundingBox;
 use crate::prelude::*;
@@ -11,9 +17,7 @@ pub struct Canvas {
     focus: Vec3,
     scale: Vec3,
     area_center: Pos2,
-    trajectory: Vec<Vec3>,
-    scenario_change_count: u32,
-    trajectory_min_dt: R32,
+    trajectory_buffer: Option<TrajectoryBuffer>,
     pub ui_integrations_window_is_open: bool,
 }
 
@@ -24,11 +28,9 @@ impl Canvas {
             integrations: Vec::default(),
             visible_units: 1.,
             focus: Vec3::default(),
-            trajectory: Vec::new(),
             scale: Vec3::default(),
             area_center: Pos2::default(),
-            scenario_change_count: 0,
-            trajectory_min_dt: R32::default(),
+            trajectory_buffer: None,
             ui_integrations_window_is_open: false,
         }
     }
@@ -40,8 +42,7 @@ impl Canvas {
 
     pub fn set_scenario(&mut self, new_scenario: Obj<Scenario>) {
         self.scenario = new_scenario;
-        self.trajectory = Vec::new();
-        self.scenario_change_count = 0;
+        self.trajectory_buffer = None;
     }
 
     #[must_use]
@@ -59,40 +60,26 @@ impl Canvas {
             .retain(|candidate| !Rc::ptr_eq(candidate, &integration));
     }
 
-    pub fn update_trajectory(
-        &mut self,
-        acceleration: &dyn AccelerationField,
-        start_position: &StartPosition,
-        start_velocity: &StartVelocity,
-        duration: &Duration,
-        min_dt: R32,
-    ) {
-        let scenario_change_count = start_position.0.change_count()
-            + start_velocity.0.change_count()
-            + duration.0.change_count();
-        if self.scenario_change_count != scenario_change_count || self.trajectory_min_dt > min_dt {
-            self.trajectory = scenario::calculate_trajectory(
-                acceleration,
-                start_position,
-                start_velocity,
-                duration,
-                min_dt,
-            );
-            self.trajectory_min_dt = min_dt;
-            self.scenario_change_count = scenario_change_count;
+    pub fn update_trajectory(&mut self, min_dt: R32) {
+        if let Some(ref mut buffer) = self.trajectory_buffer {
+            buffer.update_trajectory(&self.scenario.borrow(), min_dt);
+        } else {
+            self.trajectory_buffer = Some(TrajectoryBuffer::new(&self.scenario.borrow(), min_dt));
         }
     }
 
     #[must_use]
     pub fn has_trajectory(&self) -> bool {
-        !self.trajectory.is_empty()
+        self.trajectory_buffer.is_some()
     }
 
     #[must_use]
-    pub fn bbox(&self) -> BoundingBox {
-        let mut bbox = BoundingBox::default();
-        self.trajectory.iter().for_each(|&s| bbox.expand_to(s));
-        bbox
+    pub fn bbox(&self) -> Option<BoundingBox> {
+        self.trajectory_buffer.as_ref().map(|buf| {
+            let mut bbox = BoundingBox::default();
+            buf.trajectory.iter().for_each(|&s| bbox.expand_to(s));
+            bbox
+        })
     }
 
     pub fn set_visible_bbox(&mut self, bbox: &BoundingBox) {
@@ -105,7 +92,9 @@ impl Canvas {
     }
 
     pub fn draw_trajectory(&self, stroke: Stroke, painter: &Painter) {
-        self.draw_connected_samples(self.trajectory.iter(), stroke, painter);
+        self.trajectory_buffer
+            .as_ref()
+            .map(|buf| self.draw_connected_samples(buf.trajectory.iter(), stroke, painter));
     }
 
     fn draw_connected_samples<'a, Iter>(&self, samples: Iter, stroke: Stroke, painter: &Painter)
@@ -260,6 +249,38 @@ impl Canvas {
 
     fn screen_to_user(&self, pos: Pos2) -> Vec3 {
         (pos - self.area_center.to_vec2()).to_vec3() / self.scale + self.focus
+    }
+}
+
+#[derive(Default)]
+struct TrajectoryBuffer {
+    trajectory: Vec<Vec3>,
+    scenario_hash: u64,
+    trajectory_min_dt: R32,
+}
+
+impl TrajectoryBuffer {
+    fn new(scenario: &Scenario, min_dt: R32) -> Self {
+        Self {
+            trajectory: scenario.calculate_trajectory(min_dt),
+            trajectory_min_dt: min_dt,
+            scenario_hash: Self::hash_scenario(scenario),
+        }
+    }
+
+    fn hash_scenario(scenario: &Scenario) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        scenario.hash(&mut hasher);
+        hasher.finish()
+    }
+
+    fn update_trajectory(&mut self, scenario: &Scenario, min_dt: R32) {
+        let scenario_hash = Self::hash_scenario(scenario);
+        if self.scenario_hash != scenario_hash || self.trajectory_min_dt > min_dt {
+            self.trajectory = scenario.calculate_trajectory(min_dt);
+            self.trajectory_min_dt = min_dt;
+            self.scenario_hash = scenario_hash;
+        }
     }
 }
 

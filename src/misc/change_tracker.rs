@@ -50,7 +50,7 @@ where
         self.value
     }
 
-    pub fn copy_read_only(&self) -> ChangeTracker<T, Read> {
+    pub fn xcopy_read_only(&self) -> ChangeTracker<T, Read> {
         ChangeTracker::<T, Read> {
             value: self.value,
             change_count: self.change_count,
