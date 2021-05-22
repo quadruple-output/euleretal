@@ -13,6 +13,7 @@
 - Button for auto-zoom
 - render Integrator formulas in browser (KaTeX or MathJax)
 - Dark and Light themes
+- when zooming, zoom away from pointer, but not from center of canvas
 
 ## Functional Features
 - change all step sizes proportionally with a single slider (to test convergence)
