@@ -1,4 +1,3 @@
-mod canvas;
 mod canvas_grid;
 mod canvas_view;
 mod color_controls;
@@ -14,7 +13,6 @@ mod world;
 
 use crate::{integrators, prelude::*, scenarios};
 use ::core::fmt;
-pub use canvas::Canvas;
 use eframe::{egui, epi};
 use egui::{CentralPanel, CollapsingHeader, Rgba, SidePanel};
 pub use entities::*; // todo: should not be pub

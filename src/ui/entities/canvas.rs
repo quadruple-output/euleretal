@@ -1,8 +1,7 @@
-use std::{cell::RefCell, collections::hash_map::DefaultHasher, hash::Hasher, rc::Rc, slice::Iter};
-
 use super::BoundingBox;
 use crate::prelude::*;
 use eframe::egui::{Painter, Response, Sense, Shape};
+use std::{cell::RefCell, collections::hash_map::DefaultHasher, hash::Hasher, rc::Rc, slice::Iter};
 
 pub struct Canvas {
     scenario: Obj<Scenario>,
