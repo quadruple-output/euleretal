@@ -21,13 +21,14 @@ impl Scenario {
 const STEPS_PER_DT: usize = 40;
 
 impl Scenario {
-    pub fn hash(&self, state: &mut DefaultHasher) {
+    pub fn hash_default(&self, state: &mut DefaultHasher) {
         self.acceleration.hash(state);
         self.start_position.hash(state);
         self.start_velocity.hash(state);
         self.duration.hash(state);
     }
 
+    #[must_use]
     pub fn calculate_trajectory(&self, min_dt: R32) -> Vec<Vec3> {
         #[allow(clippy::cast_sign_loss)]
         let num_steps =

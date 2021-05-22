@@ -1,10 +1,4 @@
-use std::{
-    cell::RefCell,
-    collections::hash_map::DefaultHasher,
-    hash::{Hash, Hasher},
-    rc::Rc,
-    slice::Iter,
-};
+use std::{cell::RefCell, collections::hash_map::DefaultHasher, hash::Hasher, rc::Rc, slice::Iter};
 
 use super::BoundingBox;
 use crate::prelude::*;
@@ -92,9 +86,9 @@ impl Canvas {
     }
 
     pub fn draw_trajectory(&self, stroke: Stroke, painter: &Painter) {
-        self.trajectory_buffer
-            .as_ref()
-            .map(|buf| self.draw_connected_samples(buf.trajectory.iter(), stroke, painter));
+        if let Some(ref buffer) = self.trajectory_buffer {
+            self.draw_connected_samples(buffer.trajectory.iter(), stroke, painter);
+        }
     }
 
     fn draw_connected_samples<'a, Iter>(&self, samples: Iter, stroke: Stroke, painter: &Painter)
@@ -270,7 +264,7 @@ impl TrajectoryBuffer {
 
     fn hash_scenario(scenario: &Scenario) -> u64 {
         let mut hasher = DefaultHasher::new();
-        scenario.hash(&mut hasher);
+        scenario.hash_default(&mut hasher);
         hasher.finish()
     }
 
