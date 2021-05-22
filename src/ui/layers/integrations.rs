@@ -5,7 +5,7 @@ pub fn render(state: &ControlState, canvas: &Obj<Canvas>, painter: &egui::Painte
     let min_dt = canvas
         .borrow()
         .integrations()
-        .map(|integration| integration.borrow().step_size.borrow().duration.get())
+        .map(|integration| integration.borrow().step_size.borrow().duration.0)
         .min() // this crate depends on decorum::R32 just to be able to use this min() function
         .unwrap_or_else(|| 0.1.into());
 

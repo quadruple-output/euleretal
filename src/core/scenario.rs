@@ -32,13 +32,13 @@ impl Scenario {
     pub fn calculate_trajectory(&self, min_dt: R32) -> Vec<Vec3> {
         #[allow(clippy::cast_sign_loss)]
         let num_steps =
-            (self.duration.get() / min_dt * R32::from(STEPS_PER_DT as f32)).into_inner() as usize;
+            (self.duration.0 / min_dt * R32::from(STEPS_PER_DT as f32)).into_inner() as usize;
         let (trajectory, _samples) = calculate_trajectory_and_samples(
             &*self.acceleration,
-            self.start_position.0.get(),
-            self.start_velocity.0.get(),
+            self.start_position.0,
+            self.start_velocity.0,
             1,
-            self.duration.get(),
+            self.duration.0,
             num_steps,
         );
         log::info!("Calculated trajectory with {} segments", trajectory.len(),);
@@ -48,11 +48,11 @@ impl Scenario {
     #[must_use]
     pub fn calculate_reference_samples(&self, dt: R32) -> Samples {
         #[allow(clippy::cast_sign_loss)]
-        let num_iterations = (self.duration.get() / dt).into_inner() as usize;
+        let num_iterations = (self.duration.0 / dt).into_inner() as usize;
         let (trajectory, samples) = calculate_trajectory_and_samples(
             &*self.acceleration,
-            self.start_position.0.get(),
-            self.start_velocity.0.get(),
+            self.start_position.0,
+            self.start_velocity.0,
             num_iterations,
             dt,
             STEPS_PER_DT,

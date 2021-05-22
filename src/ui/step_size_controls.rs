@@ -21,7 +21,7 @@ pub fn show(ui: &mut Ui, world: &mut World) {
         Operation::Create => {
             world.add_step_size(StepSize {
                 user_label: UserLabel("".into()),
-                duration: Duration(ChangeTracker::with(0.5.into())),
+                duration: Duration(0.5.into()),
                 color: Hsva::default(),
             });
         }
@@ -29,11 +29,7 @@ pub fn show(ui: &mut Ui, world: &mut World) {
             world.remove_step_size(step_size);
         }
         Operation::SetDuration(step_size, new_duration) => {
-            step_size
-                .borrow_mut()
-                .duration
-                .0
-                .set(new_duration.max(0.01.into()));
+            step_size.borrow_mut().duration.0 = new_duration.max(0.01.into());
         }
         Operation::SetColor(step_size, new_color) => {
             step_size.borrow_mut().color = new_color;
@@ -71,7 +67,7 @@ fn show_step_size_table(ui: &mut Ui, world: &World) -> Operation {
                     ui.label("");
                 }
                 // edit dt:
-                let mut dt = step_size.borrow().duration.get().into_inner();
+                let mut dt = step_size.borrow().duration.0.into_inner();
                 if ui
                     .add(Slider::new(&mut dt, 0.01..=2.).logarithmic(true))
                     .changed()

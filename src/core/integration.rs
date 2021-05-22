@@ -62,25 +62,23 @@ impl Integration {
         scenario.hash_default(&mut hasher);
         let scenario_hash = hasher.finish();
         integrator.hash(&mut hasher);
-        step_duration.0.get().hash(&mut hasher);
+        step_duration.0.hash(&mut hasher);
         let sample_validity = hasher.finish();
 
         let state = &mut self.state;
         if state.sample_validity != sample_validity {
             #[allow(clippy::cast_sign_loss)]
-            let num_steps = (scenario.duration.get() / step_duration.get()).into_inner() as usize;
+            let num_steps = (scenario.duration.0 / step_duration.0).into_inner() as usize;
 
             let samples = integrator.integrate(
                 &*scenario.acceleration,
                 &StartCondition {
-                    position: scenario.start_position.0.get(),
-                    velocity: scenario.start_velocity.0.get(),
-                    acceleration: scenario
-                        .acceleration
-                        .value_at(scenario.start_position.0.get()),
+                    position: scenario.start_position.0,
+                    velocity: scenario.start_velocity.0,
+                    acceleration: scenario.acceleration.value_at(scenario.start_position.0),
                 },
                 num_steps,
-                step_duration.get(),
+                step_duration.0,
             );
             let num_samples = samples.step_points().len();
             assert!(num_samples == num_steps + 1);
@@ -88,7 +86,7 @@ impl Integration {
             state.sample_validity = sample_validity;
 
             if state.scenario_hash != scenario_hash {
-                let reference_samples = scenario.calculate_reference_samples(step_duration.0.get());
+                let reference_samples = scenario.calculate_reference_samples(step_duration.0);
                 let num_refs = reference_samples.step_points().len();
                 assert!(num_refs == num_samples);
                 state.reference_samples = Some(reference_samples);
