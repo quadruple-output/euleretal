@@ -1,4 +1,7 @@
-use std::{collections::hash_map::DefaultHasher, hash::Hasher};
+use std::{
+    collections::hash_map::DefaultHasher,
+    hash::{Hash, Hasher},
+};
 
 use crate::{core::samples::StartCondition, prelude::*};
 
@@ -51,14 +54,18 @@ impl Integration {
 
     #[allow(clippy::missing_panics_doc)]
     pub fn update(&mut self, scenario: &Scenario) {
-        let step_duration = &self.step_size.borrow().duration;
         let integrator = &self.integrator_conf.borrow().integrator;
-        let state = &mut self.state;
+        let step_duration = &self.step_size.borrow().duration;
+
+        // check if we have to re-calculate:
         let mut hasher = DefaultHasher::new();
         scenario.hash_default(&mut hasher);
         let scenario_hash = hasher.finish();
-        self.integrator_conf.borrow().integrator.hash(&mut hasher);
+        integrator.hash(&mut hasher);
+        step_duration.0.get().hash(&mut hasher);
         let sample_validity = hasher.finish();
+
+        let state = &mut self.state;
         if state.sample_validity != sample_validity {
             #[allow(clippy::cast_sign_loss)]
             let num_steps = (scenario.duration.get() / step_duration.get()).into_inner() as usize;
