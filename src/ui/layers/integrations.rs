@@ -18,13 +18,7 @@ pub fn render(state: &ControlState, canvas: &Obj<Canvas>, painter: &egui::Painte
         if first_time {
             integration.reset();
         }
-        integration.update(
-            // todo: replace 4 params by a single one
-            &*scenario.acceleration,
-            &scenario.start_position,
-            &scenario.start_velocity,
-            &scenario.duration,
-        );
+        integration.update(&*scenario);
     });
     if first_time {
         let bbox = canvas.borrow().bbox(); // need this extra assignment to drop the borrowed canvas

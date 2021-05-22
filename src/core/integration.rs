@@ -1,3 +1,5 @@
+use std::{collections::hash_map::DefaultHasher, hash::Hasher};
+
 use crate::{core::samples::StartCondition, prelude::*};
 
 pub struct Integration {
@@ -9,9 +11,9 @@ pub struct Integration {
 #[derive(Default)]
 pub struct State {
     samples: Option<Samples>,
-    samples_change_count: ChangeCount,
+    sample_validity: u64,
     reference_samples: Option<Samples>,
-    ref_samples_change_count: ChangeCount,
+    scenario_hash: u64,
 }
 
 impl Integration {
@@ -48,31 +50,27 @@ impl Integration {
     }
 
     #[allow(clippy::missing_panics_doc)]
-    pub fn update(
-        &mut self,
-        acceleration: &dyn AccelerationField,
-        start_position: &StartPosition,
-        start_velocity: &StartVelocity,
-        duration: &Duration,
-    ) {
+    pub fn update(&mut self, scenario: &Scenario) {
         let step_duration = &self.step_size.borrow().duration;
         let integrator = &self.integrator_conf.borrow().integrator;
         let state = &mut self.state;
-        let ref_samples_change_count = step_duration.0.change_count()
-            + start_position.0.change_count()
-            + start_velocity.0.change_count()
-            + duration.0.change_count();
-        let samples_change_count = ref_samples_change_count; // + integrator.change_count();
-        if state.samples_change_count != samples_change_count {
+        let mut hasher = DefaultHasher::new();
+        scenario.hash_default(&mut hasher);
+        let scenario_hash = hasher.finish();
+        self.integrator_conf.borrow().integrator.hash(&mut hasher);
+        let sample_validity = hasher.finish();
+        if state.sample_validity != sample_validity {
             #[allow(clippy::cast_sign_loss)]
-            let num_steps = (duration.get() / step_duration.get()).into_inner() as usize;
+            let num_steps = (scenario.duration.get() / step_duration.get()).into_inner() as usize;
 
             let samples = integrator.integrate(
-                acceleration,
+                &*scenario.acceleration,
                 &StartCondition {
-                    position: start_position.0.get(),
-                    velocity: start_velocity.0.get(),
-                    acceleration: acceleration.value_at(start_position.0.get()),
+                    position: scenario.start_position.0.get(),
+                    velocity: scenario.start_velocity.0.get(),
+                    acceleration: scenario
+                        .acceleration
+                        .value_at(scenario.start_position.0.get()),
                 },
                 num_steps,
                 step_duration.get(),
@@ -80,20 +78,14 @@ impl Integration {
             let num_samples = samples.step_points().len();
             assert!(num_samples == num_steps + 1);
             state.samples = Some(samples);
-            state.samples_change_count = samples_change_count;
+            state.sample_validity = sample_validity;
 
-            if state.ref_samples_change_count != ref_samples_change_count {
-                let reference_samples = scenario::calculate_reference_samples(
-                    acceleration,
-                    start_position.0.get(),
-                    start_velocity.0.get(),
-                    duration.get(),
-                    step_duration.0.get(),
-                );
+            if state.scenario_hash != scenario_hash {
+                let reference_samples = scenario.calculate_reference_samples(step_duration.0.get());
                 let num_refs = reference_samples.step_points().len();
                 assert!(num_refs == num_samples);
                 state.reference_samples = Some(reference_samples);
-                state.ref_samples_change_count = ref_samples_change_count;
+                state.scenario_hash = scenario_hash;
             }
         }
     }
@@ -169,9 +161,9 @@ impl State {
     pub fn new() -> Self {
         Self {
             samples: None,
-            samples_change_count: ChangeCount::default(),
+            sample_validity: 0,
             reference_samples: None,
-            ref_samples_change_count: ChangeCount::default(),
+            scenario_hash: 0,
         }
     }
 }

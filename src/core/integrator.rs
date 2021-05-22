@@ -1,10 +1,12 @@
+use std::{any::TypeId, collections::hash_map::DefaultHasher, hash::Hash};
+
 use super::samples::{
     CalibrationPoint, FinalizedCalibrationPoints, NewSample, NewSampleWithPoints, StartCondition,
     WithCalibrationPoints, WithoutCalibrationPoints,
 };
 use crate::prelude::*;
 
-pub trait Integrator: Send + Sync {
+pub trait Integrator: Send + Sync + 'static {
     fn label(&self) -> String;
 
     fn description(&self) -> String;
@@ -16,6 +18,10 @@ pub trait Integrator: Send + Sync {
         num_steps: usize,
         dt: R32,
     ) -> Samples<FinalizedCalibrationPoints>;
+
+    fn hash(&self, state: &mut DefaultHasher) {
+        TypeId::of::<Self>().hash(state);
+    }
 }
 
 pub trait OneStepDirect {

@@ -44,31 +44,26 @@ impl Scenario {
         log::info!("Calculated trajectory with {} segments", trajectory.len(),);
         trajectory
     }
-}
 
-pub fn calculate_reference_samples(
-    acceleration: &dyn AccelerationField,
-    start_position: Vec3,
-    start_velocity: Vec3,
-    duration: R32,
-    dt: R32,
-) -> Samples {
-    #[allow(clippy::cast_sign_loss)]
-    let num_iterations = (duration / dt).into_inner() as usize;
-    let (trajectory, samples) = calculate_trajectory_and_samples(
-        acceleration,
-        start_position,
-        start_velocity,
-        num_iterations,
-        dt,
-        STEPS_PER_DT,
-    );
-    log::info!(
-        "Calculated {} reference samples, using trajectory with {} segments",
-        samples.step_points().len(),
-        trajectory.len(),
-    );
-    samples
+    #[must_use]
+    pub fn calculate_reference_samples(&self, dt: R32) -> Samples {
+        #[allow(clippy::cast_sign_loss)]
+        let num_iterations = (self.duration.get() / dt).into_inner() as usize;
+        let (trajectory, samples) = calculate_trajectory_and_samples(
+            &*self.acceleration,
+            self.start_position.0.get(),
+            self.start_velocity.0.get(),
+            num_iterations,
+            dt,
+            STEPS_PER_DT,
+        );
+        log::info!(
+            "Calculated {} reference samples, using trajectory with {} segments",
+            samples.step_points().len(),
+            trajectory.len(),
+        );
+        samples
+    }
 }
 
 /// returns (trajectory, samples)
