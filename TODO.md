@@ -28,5 +28,4 @@
 - Stritly separate `core` from `ui`. `ui` should not publish anything.  Some
   `core` types must get a `ui`-twin with additional data relevant for `ui` only
   (like color, label, and stroke, but also `ChangeTracker`)
-- Better version of `ChangeTracker`?
 - Create a version of Vec3, based on R32, so we can `#[derive(Hash)]` for it.
