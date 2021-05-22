@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use std::{hash::Hash, ops::Deref};
 
+#[derive(Clone, Copy)]
 pub struct Duration(pub R32);
 
 impl Deref for Duration {

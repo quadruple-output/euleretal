@@ -16,6 +16,6 @@ fn main() {
         println!("Warning: Cannot initialize logging. {}", e);
     }
 
-    let app = euleretal::ui::App::default();
+    let app = euleretal::App::default();
     eframe::run_native(Box::new(app), eframe::epi::NativeOptions::default());
 }

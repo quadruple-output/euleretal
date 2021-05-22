@@ -1,4 +1,4 @@
-use crate::core::integrator::OneStepDirect;
+use crate::core::integrator::{Integrator, OneStepDirect};
 use crate::core::samples::{FinalizedCalibrationPoints, NewSample, StartCondition};
 use crate::prelude::*;
 
@@ -10,7 +10,7 @@ impl Broken {
     }
 }
 
-impl core::Integrator for Broken {
+impl Integrator for Broken {
     fn label(&self) -> String {
         "Broken Euler".to_string()
     }
@@ -52,7 +52,7 @@ impl Euler {
     }
 }
 
-impl core::Integrator for Euler {
+impl Integrator for Euler {
     fn label(&self) -> String {
         "Euler".to_string()
     }

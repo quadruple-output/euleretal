@@ -1,4 +1,4 @@
-use crate::core::integrator::OneStepDirect;
+use crate::core::integrator::{Integrator, OneStepDirect};
 use crate::core::samples::{FinalizedCalibrationPoints, NewSample, StartCondition};
 use crate::prelude::*;
 
@@ -10,7 +10,7 @@ impl ExactForConst {
     }
 }
 
-impl core::Integrator for ExactForConst {
+impl Integrator for ExactForConst {
     fn label(&self) -> String {
         "Exact for const. acceleration".to_string()
     }

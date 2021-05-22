@@ -13,14 +13,15 @@
 mod misc; // modules with macros must be listed first
 
 mod component_types;
-pub mod core;
+mod core;
 mod integrators;
 mod scenarios;
-pub mod ui;
+mod ui;
+pub use ui::App;
 
 mod prelude {
     pub use super::component_types::prelude::*;
-    pub use super::core::{self, prelude::*};
+    pub use super::core::prelude::*;
     pub use super::misc::prelude::*;
     pub use bevy_math::Vec3;
     pub use decorum::R32;

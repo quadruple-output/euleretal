@@ -1,4 +1,4 @@
-use crate::core::integrator::OneStepWithCalibrationPoints;
+use crate::core::integrator::{Integrator, OneStepWithCalibrationPoints};
 use crate::core::samples::{FinalizedCalibrationPoints, NewSampleWithPoints, StartCondition};
 use crate::prelude::*;
 
@@ -10,7 +10,7 @@ impl Euler {
     }
 }
 
-impl core::Integrator for Euler {
+impl Integrator for Euler {
     fn label(&self) -> String {
         "Midpoint (explicit, Euler)".to_string()
     }
@@ -72,7 +72,7 @@ impl SecondOrder {
     }
 }
 
-impl core::Integrator for SecondOrder {
+impl Integrator for SecondOrder {
     fn label(&self) -> String {
         "Midpoint (explicit, SecondOrder)".to_string()
     }

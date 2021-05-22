@@ -1,5 +1,6 @@
 use super::{
-    layers, Canvas, ControlState, Integrator, World, BUTTON_GLYPH_ADD, BUTTON_GLYPH_DELETE,
+    layers, Canvas, ControlState, Integration, Integrator, World, BUTTON_GLYPH_ADD,
+    BUTTON_GLYPH_DELETE,
 };
 use crate::prelude::*;
 use egui::{InnerResponse, Layout, Ui};
@@ -219,13 +220,13 @@ fn show_integrator_selector(
     world: &World,
 ) -> Option<Obj<Integrator>> {
     let integration_ptr = integration.as_ptr();
-    let current_integrator_conf = &integration.borrow().integrator_conf;
-    let mut selected_integrator_ptr = current_integrator_conf.as_ptr();
+    let current_integrator = &integration.borrow().integrator;
+    let mut selected_integrator_ptr = current_integrator.as_ptr();
 
     egui::ComboBox::from_id_source(
         ui.make_persistent_id(format!("integrator_selector_{:?}", integration_ptr)),
     )
-    .selected_text(current_integrator_conf.borrow().integrator.label())
+    .selected_text(current_integrator.borrow().integrator.label())
     .show_ui(ui, |ui| {
         world.integrators().for_each(|selectable_integrator| {
             ui.selectable_value(
@@ -239,13 +240,13 @@ fn show_integrator_selector(
     .on_hover_text(
         integration
             .borrow()
-            .integrator_conf
+            .integrator
             .borrow()
             .integrator
             .description(),
     );
 
-    if selected_integrator_ptr == current_integrator_conf.as_ptr() {
+    if selected_integrator_ptr == current_integrator.as_ptr() {
         None
     } else {
         world

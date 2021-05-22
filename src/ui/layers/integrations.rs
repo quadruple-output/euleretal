@@ -35,11 +35,6 @@ pub fn render(state: &ControlState, canvas: &Obj<Canvas>, painter: &egui::Painte
         .borrow()
         .draw_trajectory(state.strokes.trajectory, painter);
     canvas.borrow().integrations().for_each(|integration| {
-        integration.borrow().draw_on(
-            &canvas.borrow(),
-            Color32::from(integration.borrow().step_size.borrow().color),
-            integration.borrow().integrator_conf.borrow().stroke,
-            painter,
-        );
+        integration.borrow().draw_on(&canvas.borrow(), painter);
     });
 }

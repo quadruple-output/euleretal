@@ -36,10 +36,7 @@ pub fn show(ui: &mut Ui, world: &mut World, control_state: &ControlState) {
                     .integrations()
                     .for_each(|integration| {
                         let integration = integration.borrow();
-                        new_canvas.add_integration(Integration::new(
-                            Rc::clone(&integration.integrator_conf),
-                            Rc::clone(&integration.step_size),
-                        ));
+                        new_canvas.add_integration(integration.clone());
                     });
             }
         }
