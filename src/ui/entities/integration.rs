@@ -1,4 +1,4 @@
-use super::Integrator;
+use super::{Integrator, StepSize};
 use crate::prelude::*;
 
 pub struct Integration {
@@ -45,7 +45,17 @@ impl Integration {
     }
 
     pub fn stretch_bbox(&self, bbox: &mut crate::ui::BoundingBox) {
-        self.core_integration.stretch_bbox(bbox)
+        let integration = &self.core_integration;
+        for samples in integration
+            .reference_samples()
+            .iter()
+            .chain(integration.samples().iter())
+        {
+            samples
+                .step_points()
+                .iter()
+                .for_each(|&point| bbox.expand_to(point));
+        }
     }
 
     pub fn closest_sample(&self, pos: Vec3) -> Option<(CompleteSample, CompleteSample)> {

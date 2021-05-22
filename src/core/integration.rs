@@ -66,15 +66,6 @@ impl Integration {
         }
     }
 
-    pub fn stretch_bbox(&self, bbox: &mut crate::ui::BoundingBox) {
-        for samples in self.reference_samples.iter().chain(self.samples.iter()) {
-            samples
-                .step_points()
-                .iter()
-                .for_each(|&point| bbox.expand_to(point));
-        }
-    }
-
     pub fn reference_samples(&self) -> Option<&Samples<FinalizedCalibrationPoints>> {
         self.reference_samples.as_ref()
     }

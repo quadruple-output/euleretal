@@ -1,5 +1,5 @@
 use super::{
-    layers, Canvas, ControlState, Integration, Integrator, World, BUTTON_GLYPH_ADD,
+    layers, Canvas, ControlState, Integration, Integrator, StepSize, World, BUTTON_GLYPH_ADD,
     BUTTON_GLYPH_DELETE,
 };
 use crate::prelude::*;

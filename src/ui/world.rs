@@ -1,4 +1,4 @@
-use super::{Canvas, Integrator};
+use super::{Canvas, Integrator, StepSize};
 use crate::prelude::*;
 use std::{cell::RefCell, rc::Rc, slice::Iter};
 

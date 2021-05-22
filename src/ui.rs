@@ -12,12 +12,10 @@ mod step_size_controls;
 mod world;
 
 use crate::{integrators, prelude::*, scenarios};
-use ::core::fmt;
 use eframe::{egui, epi};
 use egui::{CentralPanel, CollapsingHeader, Rgba, SidePanel};
-use entities::{Canvas, Integration, Integrator};
-pub use misc::BoundingBox; // todo: should not be pub
-pub use misc::UserLabel; // todo: should not be pub
+use entities::{Canvas, Integration, Integrator, StepSize};
+use misc::{BoundingBox, ControlState, UserLabel};
 use std::str;
 use world::World;
 
@@ -29,7 +27,6 @@ const SAMPLE_DOT_RADIUS: f32 = 2.5; // todo: this might become configurable late
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct App {
     world: World,
-    //resources: Resources,
     control_state: ControlState,
 }
 
@@ -103,7 +100,9 @@ impl epi::App for App {
             ui.collapsing("Colors", |ui| {
                 color_controls::show(ui, &mut self.control_state);
             });
-            //settings::show(ui, &mut self.control_state);
+            ui.collapsing("Settings", |ui| {
+                settings::show(ui, &mut self.control_state);
+            });
         });
 
         CentralPanel::default().show(ctx, |ui| {
@@ -117,7 +116,6 @@ impl App {
     pub fn new() -> Self {
         Self {
             world: World::default(),
-            //resources: Resources::default(),
             control_state: ControlState::default(),
         }
     }
@@ -173,80 +171,5 @@ impl App {
         canvas_center_mass
             .borrow_mut()
             .add_integration(Integration::new(implicit_euler, step_size));
-    }
-}
-
-pub struct ControlState {
-    pub layerflags: LayerFlags,
-    pub strokes: Strokes,
-    pub format_precision: usize,
-}
-
-impl Default for ControlState {
-    fn default() -> Self {
-        Self {
-            layerflags: LayerFlags::default(),
-            strokes: Strokes::default(),
-            format_precision: 3,
-        }
-    }
-}
-
-impl ControlState {
-    #[must_use]
-    pub fn format_f32(&self, n: f32) -> FormatterF32 {
-        FormatterF32 {
-            precision: self.format_precision,
-            n,
-        }
-    }
-}
-
-pub struct FormatterF32 {
-    precision: usize,
-    n: f32,
-}
-
-impl fmt::Display for FormatterF32 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:.*}", self.precision, self.n)
-    }
-}
-
-pub struct LayerFlags {
-    pub coordinates: bool,
-    pub acceleration_field: bool,
-    pub inspector: bool,
-}
-
-impl Default for LayerFlags {
-    fn default() -> Self {
-        Self {
-            coordinates: true,
-            acceleration_field: false,
-            inspector: true,
-        }
-    }
-}
-
-pub struct Strokes {
-    pub trajectory: Stroke,
-    pub acceleration: Stroke,
-    pub coordinates: Stroke,
-    pub focussed_velocity: Stroke,
-    pub focussed_acceleration: Stroke,
-}
-
-impl Default for Strokes {
-    fn default() -> Self {
-        let col_accel = Rgba::from_rgb(0.3, 0.3, 0.8);
-        let col_velo = Rgba::from(Color32::WHITE);
-        Self {
-            trajectory: Stroke::new(1., col_velo * 0.25),
-            focussed_velocity: Stroke::new(1., col_velo * 1.),
-            acceleration: Stroke::new(1., col_accel * 0.25),
-            focussed_acceleration: Stroke::new(1., col_accel * 1.),
-            coordinates: Stroke::new(1., Rgba::from_rgb(0., 0.5, 0.) * 0.3),
-        }
     }
 }
