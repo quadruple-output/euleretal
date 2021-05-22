@@ -25,7 +25,4 @@
 - save/load state in file
 
 ## Clean Code
-- Stritly separate `core` from `ui`. `ui` should not publish anything.  Some
-  `core` types must get a `ui`-twin with additional data relevant for `ui` only
-  (like color, label, and stroke, but also `ChangeTracker`)
 - Create a version of Vec3, based on R32, so we can `#[derive(Hash)]` for it.
