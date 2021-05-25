@@ -14,6 +14,11 @@
 - render Integrator formulas in browser (KaTeX or MathJax)
 - Dark and Light themes
 - when zooming, zoom away from pointer, but not from center of canvas
+- in lists with '+' button, put button at end of list (where the '-' button for
+  the new entry will appear)
+- in drop-downs/choosers, apply the chosen option immediately as preview on
+  hover, without the need of clicking (design a new chooser for this)
+- re-enable hover delay
 
 ## Functional Features
 - change all step sizes proportionally with a single slider (to test convergence)
