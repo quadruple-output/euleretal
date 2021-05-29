@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use super::{core::Duration, ui_import::egui};
 
 // todo: move StepSize to ui::entities, and let the `Integration` only keep a reference to the Duration
 pub struct StepSize {

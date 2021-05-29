@@ -1,9 +1,9 @@
-use crate::prelude::*;
-use std::hash::Hash;
+use super::import::{Vec3, R32};
+use ::std::hash::Hash;
 
-pub struct StartVelocity(pub Vec3);
+pub struct StartPosition(pub Vec3);
 
-impl Hash for StartVelocity {
+impl Hash for StartPosition {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         let vec = self.0;
         // todo: it would be nice to have an R32-based Vec3, so we do not have to do this
@@ -13,3 +13,4 @@ impl Hash for StartVelocity {
         R32::from(vec.z).hash(state);
     }
 }
+// todo: impl Deref

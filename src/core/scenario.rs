@@ -1,8 +1,9 @@
-use crate::{
-    core::samples::{NewSample, StartCondition, WithoutCalibrationPoints},
-    prelude::*,
+use super::{
+    import::{Vec3, R32},
+    samples::{NewSample, StartCondition, WithoutCalibrationPoints},
+    AccelerationField, Duration, Samples, StartPosition, StartVelocity,
 };
-use std::{collections::hash_map::DefaultHasher, hash::Hash};
+use ::std::{collections::hash_map::DefaultHasher, hash::Hash};
 
 pub struct Scenario {
     pub acceleration: Box<dyn AccelerationField>,

@@ -1,5 +1,10 @@
-use super::{Integrator, StepSize};
-use crate::prelude::*;
+use super::{
+    core::{CompleteSample, Obj, Scenario},
+    import::Vec3,
+    ui_import::{egui, Color32, Hsva, Stroke},
+    Integrator, StepSize,
+};
+use ::std::rc::Rc;
 
 pub struct Integration {
     pub core_integration: crate::core::Integration,

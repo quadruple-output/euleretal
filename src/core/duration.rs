@@ -1,5 +1,5 @@
-use crate::prelude::*;
-use std::{hash::Hash, ops::Deref};
+use super::import::R32;
+use ::std::{hash::Hash, ops::Deref};
 
 #[derive(Clone, Copy)]
 pub struct Duration(pub R32);

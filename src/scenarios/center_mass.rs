@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use super::{core::AccelerationField, import::Vec3};
 
 #[derive(Clone, Copy)]
 pub struct CenterMass;

@@ -1,5 +1,5 @@
-use crate::prelude::*;
-use std::ops::Mul;
+use super::import::Vec3;
+use ::std::ops::Mul;
 
 #[derive(Clone, Copy)]
 pub struct Fraction {

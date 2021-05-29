@@ -1,10 +1,16 @@
 use super::{
-    layers, Canvas, ControlState, Integration, Integrator, StepSize, World, BUTTON_GLYPH_ADD,
-    BUTTON_GLYPH_DELETE,
+    constants,
+    core::Obj,
+    entities::{Canvas, Integration, Integrator, StepSize},
+    layers,
+    misc::Settings,
+    ui_import::{
+        egui::{self, Layout},
+        Pos2, Ui, Vec2,
+    },
+    World,
 };
-use crate::prelude::*;
-use egui::{InnerResponse, Layout, Ui};
-use std::rc::Rc;
+use ::std::rc::Rc;
 
 enum IntegrationOperation {
     Noop,
@@ -28,19 +34,19 @@ pub enum CanvasOperation {
     Close { canvas: Obj<Canvas> },
 }
 
-pub fn show_canvas(ui: &mut Ui, canvas: &Obj<Canvas>, size: Vec2, control_state: &ControlState) {
+pub fn show_canvas(ui: &mut Ui, canvas: &Obj<Canvas>, size: Vec2, settings: &Settings) {
     ui.vertical(|ui| {
         let (response, painter) = canvas.borrow_mut().allocate_painter(ui, size);
 
-        if control_state.layerflags.coordinates {
-            layers::coordinates::render(&control_state, canvas, &response.rect, &painter);
+        if settings.layerflags.coordinates {
+            layers::coordinates::render(&settings.strokes, canvas, &response.rect, &painter);
         }
-        if control_state.layerflags.acceleration_field {
-            layers::acceleration_field::render(control_state, canvas, &response, &painter);
+        if settings.layerflags.acceleration_field {
+            layers::acceleration_field::render(settings, canvas, &response, &painter);
         }
-        layers::integrations::render(&control_state, canvas, &painter);
-        if control_state.layerflags.inspector {
-            layers::inspector::render(&control_state, canvas, &response, &painter);
+        layers::integrations::render(&settings.strokes, canvas, &painter);
+        if settings.layerflags.inspector {
+            layers::inspector::render(&settings, canvas, &response, &painter);
         }
     });
 }
@@ -52,7 +58,7 @@ pub fn show_header_bar(
     world: &World,
     can_close: bool,
     can_create: bool,
-) -> InnerResponse<CanvasOperation> {
+) -> egui::InnerResponse<CanvasOperation> {
     ui.horizontal(|ui| {
         ui.with_layout(Layout::left_to_right(), |ui| {
             show_scenario_selector(ui, &canvas, world);
@@ -60,12 +66,12 @@ pub fn show_header_bar(
         });
         ui.with_layout(Layout::right_to_left(), |ui| {
             let mut operation = CanvasOperation::Noop;
-            if can_close && ui.small_button(BUTTON_GLYPH_DELETE).clicked() {
+            if can_close && ui.small_button(constants::BUTTON_GLYPH_DELETE).clicked() {
                 operation = CanvasOperation::Close {
                     canvas: Rc::clone(canvas),
                 };
             }
-            if can_create && ui.small_button(BUTTON_GLYPH_ADD).clicked() {
+            if can_create && ui.small_button(constants::BUTTON_GLYPH_ADD).clicked() {
                 operation = CanvasOperation::Create {
                     source_canvas: Rc::clone(canvas),
                 };
@@ -165,7 +171,7 @@ fn show_integrations_pop_up(
                 .striped(false)
                 .show(ui, |ui| {
                     // table header:
-                    if ui.small_button(BUTTON_GLYPH_ADD).clicked() {
+                    if ui.small_button(constants::BUTTON_GLYPH_ADD).clicked() {
                         operation = IntegrationOperation::Create;
                     }
                     ui.label("Line");
@@ -177,7 +183,7 @@ fn show_integrations_pop_up(
                     let num_integrations = canvas.borrow().integrations().len();
                     canvas.borrow().integrations().for_each(|integration| {
                         if num_integrations > 1 {
-                            if ui.small_button(BUTTON_GLYPH_DELETE).clicked() {
+                            if ui.small_button(constants::BUTTON_GLYPH_DELETE).clicked() {
                                 operation = IntegrationOperation::Delete {
                                     integration: Rc::clone(&integration),
                                 };

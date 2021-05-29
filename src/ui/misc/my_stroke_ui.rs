@@ -1,15 +1,14 @@
-use crate::prelude::*;
+use super::{
+    constants,
+    ui_import::{egui::DragValue, Color32, Stroke, Ui},
+};
 
 pub fn my_stroke_ui(ui: &mut Ui, stroke: &mut Stroke, text: &str, tooltip: &str) {
     let Stroke { width, color } = stroke;
     ui.horizontal(|ui| {
         ui.color_edit_button_srgba(color);
-        ui.add(
-            egui::DragValue::new(width)
-                .speed(0.1)
-                .clamp_range(0.0..=5.0),
-        )
-        .on_hover_text("Width");
+        ui.add(DragValue::new(width).speed(0.1).clamp_range(0.0..=5.0))
+            .on_hover_text("Width");
 
         my_stroke_preview(ui, (*width, *color), None);
 
@@ -29,7 +28,7 @@ pub fn my_stroke_preview(ui: &mut Ui, stroke: impl Into<Stroke>, dot_color: Opti
     if let Some(dot_color) = dot_color {
         ui.painter().circle_filled(
             stroke_rect.center(),
-            crate::ui::SAMPLE_DOT_RADIUS,
+            constants::SAMPLE_DOT_RADIUS,
             dot_color,
         );
     }

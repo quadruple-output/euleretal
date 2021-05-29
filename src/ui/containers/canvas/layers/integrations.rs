@@ -1,7 +1,8 @@
-use super::super::{Canvas, ControlState};
-use crate::prelude::*;
+use ::std::rc::Rc;
 
-pub fn render(state: &ControlState, canvas: &Obj<Canvas>, painter: &egui::Painter) {
+use super::{core::Obj, entities::Canvas, misc::settings, ui_import::egui};
+
+pub fn render(strokes: &settings::Strokes, canvas: &Obj<Canvas>, painter: &egui::Painter) {
     let min_dt = canvas
         .borrow()
         .integrations()
@@ -31,9 +32,7 @@ pub fn render(state: &ControlState, canvas: &Obj<Canvas>, painter: &egui::Painte
         }
     }
 
-    canvas
-        .borrow()
-        .draw_trajectory(state.strokes.trajectory, painter);
+    canvas.borrow().draw_trajectory(strokes.trajectory, painter);
     canvas.borrow().integrations().for_each(|integration| {
         integration.borrow().draw_on(&canvas.borrow(), painter);
     });

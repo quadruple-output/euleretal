@@ -1,13 +1,13 @@
-use eframe::egui::{Color32, Rgba, Stroke};
-use std::fmt;
+use super::ui_import::{Color32, Rgba, Stroke};
+use ::std::fmt;
 
-pub struct ControlState {
+pub struct Settings {
     pub layerflags: LayerFlags,
     pub strokes: Strokes,
     pub format_precision: usize,
 }
 
-impl Default for ControlState {
+impl Default for Settings {
     fn default() -> Self {
         Self {
             layerflags: LayerFlags::default(),
@@ -17,7 +17,7 @@ impl Default for ControlState {
     }
 }
 
-impl ControlState {
+impl Settings {
     pub fn format_f32(&self, n: f32) -> FormatterF32 {
         FormatterF32 {
             precision: self.format_precision,

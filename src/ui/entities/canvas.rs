@@ -1,7 +1,18 @@
-use super::{BoundingBox, Integration};
-use crate::prelude::*;
-use eframe::egui::{Painter, Response, Sense, Shape};
-use std::{cell::RefCell, collections::hash_map::DefaultHasher, hash::Hasher, rc::Rc, slice::Iter};
+use super::{
+    constants,
+    core::{Obj, Samples, Scenario},
+    import::{Vec3, R32},
+    misc::BoundingBox,
+    ui_import::{
+        egui,
+        egui::{Painter, Response, Sense, Shape},
+        Color32, Pos2, Stroke, Ui, Vec2,
+    },
+    Integration,
+};
+use ::std::{
+    cell::RefCell, collections::hash_map::DefaultHasher, hash::Hasher, rc::Rc, slice::Iter,
+};
 
 pub struct Canvas {
     scenario: Obj<Scenario>,
@@ -112,7 +123,7 @@ impl Canvas {
             .map(|position| self.user_to_screen(*position))
             .fold(Pos2::new(f32::MAX, f32::MAX), |u0, u1| {
                 if (u0.x - u1.x).abs() > 1. || (u0.y - u1.y).abs() > 1. {
-                    painter.circle_filled(u1, crate::ui::SAMPLE_DOT_RADIUS, color);
+                    painter.circle_filled(u1, constants::SAMPLE_DOT_RADIUS, color);
                     u1
                 } else {
                     u0

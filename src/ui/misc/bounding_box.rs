@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use super::import::Vec3;
 
 #[derive(Debug, Default)]
 pub struct BoundingBox {

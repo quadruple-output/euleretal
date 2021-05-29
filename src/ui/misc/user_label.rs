@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::Deref};
+use ::std::{fmt::Display, ops::Deref};
 
 pub struct UserLabel(pub String);
 

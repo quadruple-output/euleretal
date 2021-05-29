@@ -19,6 +19,8 @@
 - in drop-downs/choosers, apply the chosen option immediately as preview on
   hover, without the need of clicking (design a new chooser for this)
 - re-enable hover delay
+- "Integrators" controls: show unused integrators separated from others, and
+  collapsed
 
 ## Functional Features
 - change all step sizes proportionally with a single slider (to test convergence)

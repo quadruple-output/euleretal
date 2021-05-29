@@ -1,19 +1,32 @@
-pub mod acceleration_field;
-pub mod integration;
-pub mod integrator;
-pub mod samples;
-pub mod scenario;
+use super::import;
 
+#[macro_use]
+mod fraction; // mods with macros need to go first
+mod acceleration_field;
+mod duration;
+mod integration;
+mod integrator;
+mod obj;
+mod samples;
+mod scenario;
+mod start_position;
+mod start_velocity;
+
+pub use acceleration_field::AccelerationField;
+pub use duration::Duration;
+pub use fraction::Fraction;
 pub use integration::Integration;
-pub use integrator::Integrator;
+pub use integrator::{Integrator, OneStepDirect, OneStepWithCalibrationPoints};
+pub use obj::Obj;
+pub use samples::{
+    CompleteSample, FinalizedCalibrationPoints, NewSample, NewSampleWithPoints, Samples,
+    StartCondition,
+};
+pub use scenario::Scenario;
+pub use start_position::StartPosition;
+pub use start_velocity::StartVelocity;
 
-pub mod prelude {
-    pub use super::acceleration_field::AccelerationField;
-    pub use super::samples::{CompleteSample, Samples};
-    pub use super::scenario::{self, Scenario};
-    pub use super::{Acceleration, Position, Velocity};
-}
-
-pub type Position = crate::Vec3;
-pub type Acceleration = crate::Vec3;
-pub type Velocity = crate::Vec3;
+// todo: convert these types to structs:
+pub type Position = import::Vec3;
+pub type Acceleration = import::Vec3;
+pub type Velocity = import::Vec3;

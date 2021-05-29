@@ -1,10 +1,20 @@
-use super::{StepSize, UserLabel, World, BUTTON_GLYPH_ADD, BUTTON_GLYPH_DELETE};
-use crate::prelude::*;
-use egui::{
-    color_picker::{color_edit_button_hsva, Alpha},
-    Slider, TextEdit,
+use super::{
+    constants,
+    core::{Duration, Obj},
+    entities::StepSize,
+    import::R32,
+    misc::UserLabel,
+    ui_import::{
+        egui,
+        egui::{
+            color_picker::{color_edit_button_hsva, Alpha},
+            Slider, TextEdit,
+        },
+        Hsva, Ui,
+    },
+    World,
 };
-use std::rc::Rc;
+use ::std::rc::Rc;
 
 enum Operation {
     Noop,
@@ -48,7 +58,7 @@ fn show_step_size_table(ui: &mut Ui, world: &World) -> Operation {
         .striped(false)
         .show(ui, |mut ui| {
             // table header:
-            if ui.small_button(BUTTON_GLYPH_ADD).clicked() {
+            if ui.small_button(constants::BUTTON_GLYPH_ADD).clicked() {
                 operation = Operation::Create;
             }
             ui.label("Step Size (dt)");
@@ -60,7 +70,7 @@ fn show_step_size_table(ui: &mut Ui, world: &World) -> Operation {
             world.step_sizes().for_each(|step_size| {
                 // button '-':
                 if is_deletion_allowed(step_size, world) {
-                    if ui.small_button(BUTTON_GLYPH_DELETE).clicked() {
+                    if ui.small_button(constants::BUTTON_GLYPH_DELETE).clicked() {
                         operation = Operation::Delete(Rc::clone(step_size));
                     }
                 } else {

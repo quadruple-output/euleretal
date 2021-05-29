@@ -1,6 +1,10 @@
-use super::{Canvas, Integrator, StepSize};
-use crate::prelude::*;
-use std::{cell::RefCell, rc::Rc, slice::Iter};
+use ::std::{cell::RefCell, rc::Rc, slice::Iter};
+
+use super::{
+    core::{Obj, Scenario},
+    entities::{Canvas, Integrator, StepSize},
+    misc::Settings,
+};
 
 #[derive(Default)]
 pub struct World {
@@ -8,7 +12,7 @@ pub struct World {
     scenarios: Vec<Obj<Scenario>>,
     integrators: Vec<Obj<Integrator>>,
     step_sizes: Vec<Obj<StepSize>>,
-    // integrations are not here! They are managed by their canvases.
+    pub settings: Settings,
 }
 
 impl World {

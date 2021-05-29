@@ -1,10 +1,12 @@
-use std::{any::TypeId, collections::hash_map::DefaultHasher, hash::Hash};
-
-use super::samples::{
-    CalibrationPoint, FinalizedCalibrationPoints, NewSample, NewSampleWithPoints, StartCondition,
-    WithCalibrationPoints, WithoutCalibrationPoints,
+use super::{
+    import::R32,
+    samples::{
+        CalibrationPoint, FinalizedCalibrationPoints, NewSample, NewSampleWithPoints, Samples,
+        StartCondition, WithCalibrationPoints, WithoutCalibrationPoints,
+    },
+    AccelerationField,
 };
-use crate::prelude::*;
+use ::std::{any::TypeId, collections::hash_map::DefaultHasher, hash::Hash};
 
 pub trait Integrator: Send + Sync + 'static {
     fn label(&self) -> String;

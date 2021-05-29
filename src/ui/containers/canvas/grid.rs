@@ -1,10 +1,13 @@
-use super::canvas_view::{show_canvas, show_header_bar, CanvasOperation};
-use super::{Canvas, ControlState, World};
-use crate::prelude::*;
-use egui::Ui;
-use std::rc::Rc;
+use ::std::rc::Rc;
 
-pub fn show(ui: &mut Ui, world: &mut World, control_state: &ControlState) {
+use super::{
+    entities::Canvas,
+    ui_import::{Ui, Vec2},
+    view::{self, CanvasOperation},
+    World,
+};
+
+pub fn show(ui: &mut Ui, world: &mut World) {
     let panel_size = ui.available_size_before_wrap_finite();
     let canvas_count = world.canvases().count();
     let view_size = Vec2::new(panel_size.x, panel_size.y / canvas_count as f32);
@@ -13,13 +16,13 @@ pub fn show(ui: &mut Ui, world: &mut World, control_state: &ControlState) {
     let mut operation = CanvasOperation::Noop;
 
     world.canvases().for_each(|canvas| {
-        let header_bar = show_header_bar(ui, canvas, world, can_close, can_create);
+        let header_bar = view::show_header_bar(ui, canvas, world, can_close, can_create);
         if let CanvasOperation::Noop = header_bar.inner {
         } else {
             operation = header_bar.inner;
         }
         let inner_size = Vec2::new(view_size.x, view_size.y - header_bar.response.rect.height());
-        show_canvas(ui, canvas, inner_size, control_state);
+        view::show_canvas(ui, canvas, inner_size, &world.settings);
     });
 
     match operation {

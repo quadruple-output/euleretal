@@ -1,5 +1,5 @@
-use crate::prelude::*;
-use std::marker::PhantomData;
+use super::{import::R32, Acceleration, Fraction, Position, Velocity};
+use ::std::marker::PhantomData;
 
 pub struct Samples<C: CalibrationPointConstraint = FinalizedCalibrationPoints> {
     steps: Vec<StepContext>,

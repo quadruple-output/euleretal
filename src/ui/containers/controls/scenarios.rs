@@ -1,6 +1,7 @@
-use super::World;
-use crate::prelude::*;
-use egui::{Slider, Ui};
+use super::{
+    ui_import::{egui, egui::Slider, Ui},
+    World,
+};
 
 #[allow(clippy::borrowed_box)]
 pub fn show(ui: &mut Ui, world: &mut World) {

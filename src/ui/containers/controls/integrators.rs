@@ -1,5 +1,4 @@
-use super::{misc::my_stroke_ui, World};
-use crate::prelude::*;
+use super::{misc::my_stroke_ui, ui_import::Ui, World};
 
 #[allow(clippy::borrowed_box)]
 pub fn show(ui: &mut Ui, world: &mut World) {
