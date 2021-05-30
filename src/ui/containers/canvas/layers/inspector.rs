@@ -28,30 +28,42 @@ pub fn render(
                     painter,
                 );
                 // *** calculated sample:
-                let calc_sample_dt = calc_sample.dt.into_inner();
-                // delta s by velocity:
-                canvas.draw_vector(
-                    calc_sample.s,
-                    calc_sample.v * calc_sample_dt,
-                    settings.strokes.focussed_velocity,
-                    painter,
-                );
-                // delta s by acceleration at sample point:
-                canvas.draw_vector(
-                    calc_sample.s,
-                    0.5 * calc_sample.a * calc_sample_dt * calc_sample_dt,
-                    settings.strokes.focussed_acceleration,
-                    painter,
-                );
-
-                // calibration Points:
-                for point in calc_sample.calibration_points {
+                if calc_sample.calibration_points.is_empty() {
+                    let calc_sample_dt = calc_sample.dt.into_inner();
+                    // delta s by velocity:
                     canvas.draw_vector(
-                        point.position,
-                        0.5 * point.acceleration * calc_sample_dt * calc_sample_dt,
+                        calc_sample.s,
+                        calc_sample.v * calc_sample_dt,
+                        settings.strokes.focussed_velocity,
+                        painter,
+                    );
+                    // delta s by acceleration at sample point:
+                    canvas.draw_vector(
+                        calc_sample.s,
+                        0.5 * calc_sample.a * calc_sample_dt * calc_sample_dt,
                         settings.strokes.focussed_acceleration,
                         painter,
                     );
+                } else {
+                    // calibration Points:
+                    for point in calc_sample.calibration_points {
+                        if let Some(eff_velocity) = point.eff_velocity {
+                            canvas.draw_vector(
+                                point.position,
+                                eff_velocity,
+                                settings.strokes.focussed_velocity,
+                                painter,
+                            );
+                        }
+                        if let Some(eff_acceleration) = point.eff_acceleration {
+                            canvas.draw_vector(
+                                point.position,
+                                eff_acceleration,
+                                settings.strokes.focussed_acceleration,
+                                painter,
+                            );
+                        }
+                    }
                 }
 
                 ui.label("Inspector");

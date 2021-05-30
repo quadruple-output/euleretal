@@ -34,10 +34,17 @@ struct StepContext {
 
 #[derive(Clone, Default)]
 pub struct CalibrationPoint {
-    pub dt_fraction: Fraction,
     pub position: Position,
-    pub acceleration: Acceleration,
-    // todo: do we need a Velocity here?
+    /// fraction of dt for this point (starting point is `0/n`, end point is `n/n`)
+    pub dt_fraction: Fraction,
+    /// absolute acceleration
+    pub acceleration: Option<Acceleration>,
+    /// effectively used proportion of acceleration
+    pub eff_acceleration: Option<Acceleration>,
+    /// absolute velocity
+    pub velocity: Option<Velocity>,
+    /// effectively used proportion of velocity
+    pub eff_velocity: Option<Velocity>,
 }
 
 pub struct PointDependency {
