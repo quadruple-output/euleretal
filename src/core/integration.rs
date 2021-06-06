@@ -54,14 +54,14 @@ impl Integration {
                 num_steps,
                 step_duration,
             );
-            let num_samples = samples.step_points().len();
+            let num_samples = samples.len();
             assert!(num_samples == num_steps + 1);
             self.samples = Some(samples);
             self.sample_validity = sample_validity;
 
             if self.ref_sample_validity != ref_sample_validity {
                 let reference_samples = scenario.calculate_reference_samples(step_duration.0);
-                let num_refs = reference_samples.step_points().len();
+                let num_refs = reference_samples.len();
                 assert!(num_refs == num_samples);
                 self.reference_samples = Some(reference_samples);
                 self.ref_sample_validity = ref_sample_validity;
@@ -110,8 +110,8 @@ impl Integration {
         self.reference_samples.as_ref().and_then(|references| {
             self.samples.as_ref().map(|samples| {
                 let (idx_reference, dist_reference) =
-                    Self::find_closest(&references.step_points(), pos);
-                let (idx_sample, dist_sample) = Self::find_closest(&samples.step_points(), pos);
+                    Self::find_closest(references.step_positions(), pos);
+                let (idx_sample, dist_sample) = Self::find_closest(samples.step_positions(), pos);
                 if dist_reference < dist_sample {
                     (references.at(idx_reference), samples.at(idx_reference))
                 } else {
@@ -121,10 +121,9 @@ impl Integration {
         })
     }
 
-    fn find_closest(points: &[Position], search_pos: Position) -> (usize, f32) {
+    fn find_closest(points: impl Iterator<Item = Position>, search_pos: Position) -> (usize, f32) {
         points
-            .iter()
-            .map(|pos| (*pos - search_pos).length_squared())
+            .map(|pos| (pos - search_pos).length_squared())
             .enumerate()
             .reduce(|closest_so_far, current| {
                 if closest_so_far.1 <= current.1 {

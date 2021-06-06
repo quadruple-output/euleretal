@@ -13,16 +13,17 @@ mod type_state {
 }
 
 pub struct Samples<TS: TypeState = Finalized> {
-    steps: Vec<StepContext>,
-    step_points: Vec<Position>,
+    steps: Vec<Step>,
     calibration_points_per_step: usize,
     calibration_points: Vec<CalibrationPoint>,
-    calibration_point_constraint: PhantomData<TS>,
+    type_state: PhantomData<TS>,
 }
 
-struct StepContext {
+#[doc(hidden)]
+pub struct Step {
     time: R32,
     dt: R32,
+    position: Position,
     velocity: Velocity,
     acceleration: Acceleration,
 }
@@ -52,28 +53,27 @@ impl Samples {
     ) -> Samples<NonFinalized> {
         let mut instance = Samples::<NonFinalized> {
             steps: Vec::with_capacity(sample_capacity + 1), // +1 for the Endpoint
-            step_points: Vec::with_capacity(sample_capacity + 1),
             calibration_points_per_step,
             calibration_points: Vec::with_capacity(calibration_points_per_step * sample_capacity),
-            calibration_point_constraint: PhantomData::<NonFinalized>,
+            type_state: PhantomData::<NonFinalized>,
         };
-        instance.steps.push(StepContext {
+        instance.steps.push(Step {
             time: 0.0.into(), // start time is always zero
             dt: 0.0.into(),   // initial sample has no delta
+            position: start_condition.position,
             velocity: start_condition.velocity,
             acceleration: start_condition.acceleration,
         });
-        instance.step_points.push(start_condition.position);
         instance
     }
 }
 
 impl Samples<NonFinalized> {
     pub fn push_sample(&mut self, sample: &NewSampleWithPoints) {
-        self.step_points.push(sample.position);
-        self.steps.push(StepContext {
+        self.steps.push(Step {
             time: self.steps.last().unwrap().time + sample.dt,
             dt: sample.dt,
+            position: sample.position,
             velocity: sample.velocity,
             acceleration: sample.acceleration,
         });
@@ -84,38 +84,43 @@ impl Samples<NonFinalized> {
 
     #[must_use]
     pub fn current(&self) -> Option<StartCondition> {
-        if let (Some(current_step), Some(current_point)) =
-            (self.steps.last(), self.step_points.last())
-        {
-            Some(StartCondition {
-                position: *current_point,
-                velocity: current_step.velocity,
-                acceleration: current_step.acceleration,
-            })
-        } else {
-            None
-        }
+        self.steps.last().map(|current_step| StartCondition {
+            position: current_step.position,
+            velocity: current_step.velocity,
+            acceleration: current_step.acceleration,
+        })
     }
 
     #[must_use]
     pub fn finalized(self) -> Samples<Finalized> {
         Samples {
             steps: self.steps,
-            step_points: self.step_points,
             calibration_points_per_step: self.calibration_points_per_step,
             calibration_points: self.calibration_points,
-            calibration_point_constraint: PhantomData::<Finalized>,
+            type_state: PhantomData::<Finalized>,
         }
     }
 }
 
 impl Samples<Finalized> {
-    #[must_use]
-    pub fn step_points(&self) -> &Vec<Position> {
-        &self.step_points
+    pub fn len(&self) -> usize {
+        self.steps.len()
     }
 
-    #[must_use]
+    pub fn step_positions<'a>(
+        &'a self,
+    ) -> std::iter::Map<std::slice::Iter<'a, Step>, fn(&'a Step) -> Position> {
+        let r = self
+            .steps
+            .iter()
+            .map(Self::map_step_to_position as fn(_) -> _);
+        r
+    }
+
+    fn map_step_to_position(step: &Step) -> Position {
+        step.position
+    }
+
     pub fn at(&self, idx: usize) -> CompleteSample {
         let step = &self.steps[idx];
         CompleteSample {
@@ -124,7 +129,7 @@ impl Samples<Finalized> {
             dt: step.dt,
             v: step.velocity,
             a: step.acceleration,
-            s: self.step_points[idx],
+            s: step.position,
             calibration_points: self
                 .calibration_points
                 .iter()

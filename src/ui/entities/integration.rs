@@ -57,9 +57,8 @@ impl Integration {
             .chain(integration.samples().iter())
         {
             samples
-                .step_points()
-                .iter()
-                .for_each(|&point| bbox.expand_to(point));
+                .step_positions()
+                .for_each(|point| bbox.expand_to(point));
         }
     }
 

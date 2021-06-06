@@ -1,6 +1,6 @@
 use super::{
     constants,
-    core::{Obj, Samples, Scenario},
+    core::{Obj, Position, Samples, Scenario},
     import::{Vec3, R32},
     misc::BoundingBox,
     ui_import::{
@@ -92,20 +92,22 @@ impl Canvas {
     }
 
     pub fn draw_sample_trajectory(&self, samples: &Samples, stroke: Stroke, painter: &Painter) {
-        self.draw_connected_samples(samples.step_points().iter(), stroke, painter)
+        self.draw_connected_samples(samples.step_positions(), stroke, painter)
     }
 
     pub fn draw_trajectory(&self, stroke: Stroke, painter: &Painter) {
         if let Some(ref buffer) = self.trajectory_buffer {
-            self.draw_connected_samples(buffer.trajectory.iter(), stroke, painter);
+            self.draw_connected_samples(buffer.trajectory.iter().copied(), stroke, painter);
         }
     }
 
-    fn draw_connected_samples<'a, Iter>(&self, samples: Iter, stroke: Stroke, painter: &Painter)
-    where
-        Iter: Iterator<Item = &'a Vec3>,
-    {
-        samples.map(|s| self.user_to_screen(*s)).reduce(|u0, u1| {
+    fn draw_connected_samples(
+        &self,
+        positions: impl Iterator<Item = Position>,
+        stroke: Stroke,
+        painter: &Painter,
+    ) {
+        positions.map(|p| self.user_to_screen(p)).reduce(|u0, u1| {
             // avoid drawing extremely short line segments:
             if (u0.x - u1.x).abs() > 2. || (u0.y - u1.y).abs() > 2. {
                 painter.line_segment([u0, u1], stroke);
@@ -118,9 +120,8 @@ impl Canvas {
 
     pub fn draw_sample_dots(&self, samples: &Samples, color: Color32, painter: &Painter) {
         samples
-            .step_points()
-            .iter()
-            .map(|position| self.user_to_screen(*position))
+            .step_positions()
+            .map(|position| self.user_to_screen(position))
             .fold(Pos2::new(f32::MAX, f32::MAX), |u0, u1| {
                 if (u0.x - u1.x).abs() > 1. || (u0.y - u1.y).abs() > 1. {
                     painter.circle_filled(u1, constants::SAMPLE_DOT_RADIUS, color);

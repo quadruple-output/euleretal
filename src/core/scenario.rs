@@ -60,7 +60,7 @@ impl Scenario {
         );
         log::info!(
             "Calculated {} reference samples, using trajectory with {} segments",
-            samples.step_points().len(),
+            samples.len(),
             trajectory.len(),
         );
         samples
