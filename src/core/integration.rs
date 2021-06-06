@@ -11,7 +11,7 @@ pub struct Integration {
     samples: Option<Samples>,
     sample_validity: u64,
     reference_samples: Option<Samples>,
-    scenario_hash: u64,
+    ref_sample_validity: u64,
 }
 
 impl Integration {
@@ -20,7 +20,7 @@ impl Integration {
             samples: None,
             sample_validity: 0,
             reference_samples: None,
-            scenario_hash: 0,
+            ref_sample_validity: 0,
         }
     }
 
@@ -34,9 +34,9 @@ impl Integration {
         // check if we have to re-calculate:
         let mut hasher = DefaultHasher::new();
         scenario.hash_default(&mut hasher);
-        let scenario_hash = hasher.finish();
-        integrator.hash(&mut hasher);
         step_duration.0.hash(&mut hasher);
+        let ref_sample_validity = hasher.finish();
+        integrator.hash(&mut hasher);
         let sample_validity = hasher.finish();
 
         if self.sample_validity != sample_validity {
@@ -59,12 +59,12 @@ impl Integration {
             self.samples = Some(samples);
             self.sample_validity = sample_validity;
 
-            if self.scenario_hash != scenario_hash {
+            if self.ref_sample_validity != ref_sample_validity {
                 let reference_samples = scenario.calculate_reference_samples(step_duration.0);
                 let num_refs = reference_samples.step_points().len();
                 assert!(num_refs == num_samples);
                 self.reference_samples = Some(reference_samples);
-                self.scenario_hash = scenario_hash;
+                self.ref_sample_validity = ref_sample_validity;
             }
         }
     }
