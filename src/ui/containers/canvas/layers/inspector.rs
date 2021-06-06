@@ -8,7 +8,7 @@ pub fn render(
 ) {
     let canvas = canvas.borrow();
     canvas.integrations().for_each(|integration| {
-        canvas.on_hover_ui(response, |ui, mouse_pos| {
+        canvas.on_hover_ui(response, |_ui, mouse_pos| {
             if let Some((ref_sample, calc_sample)) = integration.borrow().closest_sample(mouse_pos)
             {
                 // *** reference sample:
@@ -66,25 +66,25 @@ pub fn render(
                     }
                 }
 
-                ui.label("Inspector");
-                ui.separator();
-                ui.label(format!(
-                    "#{}: t = {}",
-                    calc_sample.n,
-                    settings.format_f32(calc_sample.t.into())
-                ));
-                ui.label(format!(
-                    "ds = {}",
-                    settings.format_f32((calc_sample.s - ref_sample.s).length())
-                ));
-                ui.label(format!(
-                    "dv = {}",
-                    settings.format_f32((calc_sample.v - ref_sample.v).length())
-                ));
-                ui.label(format!(
-                    "da = {}",
-                    settings.format_f32((calc_sample.a - ref_sample.a).length())
-                ));
+                // ui.label("Inspector");
+                // ui.separator();
+                // ui.label(format!(
+                //     "#{}: t = {}",
+                //     calc_sample.n,
+                //     settings.format_f32(calc_sample.t.into())
+                // ));
+                // ui.label(format!(
+                //     "ds = {}",
+                //     settings.format_f32((calc_sample.s - ref_sample.s).length())
+                // ));
+                // ui.label(format!(
+                //     "dv = {}",
+                //     settings.format_f32((calc_sample.v - ref_sample.v).length())
+                // ));
+                // ui.label(format!(
+                //     "da = {}",
+                //     settings.format_f32((calc_sample.a - ref_sample.a).length())
+                // ));
             }
         });
     })
