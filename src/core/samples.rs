@@ -20,7 +20,7 @@ pub struct Samples<TS: TypeState = Finalized> {
 }
 
 #[doc(hidden)]
-pub struct Step {
+struct Step {
     time: R32,
     dt: R32,
     position: Position,
@@ -107,18 +107,10 @@ impl Samples<Finalized> {
         self.steps.len()
     }
 
-    pub fn step_positions<'a>(
-        &'a self,
-    ) -> std::iter::Map<std::slice::Iter<'a, Step>, fn(&'a Step) -> Position> {
-        let r = self
-            .steps
-            .iter()
-            .map(Self::map_step_to_position as fn(_) -> _);
-        r
-    }
-
-    fn map_step_to_position(step: &Step) -> Position {
-        step.position
+    pub fn step_positions(&self) -> PositionIter {
+        PositionIter {
+            steps_iter: self.steps.iter(),
+        }
     }
 
     pub fn at(&self, idx: usize) -> CompleteSample {
@@ -137,6 +129,34 @@ impl Samples<Finalized> {
                 .take(self.calibration_points_per_step)
                 .collect(),
         }
+    }
+}
+
+pub struct PositionIter<'a> {
+    steps_iter: ::std::slice::Iter<'a, Step>,
+}
+
+impl<'a> Iterator for PositionIter<'a> {
+    type Item = Position;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.steps_iter.next().map(|step| step.position)
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.steps_iter.size_hint()
+    }
+
+    fn count(self) -> usize {
+        self.steps_iter.count()
+    }
+
+    fn last(self) -> Option<Self::Item> {
+        self.steps_iter.last().map(|step| step.position)
+    }
+
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.steps_iter.nth(n).map(|step| step.position)
     }
 }
 
