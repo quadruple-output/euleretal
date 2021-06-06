@@ -17,7 +17,6 @@ pub struct Samples<TS: TypeState = Finalized> {
     step_points: Vec<Position>,
     calibration_points_per_step: usize,
     calibration_points: Vec<CalibrationPoint>,
-    point_dependencies: Vec<PointDependency>,
     calibration_point_constraint: PhantomData<TS>,
 }
 
@@ -43,22 +42,6 @@ pub struct CalibrationPoint {
     pub eff_velocity: Option<Velocity>,
 }
 
-pub struct PointDependency {
-    pub predecessor: Predecessor,
-    pub successor: Successor,
-    pub weight: usize,
-}
-
-pub enum Predecessor {
-    StartingPoint,
-    CalibrationPoint(usize),
-}
-
-pub enum Successor {
-    EndPoint,
-    CalibrationPoint(usize),
-}
-
 /// This implements the `new` method for `Samples<Finalized>`, returning `Samples<NonFinalized>`.
 /// This seems odd, but it is convenient since `Finalized` is the default type.
 impl Samples {
@@ -72,8 +55,6 @@ impl Samples {
             step_points: Vec::with_capacity(sample_capacity + 1),
             calibration_points_per_step,
             calibration_points: Vec::with_capacity(calibration_points_per_step * sample_capacity),
-            // as a HEURISTIC, we assume that each point is calculated from two predecessors:
-            point_dependencies: Vec::with_capacity(calibration_points_per_step * 2),
             calibration_point_constraint: PhantomData::<NonFinalized>,
         };
         instance.steps.push(StepContext {
@@ -88,10 +69,6 @@ impl Samples {
 }
 
 impl Samples<NonFinalized> {
-    pub fn add_dependency(&mut self, dependency: PointDependency) {
-        self.point_dependencies.push(dependency);
-    }
-
     pub fn push_sample(&mut self, sample: &NewSampleWithPoints) {
         self.step_points.push(sample.position);
         self.steps.push(StepContext {
@@ -127,7 +104,6 @@ impl Samples<NonFinalized> {
             step_points: self.step_points,
             calibration_points_per_step: self.calibration_points_per_step,
             calibration_points: self.calibration_points,
-            point_dependencies: self.point_dependencies,
             calibration_point_constraint: PhantomData::<Finalized>,
         }
     }

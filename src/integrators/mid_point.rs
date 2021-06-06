@@ -25,6 +25,10 @@ impl Integrator for Euler {
             .to_string()
     }
 
+    fn num_calibration_points(&self) -> usize {
+        2
+    }
+
     fn integrate_step(
         &self,
         current: &StartCondition,
@@ -64,6 +68,16 @@ impl Integrator for Euler {
         next.position = current.position
             + next.calibration_points[0].eff_velocity.unwrap()
             + next.calibration_points[1].eff_acceleration.unwrap();
+
+        // let p0 = current.tracker();
+
+        // let dt_mid_point = fraction!(1 / 2) * dt;
+        // let s_mid = p0.s + p0.v * dt_mid_point + 0.5 * p0.a * dt_mid_point * dt_mid_point;
+        // let a_mid = s_mid.compute_acceleration(acceleration_field);
+
+        // let v = p0.v + a_mid * dt;
+        // let s = p0.s + p0.v * dt + a_mid * dt * dt;
+        // s1 | v1;
     }
 }
 
@@ -86,6 +100,10 @@ impl Integrator for SecondOrder {
          v' = v + a₁ dt\n\
          s' = s + v dt + ½ a₁ dt²" // !! string contains non-breakable spaces
             .to_string()
+    }
+
+    fn num_calibration_points(&self) -> usize {
+        2
     }
 
     fn integrate_step(
@@ -130,5 +148,15 @@ impl Integrator for SecondOrder {
         next.position = current.position
             + next.calibration_points[0].eff_velocity.unwrap()
             + next.calibration_points[1].eff_acceleration.unwrap();
+
+        // let p0 = current.tracker();
+
+        // let dt_mid_point = fraction!(1 / 2) * dt;
+        // let s_mid = p0.s + p0.v * dt_mid_point + 0.5 * p0.a * dt_mid_point * dt_mid_point;
+        // let a_mid = s_mid.compute_acceleration(acceleration_field);
+
+        // let v = p0.v + a_mid * dt;
+        // let s = p0.s + p0.v * dt + 0.5 * a_mid * dt * dt;
+        // s1 | v1;
     }
 }
