@@ -1,6 +1,5 @@
 use super::{
-    import::Vec3, CompleteSample, Duration, FinalizedCalibrationPoints, Integrator, Position,
-    Samples, Scenario, StartCondition,
+    import::Vec3, CompleteSample, Duration, Integrator, Position, Samples, Scenario, StartCondition,
 };
 use ::std::{
     collections::hash_map::DefaultHasher,
@@ -68,11 +67,11 @@ impl Integration {
         }
     }
 
-    pub fn reference_samples(&self) -> Option<&Samples<FinalizedCalibrationPoints>> {
+    pub fn reference_samples(&self) -> Option<&Samples> {
         self.reference_samples.as_ref()
     }
 
-    pub fn samples(&self) -> Option<&Samples<FinalizedCalibrationPoints>> {
+    pub fn samples(&self) -> Option<&Samples> {
         self.samples.as_ref()
     }
 

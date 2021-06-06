@@ -1,10 +1,6 @@
-use super::{
-    core::{
-        AccelerationField, FinalizedCalibrationPoints, Integrator, NewSample, OneStepDirect,
-        Samples, StartCondition,
-    },
-    import::R32,
-};
+use crate::core::NewSampleWithPoints;
+
+use super::core::{AccelerationField, Integrator, StartCondition};
 
 pub struct Broken {}
 
@@ -25,21 +21,10 @@ impl Integrator for Broken {
             .to_string()
     }
 
-    fn integrate(
-        &self,
-        acceleration_field: &dyn AccelerationField,
-        start_condition: &StartCondition,
-        num_steps: usize,
-        dt: R32,
-    ) -> Samples<FinalizedCalibrationPoints> {
-        <Self as OneStepDirect>::integrate(acceleration_field, start_condition, num_steps, dt)
-    }
-}
-
-impl OneStepDirect for Broken {
     fn integrate_step(
+        &self,
         current: &StartCondition,
-        next: &mut NewSample,
+        next: &mut NewSampleWithPoints,
         dt: f32,
         _acceleration_field: &dyn AccelerationField,
     ) {
@@ -68,21 +53,10 @@ impl Integrator for Euler {
             .to_string()
     }
 
-    fn integrate(
-        &self,
-        acceleration_field: &dyn AccelerationField,
-        start_condition: &StartCondition,
-        num_steps: usize,
-        dt: R32,
-    ) -> Samples<FinalizedCalibrationPoints> {
-        <Self as OneStepDirect>::integrate(acceleration_field, start_condition, num_steps, dt)
-    }
-}
-
-impl OneStepDirect for Euler {
     fn integrate_step(
+        &self,
         current: &StartCondition,
-        next: &mut NewSample,
+        next: &mut NewSampleWithPoints,
         dt: f32,
         _acceleration_field: &dyn AccelerationField,
     ) {

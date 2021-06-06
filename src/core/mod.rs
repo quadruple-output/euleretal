@@ -16,12 +16,9 @@ pub use acceleration_field::AccelerationField;
 pub use duration::Duration;
 pub use fraction::Fraction;
 pub use integration::Integration;
-pub use integrator::{Integrator, OneStepDirect, OneStepWithCalibrationPoints};
+pub use integrator::Integrator;
 pub use obj::Obj;
-pub use samples::{
-    CompleteSample, FinalizedCalibrationPoints, NewSample, NewSampleWithPoints, Samples,
-    StartCondition,
-};
+pub use samples::{CalibrationPoint, CompleteSample, NewSampleWithPoints, Samples, StartCondition};
 pub use scenario::Scenario;
 pub use start_position::StartPosition;
 pub use start_velocity::StartVelocity;

@@ -1,9 +1,5 @@
-use super::{
-    core::{
-        AccelerationField, FinalizedCalibrationPoints, Fraction, Integrator, NewSampleWithPoints,
-        OneStepWithCalibrationPoints, Samples, StartCondition,
-    },
-    import::R32,
+use super::core::{
+    AccelerationField, CalibrationPoint, Fraction, Integrator, NewSampleWithPoints, StartCondition,
 };
 
 pub struct Euler {}
@@ -29,26 +25,10 @@ impl Integrator for Euler {
             .to_string()
     }
 
-    fn integrate(
-        &self,
-        acceleration_field: &dyn AccelerationField,
-        start_condition: &StartCondition,
-        num_steps: usize,
-        dt: R32,
-    ) -> Samples<FinalizedCalibrationPoints> {
-        <Self as OneStepWithCalibrationPoints<2>>::integrate(
-            acceleration_field,
-            start_condition,
-            num_steps,
-            dt,
-        )
-    }
-}
-
-impl OneStepWithCalibrationPoints<2> for Euler {
     fn integrate_step(
+        &self,
         current: &StartCondition,
-        next: &mut NewSampleWithPoints<2>,
+        next: &mut NewSampleWithPoints,
         dt: f32,
         acceleration_field: &dyn AccelerationField,
     ) {
@@ -59,15 +39,23 @@ impl OneStepWithCalibrationPoints<2> for Euler {
             + (current.velocity + current.acceleration * mid_point_dt) * mid_point_dt;
         let mid_point_acceleration = acceleration_field.value_at(mid_point_position);
 
-        next.calibration_points[0].position = current.position;
-        next.calibration_points[0].dt_fraction = fraction!(0 / 2);
-        next.calibration_points[0].velocity = Some(current.velocity);
-        next.calibration_points[0].eff_velocity = Some(current.velocity * dt);
+        next.calibration_points.push(CalibrationPoint {
+            position: current.position,
+            dt_fraction: fraction!(0 / 2),
+            velocity: Some(current.velocity),
+            eff_velocity: Some(current.velocity * dt),
+            acceleration: None,
+            eff_acceleration: None,
+        });
 
-        next.calibration_points[1].position = mid_point_position;
-        next.calibration_points[1].dt_fraction = mid_point_fraction;
-        next.calibration_points[1].acceleration = Some(mid_point_acceleration);
-        next.calibration_points[1].eff_acceleration = Some(mid_point_acceleration * dt * dt);
+        next.calibration_points.push(CalibrationPoint {
+            position: mid_point_position,
+            dt_fraction: mid_point_fraction,
+            acceleration: Some(mid_point_acceleration),
+            eff_acceleration: Some(mid_point_acceleration * dt * dt),
+            velocity: None,
+            eff_velocity: None,
+        });
 
         // this cannot be generically computed from the calib.points (yet! → todo):
         next.velocity = next.calibration_points[0].velocity.unwrap()
@@ -100,26 +88,10 @@ impl Integrator for SecondOrder {
             .to_string()
     }
 
-    fn integrate(
-        &self,
-        acceleration_field: &dyn AccelerationField,
-        start_condition: &StartCondition,
-        num_steps: usize,
-        dt: R32,
-    ) -> Samples<FinalizedCalibrationPoints> {
-        <Self as OneStepWithCalibrationPoints<2>>::integrate(
-            acceleration_field,
-            start_condition,
-            num_steps,
-            dt,
-        )
-    }
-}
-
-impl OneStepWithCalibrationPoints<2> for SecondOrder {
     fn integrate_step(
+        &self,
         current: &StartCondition,
-        next: &mut NewSampleWithPoints<2>,
+        next: &mut NewSampleWithPoints,
         dt: f32,
         acceleration_field: &dyn AccelerationField,
     ) {
@@ -135,15 +107,23 @@ impl OneStepWithCalibrationPoints<2> for SecondOrder {
         next.position =
             current.position + current.velocity * dt + 0.5 * mid_point_acceleration * dt * dt;
 
-        next.calibration_points[0].position = current.position;
-        next.calibration_points[0].dt_fraction = fraction!(0 / 2);
-        next.calibration_points[0].velocity = Some(current.velocity);
-        next.calibration_points[0].eff_velocity = Some(current.velocity * dt);
+        next.calibration_points.push(CalibrationPoint {
+            position: current.position,
+            dt_fraction: fraction!(0 / 2),
+            velocity: Some(current.velocity),
+            eff_velocity: Some(current.velocity * dt),
+            acceleration: None,
+            eff_acceleration: None,
+        });
 
-        next.calibration_points[1].position = mid_point_position;
-        next.calibration_points[1].dt_fraction = mid_point_fraction;
-        next.calibration_points[1].acceleration = Some(mid_point_acceleration);
-        next.calibration_points[1].eff_acceleration = Some(0.5 * mid_point_acceleration * dt * dt);
+        next.calibration_points.push(CalibrationPoint {
+            position: mid_point_position,
+            dt_fraction: mid_point_fraction,
+            acceleration: Some(mid_point_acceleration),
+            eff_acceleration: Some(0.5 * mid_point_acceleration * dt * dt),
+            velocity: None,
+            eff_velocity: None,
+        });
 
         next.velocity = next.calibration_points[0].velocity.unwrap()
             + next.calibration_points[1].acceleration.unwrap() * dt;

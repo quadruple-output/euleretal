@@ -1,9 +1,6 @@
 use super::{
     import::R32,
-    samples::{
-        CalibrationPoint, FinalizedCalibrationPoints, NewSample, NewSampleWithPoints, Samples,
-        StartCondition, WithCalibrationPoints, WithoutCalibrationPoints,
-    },
+    samples::{NewSampleWithPoints, Samples, StartCondition},
     AccelerationField,
 };
 use ::std::{any::TypeId, collections::hash_map::DefaultHasher, hash::Hash};
@@ -19,55 +16,8 @@ pub trait Integrator: Send + Sync + 'static {
         start_condition: &StartCondition,
         num_steps: usize,
         dt: R32,
-    ) -> Samples<FinalizedCalibrationPoints>;
-
-    fn hash(&self, state: &mut DefaultHasher) {
-        TypeId::of::<Self>().hash(state);
-    }
-}
-
-pub trait OneStepDirect {
-    fn integrate(
-        acceleration_field: &dyn AccelerationField,
-        start_condition: &StartCondition,
-        num_steps: usize,
-        dt: R32,
-    ) -> Samples<FinalizedCalibrationPoints> {
-        let mut samples = Samples::<WithoutCalibrationPoints>::new(start_condition, num_steps);
-        for _ in 0..num_steps {
-            let current = samples.current().unwrap();
-            let mut next = NewSample {
-                dt,
-                ..NewSample::default()
-            };
-
-            Self::integrate_step(&current, &mut next, dt.into(), acceleration_field);
-
-            next.acceleration = acceleration_field.value_at(next.position);
-            samples.push_sample(&next);
-        }
-        samples.finalized()
-    }
-
-    fn integrate_step(
-        current: &StartCondition,
-        next: &mut NewSample,
-        dt: f32,
-        acceleration_field: &dyn AccelerationField,
-    );
-}
-
-pub trait OneStepWithCalibrationPoints<const N: usize>
-where
-    [CalibrationPoint; N]: Default,
-{
-    fn integrate(
-        acceleration_field: &dyn AccelerationField,
-        start_condition: &StartCondition,
-        num_steps: usize,
-        dt: R32,
-    ) -> Samples<FinalizedCalibrationPoints> {
-        let mut samples = Samples::<WithCalibrationPoints<N>>::new(start_condition, num_steps);
+    ) -> Samples {
+        let mut samples = Samples::new(start_condition, self.num_calibration_points(), num_steps);
         for _ in 0..num_steps {
             let current = samples.current().unwrap();
             let mut next = NewSampleWithPoints {
@@ -75,7 +25,7 @@ where
                 ..NewSampleWithPoints::default()
             };
 
-            Self::integrate_step(&current, &mut next, dt.into(), acceleration_field);
+            self.integrate_step(&current, &mut next, dt.into(), acceleration_field);
 
             next.acceleration = acceleration_field.value_at(next.position);
             samples.push_sample(&next);
@@ -83,9 +33,18 @@ where
         samples.finalized()
     }
 
+    fn hash(&self, state: &mut DefaultHasher) {
+        TypeId::of::<Self>().hash(state);
+    }
+
+    fn num_calibration_points(&self) -> usize {
+        0
+    }
+
     fn integrate_step(
+        &self,
         current: &StartCondition,
-        next: &mut NewSampleWithPoints<N>,
+        next: &mut NewSampleWithPoints,
         dt: f32,
         acceleration_field: &dyn AccelerationField,
     );

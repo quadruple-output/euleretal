@@ -1,10 +1,4 @@
-use super::{
-    core::{
-        AccelerationField, FinalizedCalibrationPoints, Integrator, NewSample, OneStepDirect,
-        Samples, StartCondition,
-    },
-    import::R32,
-};
+use super::core::{AccelerationField, Integrator, NewSampleWithPoints, StartCondition};
 
 pub struct ExactForConst {}
 
@@ -25,21 +19,10 @@ impl Integrator for ExactForConst {
             .to_string()
     }
 
-    fn integrate(
-        &self,
-        acceleration_field: &dyn AccelerationField,
-        start_condition: &StartCondition,
-        num_steps: usize,
-        dt: R32,
-    ) -> Samples<FinalizedCalibrationPoints> {
-        <Self as OneStepDirect>::integrate(acceleration_field, start_condition, num_steps, dt)
-    }
-}
-
-impl OneStepDirect for ExactForConst {
     fn integrate_step(
+        &self,
         current: &StartCondition,
-        next: &mut NewSample,
+        next: &mut NewSampleWithPoints,
         dt: f32,
         _acceleration_field: &dyn AccelerationField,
     ) {

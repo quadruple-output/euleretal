@@ -1,7 +1,7 @@
 use super::{
     import::{Vec3, R32},
-    samples::{NewSample, StartCondition, WithoutCalibrationPoints},
-    AccelerationField, Duration, Samples, StartPosition, StartVelocity,
+    samples::StartCondition,
+    AccelerationField, Duration, NewSampleWithPoints, Samples, StartPosition, StartVelocity,
 };
 use ::std::{collections::hash_map::DefaultHasher, hash::Hash};
 
@@ -83,12 +83,13 @@ fn calculate_trajectory_and_samples(
 
     let mut trajectory = Vec::with_capacity(iterations * steps_per_dt + 1);
     trajectory.push(s0);
-    let mut samples = Samples::<WithoutCalibrationPoints>::new(
+    let mut samples = Samples::new(
         &StartCondition {
             position: s0,
             velocity: v0,
             acceleration: a0,
         },
+        0,
         iterations,
     );
 
@@ -115,11 +116,12 @@ fn calculate_trajectory_and_samples(
             trajectory.push(s0);
         }
         t0 = t1;
-        samples.push_sample(&NewSample {
+        samples.push_sample(&NewSampleWithPoints {
             dt,
             position: s0,
             velocity: v0,
             acceleration: a0,
+            calibration_points: Vec::new(),
         });
     }
 
