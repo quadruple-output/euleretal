@@ -5,7 +5,6 @@ use ::std::ops::Mul;
 pub struct Fraction {
     numerator: usize,
     denominator: usize,
-    as_float: f32,
 }
 
 macro_rules! fraction(
@@ -17,12 +16,11 @@ impl Fraction {
         Self {
             numerator,
             denominator,
-            as_float: numerator as f32 / denominator as f32,
         }
     }
 
     pub fn to_f32(self) -> f32 {
-        self.as_float
+        self.numerator as f32 / self.denominator as f32
     }
 }
 
@@ -31,7 +29,6 @@ impl Default for Fraction {
         Self {
             numerator: 1,
             denominator: 1,
-            as_float: 1.,
         }
     }
 }
@@ -47,6 +44,6 @@ impl Mul<f32> for Fraction {
     type Output = f32;
 
     fn mul(self, rhs: f32) -> f32 {
-        self.as_float * rhs
+        self.to_f32() * rhs
     }
 }
