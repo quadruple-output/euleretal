@@ -1,5 +1,6 @@
 use super::{
-    import::Vec3, CompleteSample, Duration, Integrator, Position, Samples, Scenario, StartCondition,
+    import::Vec3, AccelerationField, CompleteSample, Duration, Integrator, NewSampleWithPoints,
+    Position, Samples, Scenario, StartCondition,
 };
 use ::std::{
     collections::hash_map::DefaultHasher,
@@ -42,7 +43,8 @@ impl Integration {
             #[allow(clippy::cast_sign_loss)]
             let num_steps = (scenario.duration.0 / step_duration.0).into_inner() as usize;
 
-            let samples = integrator.integrate(
+            let samples = Self::integrate(
+                integrator,
                 &*scenario.acceleration,
                 &StartCondition {
                     position: scenario.start_position.0,
@@ -50,7 +52,7 @@ impl Integration {
                     acceleration: scenario.acceleration.value_at(scenario.start_position.0),
                 },
                 num_steps,
-                step_duration.0,
+                step_duration,
             );
             let num_samples = samples.step_points().len();
             assert!(num_samples == num_steps + 1);
@@ -65,6 +67,34 @@ impl Integration {
                 self.scenario_hash = scenario_hash;
             }
         }
+    }
+
+    fn integrate(
+        integrator: &dyn Integrator,
+        acceleration_field: &dyn AccelerationField,
+        start_condition: &StartCondition,
+        num_steps: usize,
+        dt: Duration,
+    ) -> Samples {
+        let dt = dt.0;
+        let mut samples = Samples::new(
+            start_condition,
+            integrator.num_calibration_points(),
+            num_steps,
+        );
+        for _ in 0..num_steps {
+            let current = samples.current().unwrap();
+            let mut next = NewSampleWithPoints {
+                dt,
+                ..NewSampleWithPoints::default()
+            };
+
+            integrator.integrate_step(&current, &mut next, dt.into(), acceleration_field);
+
+            next.acceleration = acceleration_field.value_at(next.position);
+            samples.push_sample(&next);
+        }
+        samples.finalized()
     }
 
     pub fn reference_samples(&self) -> Option<&Samples> {
