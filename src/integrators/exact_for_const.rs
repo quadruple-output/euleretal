@@ -31,8 +31,9 @@ impl Integrator for ExactForConst {
         // let s1 = p0.s + p0.v * dt + 0.5 * p0.a * dt * dt;
         // s1 | v1;
 
-        next.velocity = current.velocity + current.acceleration * dt;
+        next.velocity = (current.velocity + current.acceleration * dt).into();
         next.position =
-            current.position + current.velocity * dt + 0.5 * current.acceleration * dt * dt;
+            (current.position + current.velocity * dt + 0.5 * current.acceleration * dt * dt)
+                .into();
     }
 }

@@ -89,7 +89,6 @@ fn calculate_trajectory_and_samples(
             velocity: v0,
             acceleration: a0,
         },
-        0,
         iterations,
     );
 
@@ -116,12 +115,11 @@ fn calculate_trajectory_and_samples(
             trajectory.push(s0);
         }
         t0 = t1;
-        samples.push_sample(&NewSampleWithPoints {
+        samples.push_sample(NewSampleWithPoints {
             dt,
-            position: s0,
-            velocity: v0,
+            position: s0.into(),
+            velocity: v0.into(),
             acceleration: a0,
-            calibration_points: Vec::new(),
         });
     }
 

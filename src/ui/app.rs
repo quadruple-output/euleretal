@@ -93,7 +93,7 @@ impl Euleretal {
     fn initialize_scenario(&mut self) {
         let step_size = Rc::clone(self.world.add_step_size(StepSize {
             user_label: UserLabel("default".to_string()),
-            duration: Duration(R32::from(0.5)),
+            duration: Duration(R32::from(0.11)),
             color: Hsva::from(Color32::YELLOW),
         }));
 
@@ -107,17 +107,19 @@ impl Euleretal {
             stroke: Stroke::new(1., Hsva::from(Color32::from_rgb(255, 0, 255))), // 255,0,255: magenta
         });
 
-        let _mid_point_euler = self.world.add_integrator(Integrator {
+        let mid_point_euler = Rc::clone(self.world.add_integrator(Integrator {
             integrator: Box::new(integrators::mid_point::Euler::new()),
             stroke: Stroke::new(1., Hsva::from(Color32::YELLOW)),
-        });
+        }));
 
+        /*
         let _mid_point_second_order = self.world.add_integrator(Integrator {
             integrator: Box::new(integrators::mid_point::SecondOrder::new()),
             stroke: Stroke::new(1., Hsva::from(Color32::GREEN)),
         });
+        */
 
-        let implicit_euler = Rc::clone(self.world.add_integrator(Integrator {
+        let _implicit_euler = Rc::clone(self.world.add_integrator(Integrator {
             integrator: Box::new(integrators::euler::Euler::new()),
             stroke: Stroke::new(1., Hsva::from(Color32::RED)),
         }));
@@ -140,6 +142,6 @@ impl Euleretal {
 
         canvas_center_mass
             .borrow_mut()
-            .add_integration(Integration::new(implicit_euler, step_size));
+            .add_integration(Integration::new(mid_point_euler, step_size));
     }
 }

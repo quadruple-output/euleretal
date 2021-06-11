@@ -1,4 +1,4 @@
-use super::import::Vec3;
+use super::{import::Vec3, Duration};
 use ::std::ops::Mul;
 
 #[derive(Clone, Copy)]
@@ -40,10 +40,21 @@ impl Mul<Fraction> for Vec3 {
     }
 }
 
-impl Mul<f32> for Fraction {
+impl<IntoF32> Mul<IntoF32> for Fraction
+where
+    IntoF32: Into<f32>,
+{
     type Output = f32;
 
-    fn mul(self, rhs: f32) -> f32 {
-        self.to_f32() * rhs
+    fn mul(self, rhs: IntoF32) -> f32 {
+        self.to_f32() * rhs.into()
+    }
+}
+
+impl Mul<Fraction> for Duration {
+    type Output = Duration;
+
+    fn mul(self, rhs: Fraction) -> Self::Output {
+        self * rhs.to_f32()
     }
 }

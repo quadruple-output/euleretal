@@ -118,6 +118,14 @@ impl Canvas {
         });
     }
 
+    pub fn draw_sample_dot(&self, position: Position, color: Color32, painter: &Painter) {
+        painter.circle_filled(
+            self.user_to_screen(position),
+            constants::SAMPLE_DOT_RADIUS,
+            color,
+        );
+    }
+
     pub fn draw_sample_dots(&self, samples: &Samples, color: Color32, painter: &Painter) {
         samples
             .step_positions()

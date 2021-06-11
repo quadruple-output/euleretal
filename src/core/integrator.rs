@@ -17,10 +17,6 @@ pub trait Integrator: Send + Sync + 'static {
         acceleration_field: &dyn AccelerationField,
     );
 
-    fn num_calibration_points(&self) -> usize {
-        0
-    }
-
     fn hash(&self, state: &mut DefaultHasher) {
         TypeId::of::<Self>().hash(state);
     }

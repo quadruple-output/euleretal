@@ -1,5 +1,5 @@
 use super::{
-    import::Vec3, AccelerationField, CompleteSample, Duration, Integrator, NewSampleWithPoints,
+    import::Vec3, samples::Step, AccelerationField, Duration, Integrator, NewSampleWithPoints,
     Position, Samples, Scenario, StartCondition,
 };
 use ::std::{
@@ -77,11 +77,7 @@ impl Integration {
         dt: Duration,
     ) -> Samples {
         let dt = dt.0;
-        let mut samples = Samples::new(
-            start_condition,
-            integrator.num_calibration_points(),
-            num_steps,
-        );
+        let mut samples = Samples::new(start_condition, num_steps);
         for _ in 0..num_steps {
             let current = samples.current().unwrap();
             let mut next = NewSampleWithPoints {
@@ -91,8 +87,8 @@ impl Integration {
 
             integrator.integrate_step(&current, &mut next, dt.into(), acceleration_field);
 
-            next.acceleration = acceleration_field.value_at(next.position);
-            samples.push_sample(&next);
+            next.acceleration = acceleration_field.value_at((&next.position).into());
+            samples.push_sample(next);
         }
         samples.finalized()
     }
@@ -106,7 +102,7 @@ impl Integration {
     }
 
     /// returns (ReferenceSample,ComputedSample)
-    pub fn closest_sample(&self, pos: Vec3) -> Option<(CompleteSample, CompleteSample)> {
+    pub fn closest_sample(&self, pos: Vec3) -> Option<(&Step, &Step)> {
         self.reference_samples.as_ref().and_then(|references| {
             self.samples.as_ref().map(|samples| {
                 let (idx_reference, dist_reference) =

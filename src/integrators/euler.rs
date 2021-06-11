@@ -1,6 +1,4 @@
-use crate::core::NewSampleWithPoints;
-
-use super::core::{AccelerationField, Integrator, StartCondition};
+use super::core::{AccelerationField, Integrator, NewSampleWithPoints, StartCondition};
 
 pub struct Broken {}
 
@@ -28,8 +26,8 @@ impl Integrator for Broken {
         dt: f32,
         _acceleration_field: &dyn AccelerationField,
     ) {
-        next.position = current.position + current.velocity * dt;
-        next.velocity = current.velocity + current.acceleration * dt;
+        next.position = (current.position + current.velocity * dt).into();
+        next.velocity = (current.velocity + current.acceleration * dt).into();
     }
 }
 
@@ -60,7 +58,8 @@ impl Integrator for Euler {
         dt: f32,
         _acceleration_field: &dyn AccelerationField,
     ) {
-        next.velocity = current.velocity + current.acceleration * dt;
-        next.position = current.position + next.velocity * dt;
+        let next_velocity = current.velocity + current.acceleration * dt;
+        next.velocity = next_velocity.into();
+        next.position = (current.position + next_velocity * dt).into();
     }
 }
