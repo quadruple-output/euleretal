@@ -1,5 +1,5 @@
 use super::{
-    derived_quantities::{DerivedPosition, DerivedVelocity},
+    derived_quantities::{ComputedPosition, ComputedVelocity},
     import::R32,
     Acceleration, Position, Velocity,
 };
@@ -25,8 +25,8 @@ pub struct Samples<TS: TypeState = Finalized> {
 pub struct Step {
     pub time: R32,
     pub dt: R32,
-    pub derived_position: DerivedPosition,
-    pub derived_velocity: DerivedVelocity,
+    pub derived_position: ComputedPosition,
+    pub derived_velocity: ComputedVelocity,
     pub acceleration: Acceleration,
 }
 
@@ -63,8 +63,8 @@ impl Samples<NonFinalized> {
     #[must_use]
     pub fn current(&self) -> Option<StartCondition> {
         self.steps.last().map(|current_step| StartCondition {
-            position: (&current_step.derived_position).into(),
-            velocity: (&current_step.derived_velocity).into(),
+            position: current_step.derived_position.as_position(),
+            velocity: current_step.derived_velocity.as_velocity(),
             acceleration: current_step.acceleration,
         })
     }
@@ -104,7 +104,7 @@ impl<'a> Iterator for PositionIter<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         self.steps_iter
             .next()
-            .map(|step| (&step.derived_position).into())
+            .map(|step| step.derived_position.as_position())
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -118,13 +118,13 @@ impl<'a> Iterator for PositionIter<'a> {
     fn last(self) -> Option<Self::Item> {
         self.steps_iter
             .last()
-            .map(|step| (&step.derived_position).into())
+            .map(|step| step.derived_position.as_position())
     }
 
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
         self.steps_iter
             .nth(n)
-            .map(|step| (&step.derived_position).into())
+            .map(|step| step.derived_position.as_position())
     }
 }
 
@@ -138,7 +138,7 @@ pub struct StartCondition {
 #[derive(Default)]
 pub struct NewSampleWithPoints {
     pub dt: R32,
-    pub position: DerivedPosition,
-    pub velocity: DerivedVelocity,
+    pub position: ComputedPosition,
+    pub velocity: ComputedVelocity,
     pub acceleration: Acceleration,
 }

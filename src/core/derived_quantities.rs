@@ -1,130 +1,86 @@
-use std::ops::Mul;
+use ::std::ops::{AddAssign, Mul};
 
 use super::{import::R32, Acceleration, Duration, Fraction, Position, Velocity};
 
+/// These are the relevant derivatives of s, the position in space.
+pub enum QuantityKind {
+    Position,
+    Velocity,
+    Acceleration,
+}
+
 #[derive(Clone, Default)]
-pub struct DerivedPosition {
+pub struct ComputedPosition {
     s: Position,
     pub contributions: Vec<PositionContribution>,
 }
 
 #[derive(Clone, Default)]
-pub struct DerivedVelocity {
+pub struct ComputedVelocity {
     v: Velocity,
     pub contributions: Vec<VelocityContribution>,
 }
 
 #[derive(Clone, Default)]
-pub struct DerivedAcceleration {
+pub struct ComputedAcceleration {
     a: Acceleration,
     pub contributions: Vec<AccelerationContribution>,
 }
 
 // todo: rename to `Translation...`
 #[derive(Clone)]
-pub struct PositionContribution {
-    pub sampling_position: DerivedPosition,
-    pub quantity: PositionFragment,
-}
-
-#[derive(Clone)]
-pub struct VelocityContribution {
-    pub sampling_position: DerivedPosition,
-    pub quantity: VelocityFragment,
-}
-
-#[derive(Clone)]
-pub struct AccelerationContribution {
-    pub sampling_position: DerivedPosition,
-    pub quantity: AccelerationFragment,
-}
-
-#[derive(Clone)]
-pub enum PositionFragment {
-    Position {
-        // this is odd. todo: merge PositionContribution and PositionFragment into a single enum.
+pub enum PositionContribution {
+    StartPosition {
+        sampling_position: ComputedPosition,
     },
     VelocityDt {
+        sampling_position: ComputedPosition,
         factor: R32,
-        v: DerivedVelocity,
+        v: ComputedVelocity,
         dt: Duration,
         dt_fraction: Fraction,
     },
     AccelerationDtDt {
+        sampling_position: ComputedPosition,
         factor: R32,
-        a: DerivedAcceleration,
+        a: ComputedAcceleration,
         dt: Duration,
         dt_fraction: Fraction,
     },
 }
 
 #[derive(Clone)]
-pub enum VelocityFragment {
+pub enum VelocityContribution {
     Velocity {
-        v: DerivedVelocity,
+        sampling_position: ComputedPosition,
+        v: ComputedVelocity,
     },
     AccelerationDt {
+        sampling_position: ComputedPosition,
         factor: R32,
-        a: DerivedAcceleration,
+        a: ComputedAcceleration,
         dt: Duration,
         dt_fraction: Fraction,
     },
 }
 
 #[derive(Clone)]
-pub enum AccelerationFragment {
-    Acceleration { a: DerivedAcceleration },
+pub enum AccelerationContribution {
+    Acceleration {
+        sampling_position: ComputedPosition,
+        a: ComputedAcceleration,
+    },
 }
 
-impl From<Vec<PositionContribution>> for DerivedPosition {
+impl From<Vec<PositionContribution>> for ComputedPosition {
     fn from(contributions: Vec<PositionContribution>) -> Self {
         let mut s = Position::ZERO;
-        for contrib in &contributions {
-            s += contrib.eff_position();
-        }
+        Accumulator(&contributions).accumulate(&mut s);
         Self { s, contributions }
     }
 }
 
-impl From<Vec<VelocityContribution>> for DerivedVelocity {
-    fn from(contributions: Vec<VelocityContribution>) -> Self {
-        let mut v = Velocity::ZERO;
-        for contrib in &contributions {
-            v += contrib.eff_velocity();
-        }
-        Self { v, contributions }
-    }
-}
-
-impl From<Vec<AccelerationContribution>> for DerivedAcceleration {
-    fn from(contributions: Vec<AccelerationContribution>) -> Self {
-        let mut a = Acceleration::ZERO;
-        for contrib in &contributions {
-            a += contrib.eff_acceleration();
-        }
-        Self { a, contributions }
-    }
-}
-
-impl From<&DerivedVelocity> for Velocity {
-    fn from(dv: &DerivedVelocity) -> Self {
-        dv.v
-    }
-}
-
-impl From<&DerivedPosition> for Position {
-    fn from(dp: &DerivedPosition) -> Self {
-        dp.s
-    }
-}
-
-impl From<&DerivedAcceleration> for Acceleration {
-    fn from(da: &DerivedAcceleration) -> Self {
-        da.a
-    }
-}
-
-impl From<Position> for DerivedPosition {
+impl From<Position> for ComputedPosition {
     fn from(s: Position) -> Self {
         Self {
             s,
@@ -133,7 +89,21 @@ impl From<Position> for DerivedPosition {
     }
 }
 
-impl From<Velocity> for DerivedVelocity {
+impl ComputedPosition {
+    pub fn as_position(&self) -> Position {
+        self.s
+    }
+}
+
+impl From<Vec<VelocityContribution>> for ComputedVelocity {
+    fn from(contributions: Vec<VelocityContribution>) -> Self {
+        let mut v = Velocity::ZERO;
+        Accumulator(&contributions).accumulate(&mut v);
+        Self { v, contributions }
+    }
+}
+
+impl From<Velocity> for ComputedVelocity {
     fn from(v: Velocity) -> Self {
         Self {
             v,
@@ -142,7 +112,21 @@ impl From<Velocity> for DerivedVelocity {
     }
 }
 
-impl From<Acceleration> for DerivedAcceleration {
+impl ComputedVelocity {
+    pub fn as_velocity(&self) -> Velocity {
+        self.v
+    }
+}
+
+impl From<Vec<AccelerationContribution>> for ComputedAcceleration {
+    fn from(contributions: Vec<AccelerationContribution>) -> Self {
+        let mut a = Acceleration::ZERO;
+        Accumulator(&contributions).accumulate(&mut a);
+        Self { a, contributions }
+    }
+}
+
+impl From<Acceleration> for ComputedAcceleration {
     fn from(a: Acceleration) -> Self {
         Self {
             a,
@@ -151,60 +135,188 @@ impl From<Acceleration> for DerivedAcceleration {
     }
 }
 
-impl Mul<&DerivedVelocity> for R32 {
-    type Output = Velocity;
-
-    fn mul(self, rhs: &DerivedVelocity) -> Self::Output {
-        self.into_inner() * rhs.v
+impl ComputedAcceleration {
+    pub fn as_acceleration(&self) -> Acceleration {
+        self.a
     }
 }
 
-impl Mul<&DerivedAcceleration> for R32 {
-    type Output = Acceleration;
+pub trait Contribution {
+    type Quantity: AddAssign;
 
-    fn mul(self, rhs: &DerivedAcceleration) -> Self::Output {
-        self.into_inner() * rhs.a
-    }
+    fn sampling_position(&self) -> Position;
+    fn absolute(&self) -> Option<Self::Quantity>;
+    fn delta(&self) -> Option<Self::Quantity>;
+    fn base_quantity(&self) -> QuantityKind;
 }
 
-impl PositionContribution {
-    pub fn eff_position(&self) -> Position {
-        match &self.quantity {
-            PositionFragment::Position {} => (&self.sampling_position).into(),
-            PositionFragment::VelocityDt {
+impl Contribution for PositionContribution {
+    type Quantity = Position;
+
+    fn sampling_position(&self) -> Position {
+        match &self {
+            Self::StartPosition { sampling_position }
+            | Self::VelocityDt {
+                sampling_position, ..
+            }
+            | Self::AccelerationDtDt {
+                sampling_position, ..
+            } => sampling_position.as_position(),
+        }
+    }
+
+    fn absolute(&self) -> Option<Position> {
+        if let Self::StartPosition { sampling_position } = &self {
+            Some(sampling_position.as_position())
+        } else {
+            None
+        }
+    }
+
+    fn delta(&self) -> Option<Position> {
+        match self {
+            Self::StartPosition { .. } => None,
+            Self::VelocityDt {
                 factor,
                 v,
                 dt,
                 dt_fraction,
-            } => *factor * v * *dt * *dt_fraction,
-            PositionFragment::AccelerationDtDt {
+                ..
+            } => Some(factor * v * dt * dt_fraction),
+            Self::AccelerationDtDt {
                 factor,
                 a,
                 dt,
                 dt_fraction,
-            } => *factor * a * (*dt * *dt_fraction) * (*dt * *dt_fraction), // todo: a*dt*dt should create a Position, not a generic Vec3
+                ..
+            } => Some(factor * a * (dt * dt_fraction) * (dt * dt_fraction)),
+        }
+    }
+
+    fn base_quantity(&self) -> QuantityKind {
+        match self {
+            Self::StartPosition { .. } => QuantityKind::Position,
+            Self::VelocityDt { .. } => QuantityKind::Velocity,
+            Self::AccelerationDtDt { .. } => QuantityKind::Acceleration,
         }
     }
 }
 
-impl VelocityContribution {
-    pub fn eff_velocity(&self) -> Velocity {
-        match &self.quantity {
-            VelocityFragment::Velocity { v } => v.into(),
-            VelocityFragment::AccelerationDt {
+impl Contribution for VelocityContribution {
+    type Quantity = Velocity;
+
+    fn sampling_position(&self) -> Position {
+        match &self {
+            VelocityContribution::Velocity {
+                sampling_position, ..
+            }
+            | VelocityContribution::AccelerationDt {
+                sampling_position, ..
+            } => sampling_position.as_position(),
+        }
+    }
+
+    fn absolute(&self) -> Option<Velocity> {
+        match self {
+            Self::Velocity { v, .. } => Some(v.as_velocity()),
+            Self::AccelerationDt { .. } => None,
+        }
+    }
+
+    fn delta(&self) -> Option<Velocity> {
+        match self {
+            Self::Velocity { .. } => None,
+            Self::AccelerationDt {
                 factor,
                 a,
                 dt,
                 dt_fraction,
-            } => *factor * a * *dt * *dt_fraction,
+                ..
+            } => Some(factor * a * dt * dt_fraction),
+        }
+    }
+
+    fn base_quantity(&self) -> QuantityKind {
+        match self {
+            Self::Velocity { .. } => QuantityKind::Velocity,
+            Self::AccelerationDt { .. } => QuantityKind::Acceleration,
         }
     }
 }
 
-impl AccelerationContribution {
-    pub fn eff_acceleration(&self) -> Acceleration {
-        match &self.quantity {
-            AccelerationFragment::Acceleration { a } => a.into(),
+impl Contribution for AccelerationContribution {
+    type Quantity = Acceleration;
+
+    fn sampling_position(&self) -> Acceleration {
+        match self {
+            Self::Acceleration {
+                sampling_position, ..
+            } => sampling_position.as_position(),
+        }
+    }
+
+    fn absolute(&self) -> Option<Acceleration> {
+        match self {
+            Self::Acceleration { a, .. } => Some(a.as_acceleration()),
+        }
+    }
+
+    fn delta(&self) -> Option<Acceleration> {
+        None
+    }
+
+    fn base_quantity(&self) -> QuantityKind {
+        QuantityKind::Acceleration
+    }
+}
+
+impl Mul<&ComputedVelocity> for R32 {
+    type Output = Velocity;
+
+    fn mul(self, rhs: &ComputedVelocity) -> Self::Output {
+        self.into_inner() * rhs.v
+    }
+}
+
+impl Mul<&ComputedVelocity> for &R32 {
+    type Output = Velocity;
+
+    fn mul(self, rhs: &ComputedVelocity) -> Self::Output {
+        self.into_inner() * rhs.v
+    }
+}
+
+impl Mul<&ComputedAcceleration> for R32 {
+    type Output = Acceleration;
+
+    fn mul(self, rhs: &ComputedAcceleration) -> Self::Output {
+        self.into_inner() * rhs.a
+    }
+}
+
+impl Mul<&ComputedAcceleration> for &R32 {
+    type Output = Acceleration;
+
+    fn mul(self, rhs: &ComputedAcceleration) -> Self::Output {
+        self.into_inner() * rhs.a
+    }
+}
+
+struct Accumulator<'a, Contrib: Contribution>(&'a Vec<Contrib>);
+
+impl<'a, Contrib: Contribution> Accumulator<'a, Contrib> {
+    fn accumulate(self, accu: &mut Contrib::Quantity) {
+        let mut got_absolute = false;
+        for contrib in self.0 {
+            if let Some(absolute) = contrib.absolute() {
+                if got_absolute {
+                    todo!("Implement weighted average for multiple sampling positions");
+                }
+                got_absolute = true;
+                *accu += absolute;
+            } else {
+                *accu += contrib.delta().unwrap();
+            }
         }
     }
 }

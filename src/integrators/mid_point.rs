@@ -1,8 +1,7 @@
 use super::core::{
     derived_quantities::{
-        AccelerationContribution, AccelerationFragment, DerivedAcceleration, DerivedPosition,
-        DerivedVelocity, PositionContribution, PositionFragment, VelocityContribution,
-        VelocityFragment,
+        AccelerationContribution, ComputedAcceleration, ComputedPosition, ComputedVelocity,
+        PositionContribution, VelocityContribution,
     },
     AccelerationField, Duration, Fraction, Integrator, NewSampleWithPoints, StartCondition,
 };
@@ -39,83 +38,68 @@ impl Integrator for Euler {
     ) {
         let dt = Duration(dt.into());
 
-        let start_position = DerivedPosition::from(current.position);
-        let start_velocity = DerivedVelocity::from(current.velocity);
-        let start_acceleration = DerivedAcceleration::from(current.acceleration);
+        let start_position = ComputedPosition::from(current.position);
+        let start_velocity = ComputedVelocity::from(current.velocity);
+        let start_acceleration = ComputedAcceleration::from(current.acceleration);
 
-        let mid_point_position = DerivedPosition::from(vec![
-            PositionContribution {
+        let mid_point_position = ComputedPosition::from(vec![
+            PositionContribution::StartPosition {
                 sampling_position: start_position.clone(),
-                quantity: PositionFragment::Position {},
             },
-            PositionContribution {
+            PositionContribution::VelocityDt {
                 sampling_position: start_position.clone(),
-                quantity: PositionFragment::VelocityDt {
-                    factor: 1_f32.into(),
-                    v: start_velocity.clone(),
-                    dt,
-                    dt_fraction: fraction!(1 / 2),
-                },
+                factor: 1_f32.into(),
+                v: start_velocity.clone(),
+                dt,
+                dt_fraction: fraction!(1 / 2),
             },
-            PositionContribution {
+            PositionContribution::AccelerationDtDt {
                 sampling_position: start_position.clone(),
-                quantity: PositionFragment::AccelerationDtDt {
-                    factor: 1_f32.into(),
-                    a: start_acceleration,
-                    dt,
-                    dt_fraction: fraction!(1 / 2),
-                },
+                factor: 1_f32.into(),
+                a: start_acceleration,
+                dt,
+                dt_fraction: fraction!(1 / 2),
             },
         ]);
-        let mid_point_acceleration = DerivedAcceleration::from(vec![AccelerationContribution {
-            sampling_position: mid_point_position.clone(),
-            quantity: AccelerationFragment::Acceleration {
-                a: acceleration_field
-                    .value_at((&mid_point_position).into())
-                    .into(),
-            },
-        }]);
-
-        next.velocity = DerivedVelocity::from(vec![
-            VelocityContribution {
-                sampling_position: start_position.clone(),
-                quantity: VelocityFragment::Velocity {
-                    v: start_velocity.clone(),
-                },
-            },
-            VelocityContribution {
+        let mid_point_acceleration =
+            ComputedAcceleration::from(vec![AccelerationContribution::Acceleration {
                 sampling_position: mid_point_position.clone(),
-                quantity: VelocityFragment::AccelerationDt {
-                    factor: 1_f32.into(),
-                    a: mid_point_acceleration.clone(),
-                    dt,
-                    dt_fraction: fraction!(1 / 1),
-                },
+                a: acceleration_field
+                    .value_at(mid_point_position.as_position())
+                    .into(),
+            }]);
+
+        next.velocity = ComputedVelocity::from(vec![
+            VelocityContribution::Velocity {
+                sampling_position: start_position.clone(),
+                v: start_velocity.clone(),
+            },
+            VelocityContribution::AccelerationDt {
+                sampling_position: mid_point_position.clone(),
+                factor: 1_f32.into(),
+                a: mid_point_acceleration.clone(),
+                dt,
+                dt_fraction: fraction!(1 / 1),
             },
         ]);
 
-        next.position = DerivedPosition::from(vec![
-            PositionContribution {
+        next.position = ComputedPosition::from(vec![
+            PositionContribution::StartPosition {
                 sampling_position: start_position.clone(),
-                quantity: PositionFragment::Position {},
             },
-            PositionContribution {
+            PositionContribution::VelocityDt {
                 sampling_position: start_position,
-                quantity: PositionFragment::VelocityDt {
-                    factor: 1_f32.into(),
-                    v: start_velocity,
-                    dt,
-                    dt_fraction: fraction!(1 / 1),
-                },
+                factor: 1_f32.into(),
+                v: start_velocity,
+                dt,
+                dt_fraction: fraction!(1 / 1),
             },
-            PositionContribution {
+            PositionContribution::AccelerationDtDt {
                 sampling_position: mid_point_position,
-                quantity: PositionFragment::AccelerationDtDt {
-                    factor: 1_f32.into(),
-                    a: mid_point_acceleration,
-                    dt,
-                    dt_fraction: fraction!(1 / 1),
-                },
+                factor: 1_f32.into(),
+                a: mid_point_acceleration,
+                dt,
+                dt_fraction: fraction!(1 / 1),
             },
         ]);
         // let p0 = current.tracker();

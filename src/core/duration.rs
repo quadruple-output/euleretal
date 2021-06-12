@@ -1,4 +1,7 @@
-use super::import::{Vec3, R32};
+use super::{
+    import::{Vec3, R32},
+    Fraction,
+};
 use ::std::{
     hash::Hash,
     ops::{Deref, Mul},
@@ -45,8 +48,32 @@ impl Mul<Duration> for Vec3 {
     }
 }
 
+impl Mul<&Duration> for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: &Duration) -> Self::Output {
+        self * rhs.0.into_inner()
+    }
+}
+
 impl From<Duration> for f32 {
     fn from(d: Duration) -> Self {
         d.0.into_inner()
+    }
+}
+
+impl Mul<Fraction> for Duration {
+    type Output = Duration;
+
+    fn mul(self, rhs: Fraction) -> Self::Output {
+        self * rhs.to_f32()
+    }
+}
+
+impl Mul<&Fraction> for &Duration {
+    type Output = Duration;
+
+    fn mul(self, rhs: &Fraction) -> Self::Output {
+        *self * rhs.to_f32()
     }
 }

@@ -175,6 +175,17 @@ impl Canvas {
         }
     }
 
+    /// Execute `add_contents` when hovered, passing the mouse position translated to application
+    /// coordinates.
+    pub fn on_hover(&self, response: &Response, add_contents: impl FnOnce(Vec3)) {
+        if response.hovered() && response.ctx.input().pointer.has_pointer() {
+            if let Some(mouse_pos) = response.ctx.input().pointer.hover_pos() {
+                add_contents(self.screen_to_user(mouse_pos));
+            }
+        }
+    }
+
+    /// show a pop-up window if hovered
     pub fn on_hover_ui(&self, response: &Response, add_contents: impl FnOnce(&mut Ui, Vec3)) {
         if response.hovered() && response.ctx.input().pointer.has_pointer() {
             egui::popup::show_tooltip_at_pointer(

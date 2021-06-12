@@ -87,7 +87,7 @@ impl Integration {
 
             integrator.integrate_step(&current, &mut next, dt.into(), acceleration_field);
 
-            next.acceleration = acceleration_field.value_at((&next.position).into());
+            next.acceleration = acceleration_field.value_at(next.position.as_position());
             samples.push_sample(next);
         }
         samples.finalized()
