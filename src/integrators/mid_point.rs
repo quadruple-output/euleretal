@@ -3,7 +3,8 @@ use super::core::{
         AccelerationContribution, ComputedAcceleration, ComputedPosition, ComputedVelocity,
         PositionContribution, VelocityContribution,
     },
-    AccelerationField, Duration, Fraction, Integrator, NewSampleWithPoints, StartCondition,
+    AccelerationField, Duration, Fraction, IntegrationStep, Integrator, NewSampleWithPoints,
+    StartCondition,
 };
 
 pub struct Euler {}
@@ -37,6 +38,28 @@ impl Integrator for Euler {
         acceleration_field: &dyn AccelerationField,
     ) {
         let dt = Duration(dt.into());
+
+        let mut step = IntegrationStep::new(self, dt);
+        let p0 = step.initial_condition(current);
+        let mid_point_pos = step
+            .compute_position(fraction!(1 / 2))
+            .based_on(p0.s)
+            .add_velocity_dt(p0.v, 1.)
+            .add_acceleration_dt_dt(p0.a, 1.)
+            .create();
+        let mid_point_acceleration =
+            step.compute_acceleration_at(mid_point_pos, acceleration_field);
+        let final_pos = step
+            .compute_position(fraction!(1 / 1))
+            .based_on(p0.s)
+            .add_velocity_dt(p0.v, 1.)
+            .add_acceleration_dt_dt(mid_point_acceleration, 1.)
+            .create();
+        let final_velocity = step
+            .compute_velocity(fraction!(1 / 1), final_pos)
+            .based_on(p0.v)
+            .add_acceleration_dt(mid_point_acceleration, 1.)
+            .create();
 
         let start_position = ComputedPosition::from(current.position);
         let start_velocity = ComputedVelocity::from(current.velocity);
@@ -111,6 +134,18 @@ impl Integrator for Euler {
         // let v = p0.v + a_mid * dt;
         // let s = p0.s + p0.v * dt + a_mid * dt * dt;
         // s1 | v1;
+    }
+
+    fn expected_accelerations_for_step(&self) -> usize {
+        2
+    }
+
+    fn expected_positions_for_step(&self) -> usize {
+        2
+    }
+
+    fn expected_velocities_for_step(&self) -> usize {
+        2
     }
 }
 

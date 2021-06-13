@@ -36,4 +36,16 @@ impl Integrator for ExactForConst {
             (current.position + current.velocity * dt + 0.5 * current.acceleration * dt * dt)
                 .into();
     }
+
+    fn expected_accelerations_for_step(&self) -> usize {
+        1
+    }
+
+    fn expected_positions_for_step(&self) -> usize {
+        1
+    }
+
+    fn expected_velocities_for_step(&self) -> usize {
+        1
+    }
 }

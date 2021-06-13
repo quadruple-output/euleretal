@@ -57,3 +57,14 @@ where
         self.to_f32() * rhs.into()
     }
 }
+
+impl<IntoF32> Mul<IntoF32> for &Fraction
+where
+    IntoF32: Into<f32>,
+{
+    type Output = f32;
+
+    fn mul(self, rhs: IntoF32) -> f32 {
+        self.to_f32() * rhs.into()
+    }
+}

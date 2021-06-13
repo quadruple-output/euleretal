@@ -29,6 +29,18 @@ impl Integrator for Broken {
         next.position = (current.position + current.velocity * dt).into();
         next.velocity = (current.velocity + current.acceleration * dt).into();
     }
+
+    fn expected_accelerations_for_step(&self) -> usize {
+        1
+    }
+
+    fn expected_positions_for_step(&self) -> usize {
+        1
+    }
+
+    fn expected_velocities_for_step(&self) -> usize {
+        1
+    }
 }
 
 pub struct Euler {}
@@ -61,5 +73,17 @@ impl Integrator for Euler {
         let next_velocity = current.velocity + current.acceleration * dt;
         next.velocity = next_velocity.into();
         next.position = (current.position + next_velocity * dt).into();
+    }
+
+    fn expected_accelerations_for_step(&self) -> usize {
+        1
+    }
+
+    fn expected_positions_for_step(&self) -> usize {
+        1
+    }
+
+    fn expected_velocities_for_step(&self) -> usize {
+        1
     }
 }
