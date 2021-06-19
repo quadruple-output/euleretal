@@ -1,7 +1,6 @@
 use super::{
     import::{Vec3, R32},
-    samples::StartCondition,
-    AccelerationField, Duration, NewSampleWithPoints, Samples, StartPosition, StartVelocity,
+    AccelerationField, Duration, IntegrationStep, Samples, StartPosition, StartVelocity,
 };
 use ::std::{collections::hash_map::DefaultHasher, hash::Hash};
 
@@ -83,14 +82,7 @@ fn calculate_trajectory_and_samples(
 
     let mut trajectory = Vec::with_capacity(iterations * steps_per_dt + 1);
     trajectory.push(s0);
-    let mut samples = Samples::new(
-        &StartCondition {
-            position: s0,
-            velocity: v0,
-            acceleration: a0,
-        },
-        iterations,
-    );
+    let mut samples = Samples::new(iterations);
 
     for step in 1..=iterations {
         let t1 = R32::from(step as f32) * dt;
@@ -115,12 +107,12 @@ fn calculate_trajectory_and_samples(
             trajectory.push(s0);
         }
         t0 = t1;
-        samples.push_sample(NewSampleWithPoints {
-            dt,
-            position: s0.into(),
-            velocity: v0.into(),
-            acceleration: a0,
-        });
+        samples.push_sample(IntegrationStep::raw_from_condition(
+            Duration(dt),
+            s0,
+            v0,
+            a0,
+        ));
     }
 
     (trajectory, samples.finalized())

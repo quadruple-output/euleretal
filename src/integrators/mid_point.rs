@@ -1,11 +1,4 @@
-use super::core::{
-    derived_quantities::{
-        AccelerationContribution, ComputedAcceleration, ComputedPosition, ComputedVelocity,
-        PositionContribution, VelocityContribution,
-    },
-    AccelerationField, Duration, Fraction, IntegrationStep, Integrator, NewSampleWithPoints,
-    StartCondition,
-};
+use super::core::{AccelerationField, Duration, IntegrationStep, Integrator, StartCondition};
 
 pub struct Euler {}
 
@@ -33,13 +26,10 @@ impl Integrator for Euler {
     fn integrate_step(
         &self,
         current: &StartCondition,
-        next: &mut NewSampleWithPoints,
-        dt: f32,
+        dt: Duration,
         acceleration_field: &dyn AccelerationField,
-    ) {
-        let dt = Duration(dt.into());
-
-        let mut step = IntegrationStep::new(self, dt);
+    ) -> IntegrationStep {
+        let mut step = IntegrationStep::new(self.expected_capacities_for_step(), dt);
         let p0 = step.initial_condition(current);
         let mid_point_pos = step
             .compute_position(fraction!(1 / 2))
@@ -55,76 +45,13 @@ impl Integrator for Euler {
             .add_velocity_dt(p0.v, 1.)
             .add_acceleration_dt_dt(mid_point_acceleration, 1.)
             .create();
-        let final_velocity = step
+        let _final_velocity = step
             .compute_velocity(fraction!(1 / 1), final_pos)
             .based_on(p0.v)
             .add_acceleration_dt(mid_point_acceleration, 1.)
             .create();
+        step
 
-        let start_position = ComputedPosition::from(current.position);
-        let start_velocity = ComputedVelocity::from(current.velocity);
-        let start_acceleration = ComputedAcceleration::from(current.acceleration);
-
-        let mid_point_position = ComputedPosition::from(vec![
-            PositionContribution::StartPosition {
-                sampling_position: start_position.clone(),
-            },
-            PositionContribution::VelocityDt {
-                sampling_position: start_position.clone(),
-                factor: 1_f32.into(),
-                v: start_velocity.clone(),
-                dt,
-                dt_fraction: fraction!(1 / 2),
-            },
-            PositionContribution::AccelerationDtDt {
-                sampling_position: start_position.clone(),
-                factor: 1_f32.into(),
-                a: start_acceleration,
-                dt,
-                dt_fraction: fraction!(1 / 2),
-            },
-        ]);
-        let mid_point_acceleration =
-            ComputedAcceleration::from(vec![AccelerationContribution::Acceleration {
-                sampling_position: mid_point_position.clone(),
-                a: acceleration_field
-                    .value_at(mid_point_position.as_position())
-                    .into(),
-            }]);
-
-        next.velocity = ComputedVelocity::from(vec![
-            VelocityContribution::Velocity {
-                sampling_position: start_position.clone(),
-                v: start_velocity.clone(),
-            },
-            VelocityContribution::AccelerationDt {
-                sampling_position: mid_point_position.clone(),
-                factor: 1_f32.into(),
-                a: mid_point_acceleration.clone(),
-                dt,
-                dt_fraction: fraction!(1 / 1),
-            },
-        ]);
-
-        next.position = ComputedPosition::from(vec![
-            PositionContribution::StartPosition {
-                sampling_position: start_position.clone(),
-            },
-            PositionContribution::VelocityDt {
-                sampling_position: start_position,
-                factor: 1_f32.into(),
-                v: start_velocity,
-                dt,
-                dt_fraction: fraction!(1 / 1),
-            },
-            PositionContribution::AccelerationDtDt {
-                sampling_position: mid_point_position,
-                factor: 1_f32.into(),
-                a: mid_point_acceleration,
-                dt,
-                dt_fraction: fraction!(1 / 1),
-            },
-        ]);
         // let p0 = current.tracker();
 
         // let dt_mid_point = fraction!(1 / 2) * dt;

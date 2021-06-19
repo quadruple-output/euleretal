@@ -1,5 +1,5 @@
 use super::{
-    core::{samples::Step, Obj, Scenario},
+    core::{IntegrationStep, Obj, Scenario},
     import::Vec3,
     ui_import::{egui, Color32, Hsva, Stroke},
     Integrator, StepSize,
@@ -62,7 +62,7 @@ impl Integration {
         }
     }
 
-    pub fn closest_sample(&self, pos: Vec3) -> Option<(&Step, &Step)> {
+    pub fn closest_sample(&self, pos: Vec3) -> Option<(&IntegrationStep, &IntegrationStep)> {
         self.core_integration.closest_sample(pos)
     }
 

@@ -1,6 +1,6 @@
 use super::{
-    import::Vec3, samples::Step, AccelerationField, Duration, Integrator, NewSampleWithPoints,
-    Position, Samples, Scenario, StartCondition,
+    import::Vec3, AccelerationField, Duration, IntegrationStep, Integrator, Position, Samples,
+    Scenario, StartCondition,
 };
 use ::std::{
     collections::hash_map::DefaultHasher,
@@ -55,7 +55,7 @@ impl Integration {
                 step_duration,
             );
             let num_samples = samples.len();
-            assert!(num_samples == num_steps + 1);
+            assert!(num_samples == num_steps);
             self.samples = Some(samples);
             self.sample_validity = sample_validity;
 
@@ -77,17 +77,14 @@ impl Integration {
         dt: Duration,
     ) -> Samples {
         let dt = dt.0;
-        let mut samples = Samples::new(start_condition, num_steps);
+        let mut samples = Samples::new(num_steps);
+        let mut current_condition = (*start_condition).clone();
         for _ in 0..num_steps {
-            let current = samples.current().unwrap();
-            let mut next = NewSampleWithPoints {
-                dt,
-                ..NewSampleWithPoints::default()
-            };
+            let mut next =
+                integrator.integrate_step(&current_condition, Duration(dt), acceleration_field);
+            next.compute_acceleration_at_last_position(acceleration_field);
 
-            integrator.integrate_step(&current, &mut next, dt.into(), acceleration_field);
-
-            next.acceleration = acceleration_field.value_at(next.position.as_position());
+            current_condition = next.next_condition().unwrap();
             samples.push_sample(next);
         }
         samples.finalized()
@@ -102,7 +99,7 @@ impl Integration {
     }
 
     /// returns (ReferenceSample,ComputedSample)
-    pub fn closest_sample(&self, pos: Vec3) -> Option<(&Step, &Step)> {
+    pub fn closest_sample(&self, pos: Vec3) -> Option<(&IntegrationStep, &IntegrationStep)> {
         self.reference_samples.as_ref().and_then(|references| {
             self.samples.as_ref().map(|samples| {
                 let (idx_reference, dist_reference) =

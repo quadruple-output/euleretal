@@ -8,7 +8,7 @@ pub struct Fraction {
 }
 
 macro_rules! fraction(
-($numerator:literal / $denominator:literal) => {Fraction::new($numerator,$denominator)}
+($numerator:literal / $denominator:literal) => {crate::core::Fraction::new($numerator,$denominator)}
 );
 
 impl Fraction {

@@ -1,8 +1,5 @@
 use super::{
-    core::{
-        derived_quantities::{Contribution, QuantityKind},
-        Obj,
-    },
+    core::Obj,
     entities::Canvas,
     misc::Settings,
     ui_import::{egui, Color32},
@@ -23,11 +20,12 @@ pub fn render(
                 let ref_sample_dt = ref_sample.dt.into_inner();
                 // delta s by velocity:
                 canvas.draw_vector(
-                    ref_sample.derived_position.as_position(),
-                    ref_sample.derived_velocity.as_velocity() * ref_sample_dt,
+                    ref_sample.last_s(),
+                    ref_sample.last_v() * ref_sample_dt,
                     settings.strokes.focussed_velocity,
                     painter,
                 );
+                /*
                 // delta s by acceleration at sample point:
                 canvas.draw_vector(
                     ref_sample.derived_position.as_position(),
@@ -35,44 +33,38 @@ pub fn render(
                     settings.strokes.focussed_acceleration,
                     painter,
                 );
+                */
 
                 // first, draw contributing translations...:
-                for position_contribution in &calc_sample.derived_position.contributions {
-                    if let Some(delta) = position_contribution.delta() {
-                        canvas.draw_vector(
-                            position_contribution.sampling_position(),
-                            delta,
-                            match position_contribution.base_quantity() {
-                                QuantityKind::Velocity => settings.strokes.focussed_velocity,
-                                QuantityKind::Acceleration => {
-                                    settings.strokes.focussed_acceleration
-                                }
-                                QuantityKind::Position => {
-                                    panic!("Trying to draw a position as a vector")
-                                }
-                            },
-                            painter,
-                        );
-                    }
+                for (sampling_position, velocity) in calc_sample.velocities_iter() {
+                    canvas.draw_vector(
+                        sampling_position,
+                        velocity, // todo: this is the absolute velocity. Need effective contribution.
+                        settings.strokes.focussed_velocity,
+                        painter,
+                    );
+                }
+
+                // first, draw contributing translations...:
+                for (sampling_position, acceleration) in calc_sample.accelerations_iter() {
+                    canvas.draw_vector(
+                        sampling_position,
+                        acceleration, // todo: this is the absolute acceleration. Need effective contribution.
+                        settings.strokes.focussed_acceleration,
+                        painter,
+                    );
                 }
 
                 // ...then draw start position(s) on top, so they are visible...
-                for position_contribution in &calc_sample.derived_position.contributions {
-                    if position_contribution.delta().is_none() {
-                        canvas.draw_sample_dot(
-                            position_contribution.sampling_position(),
-                            Color32::RED,
-                            painter,
-                        );
+                let last_s = calc_sample.last_s();
+                for position in calc_sample.positions_iter() {
+                    if position != last_s {
+                        canvas.draw_sample_dot(position, Color32::RED, painter);
                     }
                 }
 
                 // ...finally, draw derived position:
-                canvas.draw_sample_dot(
-                    calc_sample.derived_position.as_position(),
-                    Color32::GREEN,
-                    painter,
-                );
+                canvas.draw_sample_dot(last_s, Color32::GREEN, painter);
 
                 // ui.label("Inspector");
                 // ui.separator();

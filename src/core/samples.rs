@@ -1,8 +1,4 @@
-use super::{
-    derived_quantities::{ComputedPosition, ComputedVelocity},
-    import::R32,
-    Acceleration, Position, Velocity,
-};
+use super::{Acceleration, IntegrationStep, Position, Velocity};
 use ::std::marker::PhantomData;
 
 mod type_state {
@@ -18,55 +14,24 @@ mod type_state {
 use type_state::{Finalized, NonFinalized, TypeState};
 
 pub struct Samples<TS: TypeState = Finalized> {
-    steps: Vec<Step>,
+    steps: Vec<IntegrationStep>,
     type_state: PhantomData<TS>,
-}
-
-pub struct Step {
-    pub time: R32,
-    pub dt: R32,
-    pub derived_position: ComputedPosition,
-    pub derived_velocity: ComputedVelocity,
-    pub acceleration: Acceleration,
 }
 
 /// This implements the `new` method for `Samples<Finalized>`, returning `Samples<NonFinalized>`.
 /// This seems odd, but it is convenient since `Finalized` is the default type.
 impl Samples {
-    pub fn new(start_condition: &StartCondition, sample_capacity: usize) -> Samples<NonFinalized> {
-        let mut instance = Samples::<NonFinalized> {
-            steps: Vec::with_capacity(sample_capacity + 1), // +1 for the Endpoint
+    pub fn new(sample_capacity: usize) -> Samples<NonFinalized> {
+        Samples::<NonFinalized> {
+            steps: Vec::with_capacity(sample_capacity),
             type_state: PhantomData::<NonFinalized>,
-        };
-        instance.steps.push(Step {
-            time: 0.0.into(), // start time is always zero
-            dt: 0.0.into(),   // initial sample has no delta
-            derived_position: start_condition.position.into(),
-            derived_velocity: start_condition.velocity.into(),
-            acceleration: start_condition.acceleration,
-        });
-        instance
+        }
     }
 }
 
 impl Samples<NonFinalized> {
-    pub fn push_sample(&mut self, sample: NewSampleWithPoints) {
-        self.steps.push(Step {
-            time: self.steps.last().unwrap().time + sample.dt,
-            dt: sample.dt,
-            derived_position: sample.position,
-            derived_velocity: sample.velocity,
-            acceleration: sample.acceleration,
-        });
-    }
-
-    #[must_use]
-    pub fn current(&self) -> Option<StartCondition> {
-        self.steps.last().map(|current_step| StartCondition {
-            position: current_step.derived_position.as_position(),
-            velocity: current_step.derived_velocity.as_velocity(),
-            acceleration: current_step.acceleration,
-        })
+    pub fn push_sample(&mut self, step: IntegrationStep) {
+        self.steps.push(step);
     }
 
     #[must_use]
@@ -89,22 +54,20 @@ impl Samples<Finalized> {
         }
     }
 
-    pub fn at(&self, idx: usize) -> &Step {
+    pub fn at(&self, idx: usize) -> &IntegrationStep {
         &self.steps[idx]
     }
 }
 
 pub struct PositionIter<'a> {
-    steps_iter: ::std::slice::Iter<'a, Step>,
+    steps_iter: ::std::slice::Iter<'a, IntegrationStep>,
 }
 
 impl<'a> Iterator for PositionIter<'a> {
     type Item = Position;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.steps_iter
-            .next()
-            .map(|step| step.derived_position.as_position())
+        self.steps_iter.next().map(Self::step_to_s)
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -116,15 +79,17 @@ impl<'a> Iterator for PositionIter<'a> {
     }
 
     fn last(self) -> Option<Self::Item> {
-        self.steps_iter
-            .last()
-            .map(|step| step.derived_position.as_position())
+        self.steps_iter.last().map(Self::step_to_s)
     }
 
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        self.steps_iter
-            .nth(n)
-            .map(|step| step.derived_position.as_position())
+        self.steps_iter.nth(n).map(Self::step_to_s)
+    }
+}
+
+impl<'a> PositionIter<'a> {
+    pub fn step_to_s(step: &IntegrationStep) -> Position {
+        step.last_s()
     }
 }
 
@@ -132,13 +97,5 @@ impl<'a> Iterator for PositionIter<'a> {
 pub struct StartCondition {
     pub position: Position,
     pub velocity: Velocity,
-    pub acceleration: Acceleration,
-}
-
-#[derive(Default)]
-pub struct NewSampleWithPoints {
-    pub dt: R32,
-    pub position: ComputedPosition,
-    pub velocity: ComputedVelocity,
     pub acceleration: Acceleration,
 }

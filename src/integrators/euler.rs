@@ -1,4 +1,4 @@
-use super::core::{AccelerationField, Integrator, NewSampleWithPoints, StartCondition};
+use super::core::{AccelerationField, Duration, IntegrationStep, Integrator, StartCondition};
 
 pub struct Broken {}
 
@@ -22,12 +22,21 @@ impl Integrator for Broken {
     fn integrate_step(
         &self,
         current: &StartCondition,
-        next: &mut NewSampleWithPoints,
-        dt: f32,
+        dt: Duration,
         _acceleration_field: &dyn AccelerationField,
-    ) {
-        next.position = (current.position + current.velocity * dt).into();
-        next.velocity = (current.velocity + current.acceleration * dt).into();
+    ) -> IntegrationStep {
+        let mut step = IntegrationStep::new(self.expected_capacities_for_step(), dt);
+        let p0 = step.initial_condition(current);
+        step.compute_position(fraction!(1 / 1))
+            .based_on(p0.s)
+            .add_velocity_dt(p0.v, 1.)
+            .add_acceleration_dt_dt(p0.a, 1.)
+            .create();
+        step.compute_velocity(fraction!(1 / 1), p0.s)
+            .based_on(p0.v)
+            .add_acceleration_dt(p0.a, 1.)
+            .create();
+        step
     }
 
     fn expected_accelerations_for_step(&self) -> usize {
@@ -66,13 +75,22 @@ impl Integrator for Euler {
     fn integrate_step(
         &self,
         current: &StartCondition,
-        next: &mut NewSampleWithPoints,
-        dt: f32,
+        dt: Duration,
         _acceleration_field: &dyn AccelerationField,
-    ) {
-        let next_velocity = current.velocity + current.acceleration * dt;
-        next.velocity = next_velocity.into();
-        next.position = (current.position + next_velocity * dt).into();
+    ) -> IntegrationStep {
+        let mut step = IntegrationStep::new(self.expected_capacities_for_step(), dt);
+        let p0 = step.initial_condition(current);
+        let next_velocity = step
+            .compute_velocity(fraction!(1 / 1), p0.s)
+            .based_on(p0.v)
+            .add_acceleration_dt(p0.a, 1.)
+            .create();
+        step.compute_position(fraction!(1 / 1))
+            .based_on(p0.s)
+            .add_velocity_dt(next_velocity, 1.)
+            .add_acceleration_dt_dt(p0.a, 1.)
+            .create();
+        step
     }
 
     fn expected_accelerations_for_step(&self) -> usize {
