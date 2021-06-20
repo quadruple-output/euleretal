@@ -227,6 +227,13 @@ impl IntegrationStep {
         }
     }
 
+    pub fn last_computed_velocity(&self) -> ComputedVelocity {
+        ComputedVelocity {
+            step: self,
+            internal: &self.internal_get_velocity(self.last_computed_velocity.unwrap()),
+        }
+    }
+
     pub fn last_s(&self) -> Position {
         self.internal_get_position(self.last_computed_position.unwrap())
             .s
@@ -346,16 +353,16 @@ enum VelocityContributionInternal {
     },
 }
 
-//enum AccelerationContributionInternal {
-//    Acceleration { aref: AccelerationRef },
-//}
-
 pub struct ComputedPosition<'a> {
     step: &'a IntegrationStep,
     internal: &'a ComputedPositionInternal,
 }
 
 impl<'a> ComputedPosition<'a> {
+    pub fn s(&self) -> Position {
+        self.internal.s
+    }
+
     pub fn contributions_iter(&self) -> impl Iterator<Item = PositionContribution> {
         self.internal
             .contributions
@@ -394,7 +401,7 @@ impl<'a> PositionContribution<'a> {
         self.internal.kind()
     }
 
-    pub fn delta(&self) -> Option<Position> {
+    pub fn vector(&self) -> Option<Position> {
         match self.internal {
             PositionContributionInternal::StartPosition { .. } => None,
             _ => Some(self.internal.evaluate_for(self.position.step)),
@@ -407,9 +414,55 @@ pub struct ComputedVelocity<'a> {
     internal: &'a ComputedVelocityInternal,
 }
 
+impl<'a> ComputedVelocity<'a> {
+    pub fn v(&self) -> Velocity {
+        self.internal.v
+    }
+
+    pub fn sampling_position(&self) -> Position {
+        self.step
+            .internal_get_position(self.internal.sampling_position)
+            .s
+    }
+
+    pub fn contributions_iter(&self) -> impl Iterator<Item = VelocityContribution> {
+        self.internal
+            .contributions
+            .iter()
+            .map(move |contrib_int| VelocityContribution {
+                velocity: self,
+                internal: contrib_int,
+            })
+    }
+}
+
 pub struct VelocityContribution<'a> {
-    position: &'a ComputedVelocity<'a>,
+    velocity: &'a ComputedVelocity<'a>,
     internal: &'a VelocityContributionInternal,
+}
+
+impl<'a> VelocityContribution<'a> {
+    pub fn sampling_position(&self) -> Position {
+        let step = self.velocity.step;
+        match self.internal {
+            VelocityContributionInternal::Velocity { vref, .. } => {
+                step.internal_get_position(step.internal_get_velocity(*vref).sampling_position)
+                    .s
+            }
+            VelocityContributionInternal::AccelerationDt { aref, .. } => {
+                step.internal_get_position(step.internal_get_acceleration(*aref).sampling_position)
+                    .s
+            }
+        }
+    }
+
+    pub fn kind(&self) -> PhysicalQuantityKind {
+        self.internal.kind()
+    }
+
+    pub fn vector(&self) -> Velocity {
+        self.internal.evaluate_for(self.velocity.step)
+    }
 }
 
 pub struct ComputedAcceleration<'a> {
@@ -567,6 +620,13 @@ impl PositionContributionInternal {
 }
 
 impl VelocityContributionInternal {
+    fn kind(&self) -> PhysicalQuantityKind {
+        match self {
+            Self::Velocity { .. } => PhysicalQuantityKind::Velocity,
+            Self::AccelerationDt { .. } => PhysicalQuantityKind::Acceleration,
+        }
+    }
+
     fn evaluate_for(&self, step: &IntegrationStep) -> Velocity {
         match self {
             Self::Velocity { vref } => step.internal_get_velocity(*vref).v,

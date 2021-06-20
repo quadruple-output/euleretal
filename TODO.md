@@ -21,6 +21,8 @@
 - re-enable hover delay
 - "Integrators" controls: show unused integrators separated from others, and
   collapsed
+- add setting for `Inspector` to not scale velocities by dt (may be useful when
+  comparing integrations with different step sizes)
 
 ## Functional Features
 - change all step sizes proportionally with a single slider (to test convergence)
