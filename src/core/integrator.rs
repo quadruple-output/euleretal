@@ -1,84 +1,56 @@
-use super::samples::{
-    CalibrationPoint, FinalizedCalibrationPoints, NewSample, NewSampleWithPoints, StartCondition,
-    WithCalibrationPoints, WithoutCalibrationPoints,
-};
-use crate::prelude::*;
+use super::{samples::StartCondition, AccelerationField, Duration, IntegrationStep};
+use ::std::{any::TypeId, collections::hash_map::DefaultHasher, hash::Hash};
 
-pub trait Integrator: Send + Sync {
+pub trait Integrator: Send + Sync + 'static {
     fn label(&self) -> String;
 
     fn description(&self) -> String;
 
-    fn integrate(
+    fn integrate_step(
         &self,
+        current: &StartCondition,
+        dt: Duration,
         acceleration_field: &dyn AccelerationField,
-        start_condition: &StartCondition,
-        num_steps: usize,
-        dt: R32,
-    ) -> Samples<FinalizedCalibrationPoints>;
-}
+    ) -> IntegrationStep;
 
-pub trait OneStepDirect {
-    fn integrate(
-        acceleration_field: &dyn AccelerationField,
-        start_condition: &StartCondition,
-        num_steps: usize,
-        dt: R32,
-    ) -> Samples<FinalizedCalibrationPoints> {
-        let mut samples = Samples::<WithoutCalibrationPoints>::new(start_condition, num_steps);
-        for _ in 0..num_steps {
-            let current = samples.current();
-            let mut next = NewSample {
-                dt,
-                ..NewSample::default()
-            };
-
-            Self::integrate_step(&current, &mut next, dt.into(), acceleration_field);
-
-            next.acceleration = acceleration_field.value_at(next.position);
-            samples.push_sample(&next);
-        }
-        samples.finalized()
+    fn hash(&self, state: &mut DefaultHasher) {
+        TypeId::of::<Self>().hash(state);
     }
 
-    fn integrate_step(
-        current: &StartCondition,
-        next: &mut NewSample,
-        dt: f32,
-        acceleration_field: &dyn AccelerationField,
-    );
+    /// Number of acceleration values involved in computing the next sample. This does not include
+    /// the acceleration value at the computed next sample.
+    fn expected_accelerations_for_step(&self) -> usize;
+
+    /// Number of positions involved in computing the next sample. This doen not include the
+    /// position of the next sample.
+    fn expected_positions_for_step(&self) -> usize;
+
+    /// Number of velocity values involved in computing the next sample. This does not include the
+    /// computed velocity of the next sample.
+    fn expected_velocities_for_step(&self) -> usize;
+
+    fn expected_capacities_for_step(&self) -> ExpectedCapacities {
+        ExpectedCapacities {
+            positions: self.expected_positions_for_step(),
+            velocities: self.expected_velocities_for_step(),
+            accelerations: self.expected_accelerations_for_step(),
+        }
+    }
 }
 
-pub trait OneStepWithCalibrationPoints<const N: usize>
-where
-    [CalibrationPoint; N]: Default,
-{
-    fn integrate(
-        acceleration_field: &dyn AccelerationField,
-        start_condition: &StartCondition,
-        num_steps: usize,
-        dt: R32,
-    ) -> Samples<FinalizedCalibrationPoints> {
-        let mut samples = Samples::<WithCalibrationPoints<N>>::new(start_condition, num_steps);
-        for _ in 0..num_steps {
-            let current = samples.current();
-            let mut next = NewSampleWithPoints {
-                dt,
-                ..NewSampleWithPoints::default()
-            };
+#[derive(Clone, Copy)]
+pub struct ExpectedCapacities {
+    pub positions: usize,
+    pub velocities: usize,
+    pub accelerations: usize,
+}
 
-            Self::integrate_step(&current, &mut next, dt.into(), acceleration_field);
-
-            next.acceleration = acceleration_field.value_at(next.position);
-            samples.push_sample(&next);
+impl Default for ExpectedCapacities {
+    fn default() -> Self {
+        Self {
+            positions: 1,
+            velocities: 1,
+            accelerations: 1,
         }
-        samples.finalized()
     }
-
-    fn integrate_step(
-        current: &StartCondition,
-        next: &mut NewSampleWithPoints<N>,
-        dt: f32,
-        acceleration_field: &dyn AccelerationField,
-    );
 }

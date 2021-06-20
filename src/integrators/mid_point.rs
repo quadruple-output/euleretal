@@ -1,6 +1,4 @@
-use crate::core::integrator::OneStepWithCalibrationPoints;
-use crate::core::samples::{FinalizedCalibrationPoints, NewSampleWithPoints, StartCondition};
-use crate::prelude::*;
+use super::core::{AccelerationField, Duration, IntegrationStep, Integrator, StartCondition};
 
 pub struct Euler {}
 
@@ -25,42 +23,56 @@ impl Integrator for Euler {
             .to_string()
     }
 
-    fn integrate(
-        &self,
-        acceleration_field: &dyn AccelerationField,
-        start_condition: &StartCondition,
-        num_steps: usize,
-        dt: R32,
-    ) -> Samples<FinalizedCalibrationPoints> {
-        <Self as OneStepWithCalibrationPoints<1>>::integrate(
-            acceleration_field,
-            start_condition,
-            num_steps,
-            dt,
-        )
-    }
-}
-
-impl OneStepWithCalibrationPoints<1> for Euler {
     fn integrate_step(
+        &self,
         current: &StartCondition,
-        next: &mut NewSampleWithPoints<1>,
-        dt: f32,
+        dt: Duration,
         acceleration_field: &dyn AccelerationField,
-    ) {
-        let mid_point_fraction = fraction!(1 / 2);
-        let mid_point_dt = mid_point_fraction * dt;
+    ) -> IntegrationStep {
+        let mut step = IntegrationStep::new(self.expected_capacities_for_step(), dt);
+        let p0 = step.initial_condition(current);
+        let mid_point_pos = step
+            .compute_position(fraction!(1 / 2))
+            .based_on(p0.s)
+            .add_velocity_dt(p0.v, 1.)
+            .add_acceleration_dt_dt(p0.a, 1.)
+            .create();
+        let mid_point_acceleration =
+            step.compute_acceleration_at(mid_point_pos, acceleration_field);
+        let final_pos = step
+            .compute_position(fraction!(1 / 1))
+            .based_on(p0.s)
+            .add_velocity_dt(p0.v, 1.)
+            .add_acceleration_dt_dt(mid_point_acceleration, 1.)
+            .create();
+        let _final_velocity = step
+            .compute_velocity(fraction!(1 / 1), final_pos)
+            .based_on(p0.v)
+            .add_acceleration_dt(mid_point_acceleration, 1.)
+            .create();
+        step
 
-        let mid_point_position = current.position
-            + (current.velocity + current.acceleration * mid_point_dt) * mid_point_dt;
-        let mid_point_acceleration = acceleration_field.value_at(mid_point_position);
+        // let p0 = current.tracker();
 
-        next.velocity = current.velocity + mid_point_acceleration * dt;
-        next.position = current.position + next.velocity * dt;
+        // let dt_mid_point = fraction!(1 / 2) * dt;
+        // let s_mid = p0.s + p0.v * dt_mid_point + 0.5 * p0.a * dt_mid_point * dt_mid_point;
+        // let a_mid = s_mid.compute_acceleration(acceleration_field);
 
-        next.calibration_points[0].dt_fraction = mid_point_fraction;
-        next.calibration_points[0].acceleration = mid_point_acceleration;
-        next.calibration_points[0].position = mid_point_position;
+        // let v = p0.v + a_mid * dt;
+        // let s = p0.s + p0.v * dt + a_mid * dt * dt;
+        // s1 | v1;
+    }
+
+    fn expected_accelerations_for_step(&self) -> usize {
+        2
+    }
+
+    fn expected_positions_for_step(&self) -> usize {
+        2
+    }
+
+    fn expected_velocities_for_step(&self) -> usize {
+        1
     }
 }
 
@@ -85,43 +97,55 @@ impl Integrator for SecondOrder {
             .to_string()
     }
 
-    fn integrate(
-        &self,
-        acceleration_field: &dyn AccelerationField,
-        start_condition: &StartCondition,
-        num_steps: usize,
-        dt: R32,
-    ) -> Samples<FinalizedCalibrationPoints> {
-        <Self as OneStepWithCalibrationPoints<1>>::integrate(
-            acceleration_field,
-            start_condition,
-            num_steps,
-            dt,
-        )
-    }
-}
-
-impl OneStepWithCalibrationPoints<1> for SecondOrder {
     fn integrate_step(
+        &self,
         current: &StartCondition,
-        next: &mut NewSampleWithPoints<1>,
-        dt: f32,
+        dt: Duration,
         acceleration_field: &dyn AccelerationField,
-    ) {
-        let mid_point_fraction = fraction!(1 / 2);
-        let mid_point_dt = mid_point_fraction * dt;
+    ) -> IntegrationStep {
+        let mut step = IntegrationStep::new(self.expected_capacities_for_step(), dt);
+        let p0 = step.initial_condition(current);
+        let mid_point_pos = step
+            .compute_position(fraction!(1 / 2))
+            .based_on(p0.s)
+            .add_velocity_dt(p0.v, 1.)
+            .add_acceleration_dt_dt(p0.a, 0.5)
+            .create();
+        let mid_point_acceleration =
+            step.compute_acceleration_at(mid_point_pos, acceleration_field);
+        let final_pos = step
+            .compute_position(fraction!(1 / 1))
+            .based_on(p0.s)
+            .add_velocity_dt(p0.v, 1.)
+            .add_acceleration_dt_dt(mid_point_acceleration, 0.5)
+            .create();
+        let _final_velocity = step
+            .compute_velocity(fraction!(1 / 1), final_pos)
+            .based_on(p0.v)
+            .add_acceleration_dt(mid_point_acceleration, 1.)
+            .create();
+        step
 
-        let mid_point_position = current.position
-            + current.velocity * mid_point_dt
-            + 0.5 * current.acceleration * mid_point_dt * mid_point_dt;
-        let mid_point_acceleration = acceleration_field.value_at(mid_point_position);
+        // let p0 = current.tracker();
 
-        next.velocity = current.velocity + mid_point_acceleration * dt;
-        next.position =
-            current.position + current.velocity * dt + 0.5 * mid_point_acceleration * dt * dt;
+        // let dt_mid_point = fraction!(1 / 2) * dt;
+        // let s_mid = p0.s + p0.v * dt_mid_point + 0.5 * p0.a * dt_mid_point * dt_mid_point;
+        // let a_mid = s_mid.compute_acceleration(acceleration_field);
 
-        next.calibration_points[0].dt_fraction = mid_point_fraction;
-        next.calibration_points[0].acceleration = mid_point_acceleration;
-        next.calibration_points[0].position = mid_point_position;
+        // let v = p0.v + a_mid * dt;
+        // let s = p0.s + p0.v * dt + 0.5 * a_mid * dt * dt;
+        // s1 | v1;
+    }
+
+    fn expected_accelerations_for_step(&self) -> usize {
+        2
+    }
+
+    fn expected_positions_for_step(&self) -> usize {
+        2
+    }
+
+    fn expected_velocities_for_step(&self) -> usize {
+        1
     }
 }

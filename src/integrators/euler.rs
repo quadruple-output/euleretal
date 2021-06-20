@@ -1,6 +1,4 @@
-use crate::core::integrator::OneStepDirect;
-use crate::core::samples::{FinalizedCalibrationPoints, NewSample, StartCondition};
-use crate::prelude::*;
+use super::core::{AccelerationField, Duration, IntegrationStep, Integrator, StartCondition};
 
 pub struct Broken {}
 
@@ -21,26 +19,36 @@ impl Integrator for Broken {
             .to_string()
     }
 
-    fn integrate(
-        &self,
-        acceleration_field: &dyn AccelerationField,
-        start_condition: &StartCondition,
-        num_steps: usize,
-        dt: R32,
-    ) -> Samples<FinalizedCalibrationPoints> {
-        <Self as OneStepDirect>::integrate(acceleration_field, start_condition, num_steps, dt)
-    }
-}
-
-impl OneStepDirect for Broken {
     fn integrate_step(
+        &self,
         current: &StartCondition,
-        next: &mut NewSample,
-        dt: f32,
+        dt: Duration,
         _acceleration_field: &dyn AccelerationField,
-    ) {
-        next.position = current.position + current.velocity * dt;
-        next.velocity = current.velocity + current.acceleration * dt;
+    ) -> IntegrationStep {
+        let mut step = IntegrationStep::new(self.expected_capacities_for_step(), dt);
+        let p0 = step.initial_condition(current);
+        step.compute_position(fraction!(1 / 1))
+            .based_on(p0.s)
+            .add_velocity_dt(p0.v, 1.)
+            //.add_acceleration_dt_dt(p0.a, 1.)
+            .create();
+        step.compute_velocity(fraction!(1 / 1), p0.s)
+            .based_on(p0.v)
+            .add_acceleration_dt(p0.a, 1.)
+            .create();
+        step
+    }
+
+    fn expected_accelerations_for_step(&self) -> usize {
+        1
+    }
+
+    fn expected_positions_for_step(&self) -> usize {
+        1
+    }
+
+    fn expected_velocities_for_step(&self) -> usize {
+        1
     }
 }
 
@@ -64,25 +72,37 @@ impl Integrator for Euler {
             .to_string()
     }
 
-    fn integrate(
-        &self,
-        acceleration_field: &dyn AccelerationField,
-        start_condition: &StartCondition,
-        num_steps: usize,
-        dt: R32,
-    ) -> Samples<FinalizedCalibrationPoints> {
-        <Self as OneStepDirect>::integrate(acceleration_field, start_condition, num_steps, dt)
-    }
-}
-
-impl OneStepDirect for Euler {
     fn integrate_step(
+        &self,
         current: &StartCondition,
-        next: &mut NewSample,
-        dt: f32,
+        dt: Duration,
         _acceleration_field: &dyn AccelerationField,
-    ) {
-        next.velocity = current.velocity + current.acceleration * dt;
-        next.position = current.position + next.velocity * dt;
+    ) -> IntegrationStep {
+        let mut step = IntegrationStep::new(self.expected_capacities_for_step(), dt);
+        let p0 = step.initial_condition(current);
+        let next_position = step
+            .compute_position(fraction!(1 / 1))
+            .based_on(p0.s)
+            .add_velocity_dt(p0.v, 1.)
+            .add_acceleration_dt_dt(p0.a, 1.)
+            .create();
+        let _next_velocity = step
+            .compute_velocity(fraction!(1 / 1), next_position)
+            .based_on(p0.v)
+            .add_acceleration_dt(p0.a, 1.)
+            .create();
+        step
+    }
+
+    fn expected_accelerations_for_step(&self) -> usize {
+        1
+    }
+
+    fn expected_positions_for_step(&self) -> usize {
+        1
+    }
+
+    fn expected_velocities_for_step(&self) -> usize {
+        1
     }
 }

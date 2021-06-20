@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use super::{core::AccelerationField, import::Vec3};
 
 #[derive(Clone, Copy)]
 pub struct CenterMass;
@@ -12,7 +12,7 @@ impl AccelerationField for CenterMass {
             let direction_normalized = -pos * distance_recip;
             direction_normalized * distance_squared_recip
         } else {
-            Vec3::zero()
+            Vec3::ZERO
         }
     }
 
