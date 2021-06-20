@@ -64,9 +64,9 @@ impl IntegrationStep {
     pub fn new(capacities: integrator::ExpectedCapacities, dt: Duration) -> Self {
         Self {
             dt,
-            all_positions: Vec::with_capacity(capacities.positions),
-            all_velocities: Vec::with_capacity(capacities.velocities),
-            all_accelerations: Vec::with_capacity(capacities.accelerations),
+            all_positions: Vec::with_capacity(capacities.positions + 1),
+            all_velocities: Vec::with_capacity(capacities.velocities + 1),
+            all_accelerations: Vec::with_capacity(capacities.accelerations + 1),
             last_computed_position: None,
             last_computed_velocity: None,
             acceleration_at_last_position: None,

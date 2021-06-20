@@ -112,12 +112,10 @@ impl Euleretal {
             stroke: Stroke::new(1., Hsva::from(Color32::YELLOW)),
         }));
 
-        /*
         let _mid_point_second_order = self.world.add_integrator(Integrator {
             integrator: Box::new(integrators::mid_point::SecondOrder::new()),
             stroke: Stroke::new(1., Hsva::from(Color32::GREEN)),
         });
-        */
 
         let _implicit_euler = Rc::clone(self.world.add_integrator(Integrator {
             integrator: Box::new(integrators::euler::Euler::new()),

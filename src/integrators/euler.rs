@@ -30,7 +30,7 @@ impl Integrator for Broken {
         step.compute_position(fraction!(1 / 1))
             .based_on(p0.s)
             .add_velocity_dt(p0.v, 1.)
-            .add_acceleration_dt_dt(p0.a, 1.)
+            //.add_acceleration_dt_dt(p0.a, 1.)
             .create();
         step.compute_velocity(fraction!(1 / 1), p0.s)
             .based_on(p0.v)
@@ -80,15 +80,16 @@ impl Integrator for Euler {
     ) -> IntegrationStep {
         let mut step = IntegrationStep::new(self.expected_capacities_for_step(), dt);
         let p0 = step.initial_condition(current);
-        let next_velocity = step
-            .compute_velocity(fraction!(1 / 1), p0.s)
+        let next_position = step
+            .compute_position(fraction!(1 / 1))
+            .based_on(p0.s)
+            .add_velocity_dt(p0.v, 1.)
+            .add_acceleration_dt_dt(p0.a, 1.)
+            .create();
+        let _next_velocity = step
+            .compute_velocity(fraction!(1 / 1), next_position)
             .based_on(p0.v)
             .add_acceleration_dt(p0.a, 1.)
-            .create();
-        step.compute_position(fraction!(1 / 1))
-            .based_on(p0.s)
-            .add_velocity_dt(next_velocity, 1.)
-            .add_acceleration_dt_dt(p0.a, 1.)
             .create();
         step
     }

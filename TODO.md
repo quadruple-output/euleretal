@@ -23,6 +23,7 @@
   collapsed
 - add setting for `Inspector` to not scale velocities by dt (may be useful when
   comparing integrations with different step sizes)
+- add option to (continuously) synchronize the view point of all canvases
 
 ## Functional Features
 - change all step sizes proportionally with a single slider (to test convergence)
@@ -34,4 +35,6 @@
 - save/load state in file
 
 ## Clean Code
+- remove methods like `expected_accelerations_for_step` and determine
+  "expected" values for next step from previous one.
 - Create a version of Vec3, based on R32, so we can `#[derive(Hash)]` for it.
