@@ -1,8 +1,54 @@
+mod public_refs {
+    use super::{
+        AccelerationRefInternal, IntegrationStep, PositionRefInternal, VelocityRefInternal,
+    };
+
+    #[derive(Clone, Copy)]
+    pub struct PositionRef(PositionRefInternal, *const IntegrationStep);
+    impl PositionRef {
+        pub(super) fn new(pref: PositionRefInternal, step: &mut IntegrationStep) -> Self {
+            Self(pref, step)
+        }
+
+        pub(super) fn internal_for(self, step: &IntegrationStep) -> PositionRefInternal {
+            assert!(self.1 == step);
+            self.0
+        }
+    }
+
+    #[derive(Clone, Copy)]
+    pub struct VelocityRef(VelocityRefInternal, *const IntegrationStep);
+    impl VelocityRef {
+        pub(super) fn new(vref: VelocityRefInternal, step: &mut IntegrationStep) -> Self {
+            Self(vref, step)
+        }
+
+        pub(super) fn internal_for(self, step: &IntegrationStep) -> VelocityRefInternal {
+            assert!(self.1 == step);
+            self.0
+        }
+    }
+
+    #[derive(Clone, Copy)]
+    pub struct AccelerationRef(AccelerationRefInternal, *const IntegrationStep);
+    impl AccelerationRef {
+        pub(super) fn new(aref: AccelerationRefInternal, step: &mut IntegrationStep) -> Self {
+            Self(aref, step)
+        }
+
+        pub(super) fn internal_for(self, step: &IntegrationStep) -> AccelerationRefInternal {
+            assert!(self.1 == step);
+            self.0
+        }
+    }
+}
+
 use super::{
-    import::R32, integrator, Acceleration, AccelerationField, Duration, Fraction, Position,
-    StartCondition, Velocity,
+    import::R32, integrator, Acceleration, AccelerationField, Duration, Fraction,
+    PhysicalQuantityKind, Position, StartCondition, Velocity,
 };
 use ::std::ops::Mul;
+pub use public_refs::{AccelerationRef, PositionRef, VelocityRef};
 
 pub struct IntegrationStep {
     pub dt: Duration,
@@ -37,27 +83,29 @@ impl IntegrationStep {
             last_computed_velocity: None,
             acceleration_at_last_position: None,
         };
-        let pref = result.computed_position(ComputedPositionInternal {
+        let pref = result.add_computed_position(ComputedPositionInternal {
             s,
             contributions: Vec::new(),
         });
         result.last_computed_position = Some(pref);
-        result.last_computed_velocity = Some(result.computed_velocity(ComputedVelocityInternal {
-            v,
-            sampling_position: pref,
-            contributions: Vec::new(),
-        }));
-        result.acceleration_at_last_position =
-            Some(result.computed_acceleration(ComputedAccelerationInternal {
+        result.last_computed_velocity =
+            Some(result.add_computed_velocity(ComputedVelocityInternal {
+                v,
+                sampling_position: pref,
+                contributions: Vec::new(),
+            }));
+        result.acceleration_at_last_position = Some(result.add_computed_acceleration(
+            ComputedAccelerationInternal {
                 a,
                 sampling_position: pref,
-            }));
+            },
+        ));
         result
     }
 
     pub fn start_position(&mut self, s: Position) -> PositionRef {
         PositionRef::new(
-            self.computed_position(ComputedPositionInternal {
+            self.add_computed_position(ComputedPositionInternal {
                 s,
                 contributions: Vec::new(),
             }),
@@ -67,9 +115,9 @@ impl IntegrationStep {
 
     pub fn start_velocity(&mut self, v: Velocity, sampling_position: PositionRef) -> VelocityRef {
         VelocityRef::new(
-            self.computed_velocity(ComputedVelocityInternal {
+            self.add_computed_velocity(ComputedVelocityInternal {
                 v,
-                sampling_position: sampling_position.0,
+                sampling_position: sampling_position.internal_for(self),
                 contributions: Vec::new(),
             }),
             self,
@@ -82,9 +130,9 @@ impl IntegrationStep {
         sampling_position: PositionRef,
     ) -> AccelerationRef {
         AccelerationRef::new(
-            self.computed_acceleration(ComputedAccelerationInternal {
+            self.add_computed_acceleration(ComputedAccelerationInternal {
                 a,
-                sampling_position: sampling_position.0,
+                sampling_position: sampling_position.internal_for(self),
                 //contributions: Vec::new(),
             }),
             self,
@@ -107,9 +155,9 @@ impl IntegrationStep {
             self.acceleration_at_last_position,
         ) {
             Some(StartCondition {
-                position: self.position_internal(pref).s,
-                velocity: self.velocity_internal(vref).v,
-                acceleration: self.acceleration_internal(aref).a,
+                position: self.internal_get_position(pref).s,
+                velocity: self.internal_get_velocity(vref).v,
+                acceleration: self.internal_get_acceleration(aref).a,
             })
         } else {
             None
@@ -133,50 +181,59 @@ impl IntegrationStep {
         sref: PositionRef,
         a: &dyn AccelerationField,
     ) -> AccelerationRef {
-        let aref_int = self.computed_acceleration(ComputedAccelerationInternal {
-            a: a.value_at(self.position_internal(sref.0).s),
-            sampling_position: sref.0,
+        let s_ref_int = sref.internal_for(self);
+        let a_ref_int = self.add_computed_acceleration(ComputedAccelerationInternal {
+            a: a.value_at(self.internal_get_position(s_ref_int).s),
+            sampling_position: s_ref_int,
         });
-        AccelerationRef(aref_int, self)
+        AccelerationRef::new(a_ref_int, self)
     }
 
     pub fn compute_acceleration_at_last_position(&mut self, a: &dyn AccelerationField) {
         let last_pref = self.last_computed_position.unwrap();
-        self.acceleration_at_last_position =
-            Some(self.computed_acceleration(ComputedAccelerationInternal {
-                a: a.value_at(self.position_internal(last_pref).s),
+        self.acceleration_at_last_position = Some(self.add_computed_acceleration(
+            ComputedAccelerationInternal {
+                a: a.value_at(self.internal_get_position(last_pref).s),
                 sampling_position: last_pref,
-            }));
+            },
+        ));
     }
 
-    pub fn position(&self, pref: PositionRef) -> ComputedPosition {
+    pub fn get_position(&self, pref: PositionRef) -> ComputedPosition {
         ComputedPosition {
             step: self,
-            internal: &self.position_internal(pref.0),
+            internal: &self.internal_get_position(pref.internal_for(self)),
         }
     }
 
-    pub fn velocity(&self, pref: VelocityRef) -> ComputedVelocity {
+    pub fn get_velocity(&self, pref: VelocityRef) -> ComputedVelocity {
         ComputedVelocity {
             step: self,
-            internal: &self.velocity_internal(pref.0),
+            internal: &self.internal_get_velocity(pref.internal_for(self)),
         }
     }
 
-    pub fn acceleration(&self, pref: AccelerationRef) -> ComputedAcceleration {
+    pub fn get_acceleration(&self, pref: AccelerationRef) -> ComputedAcceleration {
         ComputedAcceleration {
             step: self,
-            internal: &self.acceleration_internal(pref.0),
+            internal: &self.internal_get_acceleration(pref.internal_for(self)),
+        }
+    }
+
+    pub fn last_computed_position(&self) -> ComputedPosition {
+        ComputedPosition {
+            step: self,
+            internal: &self.internal_get_position(self.last_computed_position.unwrap()),
         }
     }
 
     pub fn last_s(&self) -> Position {
-        self.position_internal(self.last_computed_position.unwrap())
+        self.internal_get_position(self.last_computed_position.unwrap())
             .s
     }
 
     pub fn last_v(&self) -> Velocity {
-        self.velocity_internal(self.last_computed_velocity.unwrap())
+        self.internal_get_velocity(self.last_computed_velocity.unwrap())
             .v
     }
 
@@ -187,7 +244,7 @@ impl IntegrationStep {
     pub fn velocities_iter(&self) -> impl Iterator<Item = (Position, Velocity)> + '_ {
         self.all_velocities.iter().map(move |comp_vel| {
             (
-                self.position_internal(comp_vel.sampling_position).s,
+                self.internal_get_position(comp_vel.sampling_position).s,
                 comp_vel.v,
             )
         })
@@ -196,23 +253,23 @@ impl IntegrationStep {
     pub fn accelerations_iter(&self) -> impl Iterator<Item = (Position, Acceleration)> + '_ {
         self.all_accelerations.iter().map(move |comp_acc| {
             (
-                self.position_internal(comp_acc.sampling_position).s,
+                self.internal_get_position(comp_acc.sampling_position).s,
                 comp_acc.a,
             )
         })
     }
 
-    fn computed_position(&mut self, p: ComputedPositionInternal) -> PositionRefInternal {
+    fn add_computed_position(&mut self, p: ComputedPositionInternal) -> PositionRefInternal {
         self.all_positions.push(p);
         PositionRefInternal(self.all_positions.len() - 1)
     }
 
-    fn computed_velocity(&mut self, p: ComputedVelocityInternal) -> VelocityRefInternal {
+    fn add_computed_velocity(&mut self, p: ComputedVelocityInternal) -> VelocityRefInternal {
         self.all_velocities.push(p);
         VelocityRefInternal(self.all_velocities.len() - 1)
     }
 
-    fn computed_acceleration(
+    fn add_computed_acceleration(
         &mut self,
         p: ComputedAccelerationInternal,
     ) -> AccelerationRefInternal {
@@ -220,15 +277,15 @@ impl IntegrationStep {
         AccelerationRefInternal(self.all_accelerations.len() - 1)
     }
 
-    fn position_internal(&self, pref: PositionRefInternal) -> &ComputedPositionInternal {
+    fn internal_get_position(&self, pref: PositionRefInternal) -> &ComputedPositionInternal {
         &self.all_positions[pref.0]
     }
 
-    fn velocity_internal(&self, pref: VelocityRefInternal) -> &ComputedVelocityInternal {
+    fn internal_get_velocity(&self, pref: VelocityRefInternal) -> &ComputedVelocityInternal {
         &self.all_velocities[pref.0]
     }
 
-    fn acceleration_internal(
+    fn internal_get_acceleration(
         &self,
         pref: AccelerationRefInternal,
     ) -> &ComputedAccelerationInternal {
@@ -238,33 +295,12 @@ impl IntegrationStep {
 
 #[derive(Clone, Copy)]
 struct PositionRefInternal(usize);
-#[derive(Clone, Copy)]
-pub struct PositionRef(PositionRefInternal, *mut IntegrationStep);
-impl PositionRef {
-    fn new(pref: PositionRefInternal, step: &mut IntegrationStep) -> Self {
-        Self(pref, step)
-    }
-}
 
 #[derive(Clone, Copy)]
 struct VelocityRefInternal(usize);
-#[derive(Clone, Copy)]
-pub struct VelocityRef(VelocityRefInternal, *mut IntegrationStep);
-impl VelocityRef {
-    fn new(vref: VelocityRefInternal, step: &mut IntegrationStep) -> Self {
-        Self(vref, step)
-    }
-}
 
 #[derive(Clone, Copy)]
 struct AccelerationRefInternal(usize);
-#[derive(Clone, Copy)]
-pub struct AccelerationRef(AccelerationRefInternal, *mut IntegrationStep);
-impl AccelerationRef {
-    fn new(aref: AccelerationRefInternal, step: &mut IntegrationStep) -> Self {
-        Self(aref, step)
-    }
-}
 
 struct ComputedPositionInternal {
     s: Position,
@@ -319,9 +355,51 @@ pub struct ComputedPosition<'a> {
     internal: &'a ComputedPositionInternal,
 }
 
+impl<'a> ComputedPosition<'a> {
+    pub fn contributions_iter(&self) -> impl Iterator<Item = PositionContribution> {
+        self.internal
+            .contributions
+            .iter()
+            .map(move |contrib_int| PositionContribution {
+                position: self,
+                internal: contrib_int,
+            })
+    }
+}
+
 pub struct PositionContribution<'a> {
     position: &'a ComputedPosition<'a>,
     internal: &'a PositionContributionInternal,
+}
+
+impl<'a> PositionContribution<'a> {
+    pub fn sampling_position(&self) -> Position {
+        let step = self.position.step;
+        match self.internal {
+            PositionContributionInternal::StartPosition { sref } => {
+                step.internal_get_position(*sref).s
+            }
+            PositionContributionInternal::VelocityDt { vref, .. } => {
+                step.internal_get_position(step.internal_get_velocity(*vref).sampling_position)
+                    .s
+            }
+            PositionContributionInternal::AccelerationDtDt { aref, .. } => {
+                step.internal_get_position(step.internal_get_acceleration(*aref).sampling_position)
+                    .s
+            }
+        }
+    }
+
+    pub fn kind(&self) -> PhysicalQuantityKind {
+        self.internal.kind()
+    }
+
+    pub fn delta(&self) -> Option<Position> {
+        match self.internal {
+            PositionContributionInternal::StartPosition { .. } => None,
+            _ => Some(self.internal.evaluate_for(self.position.step)),
+        }
+    }
 }
 
 pub struct ComputedVelocity<'a> {
@@ -364,7 +442,9 @@ impl<'a> PositionBuilder<'a> {
 
     pub fn based_on(mut self, sref: PositionRef) -> Self {
         self.contributions
-            .push(PositionContributionInternal::StartPosition { sref: sref.0 });
+            .push(PositionContributionInternal::StartPosition {
+                sref: sref.internal_for(self.step),
+            });
         self
     }
 
@@ -372,7 +452,7 @@ impl<'a> PositionBuilder<'a> {
         self.contributions
             .push(PositionContributionInternal::VelocityDt {
                 factor: factor.into(),
-                vref: vref.0,
+                vref: vref.internal_for(self.step),
                 dt_fraction: self.dt_fraction,
             });
         self
@@ -382,7 +462,7 @@ impl<'a> PositionBuilder<'a> {
         self.contributions
             .push(PositionContributionInternal::AccelerationDtDt {
                 factor: factor.into(),
-                aref: aref.0,
+                aref: aref.internal_for(self.step),
                 dt_fraction: self.dt_fraction,
             });
         self
@@ -393,15 +473,12 @@ impl<'a> PositionBuilder<'a> {
         for contrib in &self.contributions {
             s += contrib.evaluate_for(self.step);
         }
-        let result = PositionRef::new(
-            self.step.computed_position(ComputedPositionInternal {
-                s,
-                contributions: self.contributions,
-            }),
-            self.step,
-        );
-        self.step.last_computed_position = Some(result.0);
-        result
+        let s_ref_internal = self.step.add_computed_position(ComputedPositionInternal {
+            s,
+            contributions: self.contributions,
+        });
+        self.step.last_computed_position = Some(s_ref_internal);
+        PositionRef::new(s_ref_internal, self.step)
     }
 }
 
@@ -414,10 +491,11 @@ pub struct VelocityBuilder<'a> {
 
 impl<'a> VelocityBuilder<'a> {
     fn new(step: &'a mut IntegrationStep, dt_fraction: Fraction, sref: PositionRef) -> Self {
+        let sref_internal = sref.internal_for(step);
         Self {
             step,
             dt_fraction,
-            sref: sref.0,
+            sref: sref_internal,
             // most of the times there will be 2 contributions:
             contributions: Vec::with_capacity(2),
         }
@@ -425,7 +503,9 @@ impl<'a> VelocityBuilder<'a> {
 
     pub fn based_on(mut self, vref: VelocityRef) -> Self {
         self.contributions
-            .push(VelocityContributionInternal::Velocity { vref: vref.0 });
+            .push(VelocityContributionInternal::Velocity {
+                vref: vref.internal_for(self.step),
+            });
         self
     }
 
@@ -433,7 +513,7 @@ impl<'a> VelocityBuilder<'a> {
         self.contributions
             .push(VelocityContributionInternal::AccelerationDt {
                 factor: factor.into(),
-                aref: aref.0,
+                aref: aref.internal_for(self.step),
                 dt_fraction: self.dt_fraction,
             });
         self
@@ -444,29 +524,34 @@ impl<'a> VelocityBuilder<'a> {
         for contrib in &self.contributions {
             v += contrib.evaluate_for(self.step);
         }
-        let result = VelocityRef::new(
-            self.step.computed_velocity(ComputedVelocityInternal {
-                v,
-                sampling_position: self.sref,
-                contributions: self.contributions,
-            }),
-            self.step,
-        );
-        self.step.last_computed_velocity = Some(result.0);
-        result
+        let v_ref_internal = self.step.add_computed_velocity(ComputedVelocityInternal {
+            v,
+            sampling_position: self.sref,
+            contributions: self.contributions,
+        });
+        self.step.last_computed_velocity = Some(v_ref_internal);
+        VelocityRef::new(v_ref_internal, self.step)
     }
 }
 
 impl PositionContributionInternal {
+    fn kind(&self) -> PhysicalQuantityKind {
+        match self {
+            Self::StartPosition { .. } => PhysicalQuantityKind::Position,
+            Self::VelocityDt { .. } => PhysicalQuantityKind::Velocity,
+            Self::AccelerationDtDt { .. } => PhysicalQuantityKind::Acceleration,
+        }
+    }
+
     fn evaluate_for(&self, step: &IntegrationStep) -> Position {
         match self {
-            Self::StartPosition { sref } => step.position_internal(*sref).s,
+            Self::StartPosition { sref } => step.internal_get_position(*sref).s,
             Self::VelocityDt {
                 factor,
                 vref,
                 dt_fraction,
             } => {
-                let v = step.velocity_internal(*vref);
+                let v = step.internal_get_velocity(*vref);
                 factor * v * dt_fraction * step.dt
             }
             Self::AccelerationDtDt {
@@ -474,7 +559,7 @@ impl PositionContributionInternal {
                 aref,
                 dt_fraction,
             } => {
-                let a = step.acceleration_internal(*aref);
+                let a = step.internal_get_acceleration(*aref);
                 factor * a * (dt_fraction * step.dt) * (dt_fraction * step.dt)
             }
         }
@@ -484,13 +569,13 @@ impl PositionContributionInternal {
 impl VelocityContributionInternal {
     fn evaluate_for(&self, step: &IntegrationStep) -> Velocity {
         match self {
-            Self::Velocity { vref } => step.velocity_internal(*vref).v,
+            Self::Velocity { vref } => step.internal_get_velocity(*vref).v,
             Self::AccelerationDt {
                 factor,
                 aref,
                 dt_fraction,
             } => {
-                let a = step.acceleration_internal(*aref);
+                let a = step.internal_get_acceleration(*aref);
                 factor * a * dt_fraction * step.dt
             }
         }

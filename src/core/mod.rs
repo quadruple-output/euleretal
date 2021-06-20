@@ -29,3 +29,9 @@ pub use start_velocity::StartVelocity;
 pub type Position = import::Vec3;
 pub type Acceleration = import::Vec3;
 pub type Velocity = import::Vec3;
+
+pub enum PhysicalQuantityKind {
+    Position,
+    Velocity,
+    Acceleration,
+}

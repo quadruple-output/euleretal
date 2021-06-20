@@ -1,5 +1,5 @@
 use super::{
-    core::Obj,
+    core::{Obj, PhysicalQuantityKind},
     entities::Canvas,
     misc::Settings,
     ui_import::{egui, Color32},
@@ -25,34 +25,28 @@ pub fn render(
                     settings.strokes.focussed_velocity,
                     painter,
                 );
-                /*
-                // delta s by acceleration at sample point:
-                canvas.draw_vector(
-                    ref_sample.derived_position.as_position(),
-                    0.5 * ref_sample.acceleration * ref_sample_dt * ref_sample_dt,
-                    settings.strokes.focussed_acceleration,
-                    painter,
-                );
-                */
+
+                // *** calculated sample:
+                let sample_position = calc_sample.last_computed_position();
 
                 // first, draw contributing translations...:
-                for (sampling_position, velocity) in calc_sample.velocities_iter() {
-                    canvas.draw_vector(
-                        sampling_position,
-                        velocity, // todo: this is the absolute velocity. Need effective contribution.
-                        settings.strokes.focussed_velocity,
-                        painter,
-                    );
-                }
-
-                // first, draw contributing translations...:
-                for (sampling_position, acceleration) in calc_sample.accelerations_iter() {
-                    canvas.draw_vector(
-                        sampling_position,
-                        acceleration, // todo: this is the absolute acceleration. Need effective contribution.
-                        settings.strokes.focussed_acceleration,
-                        painter,
-                    );
+                for contribution in sample_position.contributions_iter() {
+                    if let Some(delta) = contribution.delta() {
+                        canvas.draw_vector(
+                            contribution.sampling_position(),
+                            delta,
+                            match contribution.kind() {
+                                PhysicalQuantityKind::Position => panic!(), // in this case, delta() should be None
+                                PhysicalQuantityKind::Velocity => {
+                                    settings.strokes.focussed_velocity
+                                }
+                                PhysicalQuantityKind::Acceleration => {
+                                    settings.strokes.focussed_acceleration
+                                }
+                            },
+                            painter,
+                        );
+                    }
                 }
 
                 // ...then draw start position(s) on top, so they are visible...
