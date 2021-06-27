@@ -522,7 +522,7 @@ impl<'a> PositionBuilder<'a> {
     }
 
     pub fn create(self) -> PositionRef {
-        let mut s = Position::ZERO;
+        let mut s = Position::zeros();
         for contrib in &self.contributions {
             s += contrib.evaluate_for(self.step);
         }
@@ -573,7 +573,7 @@ impl<'a> VelocityBuilder<'a> {
     }
 
     pub fn create(self) -> VelocityRef {
-        let mut v = Velocity::ZERO;
+        let mut v = Velocity::zeros();
         for contrib in &self.contributions {
             v += contrib.evaluate_for(self.step);
         }

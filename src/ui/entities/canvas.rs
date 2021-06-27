@@ -268,11 +268,14 @@ impl Canvas {
     }
 
     fn user_to_screen(&self, pos: Vec3) -> Pos2 {
-        ((pos - self.focus) * self.scale).to_pos2() + self.area_center.to_vec2()
+        ((pos - self.focus).component_mul(&self.scale)).to_pos2() + self.area_center.to_vec2()
     }
 
     fn screen_to_user(&self, pos: Pos2) -> Vec3 {
-        (pos - self.area_center.to_vec2()).to_vec3() / self.scale + self.focus
+        (pos - self.area_center.to_vec2())
+            .to_vec3()
+            .component_div(&self.scale)
+            + self.focus
     }
 }
 

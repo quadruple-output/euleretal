@@ -24,7 +24,7 @@ pub fn render(
         let a = acceleration.value_at(mouse_pos);
         ui.label("Field");
         ui.separator();
-        ui.label(format!("|a| = {}", settings.format_f32(a.length())));
+        ui.label(format!("|a| = {}", settings.format_f32(a.norm())));
         canvas.draw_vector(mouse_pos, a, settings.strokes.acceleration, painter);
     });
 }

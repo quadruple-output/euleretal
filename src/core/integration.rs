@@ -116,7 +116,7 @@ impl Integration {
 
     fn find_closest(points: impl Iterator<Item = Position>, search_pos: Position) -> (usize, f32) {
         points
-            .map(|pos| (pos - search_pos).length_squared())
+            .map(|pos| (pos - search_pos).norm_squared())
             .enumerate()
             .reduce(|closest_so_far, current| {
                 if closest_so_far.1 <= current.1 {

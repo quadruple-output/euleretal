@@ -15,7 +15,7 @@ mod scenarios;
 mod ui;
 
 mod import {
-    pub use ::bevy_math::Vec3;
+    pub type Vec3 = ::parry3d::math::Vector<f32>;
     pub use ::decorum::R32;
     pub use ::std::rc::Rc;
 }
