@@ -9,12 +9,14 @@
 // When compiling natively:
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
-    if let Err(e) = flexi_logger::Logger::with_env_or_str("info")
-        .format(flexi_logger::colored_opt_format)
-        .start()
-    {
-        println!("Warning: Cannot initialize logging. {}", e);
-    }
+    use ::log::LevelFilter;
+    use ::simple_logger::SimpleLogger;
+
+    SimpleLogger::new()
+        .with_level(LevelFilter::Off)
+        .with_module_level("euleretal", LevelFilter::Info)
+        .init()
+        .unwrap();
 
     let app = euleretal::Euleretal::default();
     eframe::run_native(Box::new(app), eframe::epi::NativeOptions::default());

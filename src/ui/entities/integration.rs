@@ -71,14 +71,14 @@ impl Integration {
             scenario,
             &*self.integrator.borrow().integrator,
             self.step_size.borrow().duration,
-        )
+        );
     }
 
     pub fn draw_on(&self, canvas: &super::Canvas, painter: &egui::Painter) {
         let sample_color = Color32::from(self.step_size.borrow().color);
         let stroke = self.integrator.borrow().stroke;
-        if let Some(ref samples) = self.core_integration.samples() {
-            canvas.draw_sample_trajectory(&samples, stroke, painter);
+        if let Some(samples) = self.core_integration.samples() {
+            canvas.draw_sample_trajectory(samples, stroke, painter);
         }
         for samples in self
             .core_integration

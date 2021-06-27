@@ -7,7 +7,6 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::multiple_crate_versions)]
 //#![deny(missing_docs)]
-#![feature(box_syntax)]
 
 #[macro_use]
 mod core; // modules with macros must be listed first

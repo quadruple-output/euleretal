@@ -202,35 +202,35 @@ impl IntegrationStep {
     pub fn get_position(&self, pref: PositionRef) -> ComputedPosition {
         ComputedPosition {
             step: self,
-            internal: &self.internal_get_position(pref.internal_for(self)),
+            internal: self.internal_get_position(pref.internal_for(self)),
         }
     }
 
     pub fn get_velocity(&self, pref: VelocityRef) -> ComputedVelocity {
         ComputedVelocity {
             step: self,
-            internal: &self.internal_get_velocity(pref.internal_for(self)),
+            internal: self.internal_get_velocity(pref.internal_for(self)),
         }
     }
 
     pub fn get_acceleration(&self, pref: AccelerationRef) -> ComputedAcceleration {
         ComputedAcceleration {
             step: self,
-            internal: &self.internal_get_acceleration(pref.internal_for(self)),
+            internal: self.internal_get_acceleration(pref.internal_for(self)),
         }
     }
 
     pub fn last_computed_position(&self) -> ComputedPosition {
         ComputedPosition {
             step: self,
-            internal: &self.internal_get_position(self.last_computed_position.unwrap()),
+            internal: self.internal_get_position(self.last_computed_position.unwrap()),
         }
     }
 
     pub fn last_computed_velocity(&self) -> ComputedVelocity {
         ComputedVelocity {
             step: self,
-            internal: &self.internal_get_velocity(self.last_computed_velocity.unwrap()),
+            internal: self.internal_get_velocity(self.last_computed_velocity.unwrap()),
         }
     }
 

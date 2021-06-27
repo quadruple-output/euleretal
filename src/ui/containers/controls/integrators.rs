@@ -9,7 +9,7 @@ pub fn show(ui: &mut Ui, world: &mut World) {
             ui,
             &mut integrator.borrow_mut().stroke,
             &label,
-            &&description,
+            &description,
         );
     });
 }
