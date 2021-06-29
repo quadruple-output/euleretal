@@ -17,6 +17,7 @@ mod ui;
 mod import {
     pub type Vec3 = ::parry3d::math::Vector<f32>;
     pub use ::decorum::R32;
+    pub use ::parry3d::{query::PointQuery, shape};
     pub use ::std::rc::Rc;
 }
 

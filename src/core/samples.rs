@@ -1,6 +1,3 @@
-use super::{Acceleration, IntegrationStep, Position, Velocity};
-use ::std::marker::PhantomData;
-
 mod type_state {
     pub trait TypeState {}
 
@@ -11,8 +8,8 @@ mod type_state {
     impl TypeState for NonFinalized {}
 }
 
-use decorum::R32;
-use parry3d::query::PointQuery;
+use super::{import::R32, Acceleration, IntegrationStep, Position, Velocity};
+use ::std::marker::PhantomData;
 use type_state::{Finalized, NonFinalized, TypeState};
 
 pub struct Samples<TS: TypeState = Finalized> {
@@ -65,16 +62,7 @@ impl Samples<Finalized> {
             .iter()
             .enumerate()
             .map(|(index, step)| SampleIdxWithDistance {
-                distance: 
-                /*
-                step.distance_to(pos),
-                */
-                ::parry3d::shape::Segment::new(
-                    step.positions_iter().next().unwrap().into(),
-                    step.positions_iter().last().unwrap().into(),
-                )
-                .distance_to_local_point(&(*pos).into(), true)
-                .into(),
+                distance: step.distance_to(pos),
                 index,
             })
             .reduce(|a, b| if a.distance < b.distance { a } else { b })

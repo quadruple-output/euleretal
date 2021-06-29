@@ -44,8 +44,9 @@ mod public_refs {
 }
 
 use super::{
-    import::R32, integrator, Acceleration, AccelerationField, Duration, Fraction,
-    PhysicalQuantityKind, Position, StartCondition, Velocity,
+    import::{shape, PointQuery, R32},
+    integrator, Acceleration, AccelerationField, Duration, Fraction, PhysicalQuantityKind,
+    Position, StartCondition, Velocity,
 };
 use ::std::ops::Mul;
 pub use public_refs::{AccelerationRef, PositionRef, VelocityRef};
@@ -264,6 +265,15 @@ impl IntegrationStep {
                 comp_acc.a,
             )
         })
+    }
+
+    pub fn distance_to(&self, pos: &Position) -> R32 {
+        shape::Segment::new(
+            self.positions_iter().next().unwrap().into(),
+            self.positions_iter().last().unwrap().into(),
+        )
+        .distance_to_local_point(&(*pos).into(), true)
+        .into()
     }
 
     fn add_computed_position(&mut self, p: ComputedPositionInternal) -> PositionRefInternal {
