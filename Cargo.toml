@@ -1,3 +1,6 @@
+# This file was originally based on the egui template.  The latest template version can be
+# found at https://github.com/emilk/egui_template/blob/master/Cargo.toml
+
 [package]
 name = "euleretal"
 description = "Interactive visualization of discrete integration functions for physical acceleration of rigid bodies"
@@ -9,24 +12,28 @@ license = "MIT OR Apache-2.0"
 version = "0.1.0"
 authors = ["quadruple-output <57874618+quadruple-output@users.noreply.github.com>"]
 edition = "2018"
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+# more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-eframe = "0.12" # Gives us egui, epi and web+native backends
-serde = { version = "1", features = ["derive"], optional = true }
-bevy_math = "0.5"
-decorum = "0.3"
-flexi_logger = "0.17"
+eframe = "0.13" # gives us egui, epi and web+native backends
+parry3d = "0.5" # geometric and collision detection libraries, including `nalgebra`
+decorum = "0.3" # Total ordering (and more) for floating-point types
 log = "0.4"
+simple_logger = "1.11"
+
+[dependencies.serde] # serialization/deserialization framework
+version = "1"
+features = ["derive"]
+optional = true 
 
 [lib]
-crate-type = ["cdylib", "rlib"]
-
+# refer to https://doc.rust-lang.org/cargo/reference/cargo-targets.html#configuring-a-target
+crate-type = ["cdylib", "rlib"] # this setting has blindly been taken over from the egui template
 
 [features]
 default = []
-http = ["eframe/http"] # Enable if you want to do http requests
-persistence = ["eframe/persistence", "serde"] # Enable if you want to persist app state on shutdown
+http = ["eframe/http"] # enable if you want to do http requests
+persistence = ["eframe/persistence", "serde"] # enable if you want to persist app state on shutdown
 
 [profile.release]
 opt-level = 2 # fast and small wasm

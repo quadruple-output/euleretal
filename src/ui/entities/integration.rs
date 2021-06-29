@@ -1,6 +1,5 @@
 use super::{
-    core::{IntegrationStep, Obj, Scenario},
-    import::Vec3,
+    core::{IntegrationStep, Obj, Position, Scenario},
     ui_import::{egui, Color32, Hsva, Stroke},
     Integrator, StepSize,
 };
@@ -62,7 +61,7 @@ impl Integration {
         }
     }
 
-    pub fn closest_sample(&self, pos: Vec3) -> Option<(&IntegrationStep, &IntegrationStep)> {
+    pub fn closest_sample(&self, pos: &Position) -> Option<(&IntegrationStep, &IntegrationStep)> {
         self.core_integration.closest_sample(pos)
     }
 
@@ -71,14 +70,14 @@ impl Integration {
             scenario,
             &*self.integrator.borrow().integrator,
             self.step_size.borrow().duration,
-        )
+        );
     }
 
     pub fn draw_on(&self, canvas: &super::Canvas, painter: &egui::Painter) {
         let sample_color = Color32::from(self.step_size.borrow().color);
         let stroke = self.integrator.borrow().stroke;
-        if let Some(ref samples) = self.core_integration.samples() {
-            canvas.draw_sample_trajectory(&samples, stroke, painter);
+        if let Some(samples) = self.core_integration.samples() {
+            canvas.draw_sample_trajectory(samples, stroke, painter);
         }
         for samples in self
             .core_integration

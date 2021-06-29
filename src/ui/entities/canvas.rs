@@ -92,7 +92,7 @@ impl Canvas {
     }
 
     pub fn draw_sample_trajectory(&self, samples: &Samples, stroke: Stroke, painter: &Painter) {
-        self.draw_connected_samples(samples.step_positions(), stroke, painter)
+        self.draw_connected_samples(samples.step_positions(), stroke, painter);
     }
 
     pub fn draw_trajectory(&self, stroke: Stroke, painter: &Painter) {
@@ -204,7 +204,7 @@ impl Canvas {
         painter.line_segment(
             [self.user_to_screen(start), self.user_to_screen(end)],
             stroke,
-        )
+        );
     }
 
     #[allow(clippy::vec_init_then_push)]
@@ -225,8 +225,8 @@ impl Canvas {
         rotate(&mut tip, direction_normalized);
         move_to(&mut tail, start);
         move_to(&mut tip, end);
-        painter.add(Shape::polygon(tip, stroke.color, stroke));
-        painter.line_segment(tail, stroke)
+        painter.add(Shape::convex_polygon(tip, stroke.color, stroke));
+        painter.line_segment(tail, stroke);
     }
 
     pub fn draw_hline(&self, y: f32, stroke: Stroke, paint_area: &egui::Rect, painter: &Painter) {
@@ -268,11 +268,14 @@ impl Canvas {
     }
 
     fn user_to_screen(&self, pos: Vec3) -> Pos2 {
-        ((pos - self.focus) * self.scale).to_pos2() + self.area_center.to_vec2()
+        ((pos - self.focus).component_mul(&self.scale)).to_pos2() + self.area_center.to_vec2()
     }
 
     fn screen_to_user(&self, pos: Pos2) -> Vec3 {
-        (pos - self.area_center.to_vec2()).to_vec3() / self.scale + self.focus
+        (pos - self.area_center.to_vec2())
+            .to_vec3()
+            .component_div(&self.scale)
+            + self.focus
     }
 }
 

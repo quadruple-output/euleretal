@@ -46,7 +46,12 @@ impl epi::App for Euleretal {
         epi::set_value(storage, epi::APP_KEY, self);
     }
 
-    fn setup(&mut self, ctx: &egui::CtxRef) {
+    fn setup(
+        &mut self,
+        ctx: &egui::CtxRef,
+        _frame: &mut epi::Frame<'_>,
+        _storage: Option<&dyn epi::Storage>,
+    ) {
         let mut style = (*ctx.style()).clone();
 
         /* -=- Change Color Scheme to B/W -=- *\
@@ -71,7 +76,7 @@ impl epi::App for Euleretal {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::CtxRef, _frame: &mut epi::Frame<'_>) {
-        SidePanel::left("side_panel", 200.0).show(ctx, |ui| {
+        SidePanel::left("side_panel").show(ctx, |ui| {
             containers::controls::show(ui, &mut self.world);
             containers::settings::show(ui, &mut self.world.settings);
         });

@@ -202,35 +202,35 @@ impl IntegrationStep {
     pub fn get_position(&self, pref: PositionRef) -> ComputedPosition {
         ComputedPosition {
             step: self,
-            internal: &self.internal_get_position(pref.internal_for(self)),
+            internal: self.internal_get_position(pref.internal_for(self)),
         }
     }
 
     pub fn get_velocity(&self, pref: VelocityRef) -> ComputedVelocity {
         ComputedVelocity {
             step: self,
-            internal: &self.internal_get_velocity(pref.internal_for(self)),
+            internal: self.internal_get_velocity(pref.internal_for(self)),
         }
     }
 
     pub fn get_acceleration(&self, pref: AccelerationRef) -> ComputedAcceleration {
         ComputedAcceleration {
             step: self,
-            internal: &self.internal_get_acceleration(pref.internal_for(self)),
+            internal: self.internal_get_acceleration(pref.internal_for(self)),
         }
     }
 
     pub fn last_computed_position(&self) -> ComputedPosition {
         ComputedPosition {
             step: self,
-            internal: &self.internal_get_position(self.last_computed_position.unwrap()),
+            internal: self.internal_get_position(self.last_computed_position.unwrap()),
         }
     }
 
     pub fn last_computed_velocity(&self) -> ComputedVelocity {
         ComputedVelocity {
             step: self,
-            internal: &self.internal_get_velocity(self.last_computed_velocity.unwrap()),
+            internal: self.internal_get_velocity(self.last_computed_velocity.unwrap()),
         }
     }
 
@@ -522,7 +522,7 @@ impl<'a> PositionBuilder<'a> {
     }
 
     pub fn create(self) -> PositionRef {
-        let mut s = Position::ZERO;
+        let mut s = Position::zeros();
         for contrib in &self.contributions {
             s += contrib.evaluate_for(self.step);
         }
@@ -573,7 +573,7 @@ impl<'a> VelocityBuilder<'a> {
     }
 
     pub fn create(self) -> VelocityRef {
-        let mut v = Velocity::ZERO;
+        let mut v = Velocity::zeros();
         for contrib in &self.contributions {
             v += contrib.evaluate_for(self.step);
         }

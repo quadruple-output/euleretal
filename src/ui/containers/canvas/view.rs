@@ -46,7 +46,7 @@ pub fn show_canvas(ui: &mut Ui, canvas: &Obj<Canvas>, size: Vec2, settings: &Set
         }
         layers::integrations::render(&settings.strokes, canvas, &painter);
         if settings.layerflags.inspector {
-            layers::inspector::render(&settings, canvas, &response, &painter);
+            layers::inspector::render(settings, canvas, &response, &painter);
         }
     });
 }
@@ -61,7 +61,7 @@ pub fn show_header_bar(
 ) -> egui::InnerResponse<CanvasOperation> {
     ui.horizontal(|ui| {
         ui.with_layout(Layout::left_to_right(), |ui| {
-            show_scenario_selector(ui, &canvas, world);
+            show_scenario_selector(ui, canvas, world);
             show_integration_selector(ui, canvas, world);
         });
         ui.with_layout(Layout::right_to_left(), |ui| {
@@ -185,7 +185,7 @@ fn show_integrations_pop_up(
                         if num_integrations > 1 {
                             if ui.small_button(constants::BUTTON_GLYPH_DELETE).clicked() {
                                 operation = IntegrationOperation::Delete {
-                                    integration: Rc::clone(&integration),
+                                    integration: Rc::clone(integration),
                                 };
                             }
                         } else {
@@ -241,7 +241,7 @@ fn show_integrator_selector(
                 selectable_integrator.borrow().integrator.label(),
             )
             .on_hover_text(selectable_integrator.borrow().integrator.description());
-        })
+        });
     })
     .on_hover_text(
         integration
