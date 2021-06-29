@@ -1,5 +1,5 @@
 use super::{
-    import::Vec3, AccelerationField, Duration, IntegrationStep, Integrator, Samples, Scenario,
+    AccelerationField, Duration, IntegrationStep, Integrator, Position, Samples, Scenario,
     StartCondition,
 };
 use ::std::{
@@ -99,24 +99,19 @@ impl Integration {
     }
 
     /// returns (ReferenceSample,ComputedSample)
-    pub fn closest_sample(&self, pos: &Vec3) -> Option<(&IntegrationStep, &IntegrationStep)> {
+    pub fn closest_sample(&self, pos: &Position) -> Option<(&IntegrationStep, &IntegrationStep)> {
         if let (Some(references), Some(samples)) =
             (self.reference_samples.as_ref(), self.samples.as_ref())
         {
             if let (Some(closest_reference), Some(closest_sample)) =
                 (references.closest(pos), samples.closest(pos))
             {
-                if closest_reference.distance < closest_sample.distance {
-                    Some((
-                        references.at(closest_reference.index),
-                        samples.at(closest_reference.index),
-                    ))
+                let closest_index = if closest_reference.distance < closest_sample.distance {
+                    closest_reference.index
                 } else {
-                    Some((
-                        references.at(closest_sample.index),
-                        samples.at(closest_sample.index),
-                    ))
-                }
+                    closest_sample.index
+                };
+                Some((references.at(closest_index), samples.at(closest_index)))
             } else {
                 None
             }
