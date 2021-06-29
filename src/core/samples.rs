@@ -11,6 +11,8 @@ mod type_state {
     impl TypeState for NonFinalized {}
 }
 
+use decorum::R32;
+use parry3d::query::PointQuery;
 use type_state::{Finalized, NonFinalized, TypeState};
 
 pub struct Samples<TS: TypeState = Finalized> {
@@ -57,6 +59,26 @@ impl Samples<Finalized> {
     pub fn at(&self, idx: usize) -> &IntegrationStep {
         &self.steps[idx]
     }
+
+    pub fn closest(&self, pos: &Position) -> Option<SampleIdxWithDistance> {
+        self.steps
+            .iter()
+            .enumerate()
+            .map(|(index, step)| SampleIdxWithDistance {
+                distance: 
+                /*
+                step.distance_to(pos),
+                */
+                ::parry3d::shape::Segment::new(
+                    step.positions_iter().next().unwrap().into(),
+                    step.positions_iter().last().unwrap().into(),
+                )
+                .distance_to_local_point(&(*pos).into(), true)
+                .into(),
+                index,
+            })
+            .reduce(|a, b| if a.distance < b.distance { a } else { b })
+    }
 }
 
 pub struct PositionIter<'a> {
@@ -98,4 +120,10 @@ pub struct StartCondition {
     pub position: Position,
     pub velocity: Velocity,
     pub acceleration: Acceleration,
+}
+
+#[derive(Clone, Copy)]
+pub struct SampleIdxWithDistance {
+    pub distance: R32,
+    pub index: usize,
 }

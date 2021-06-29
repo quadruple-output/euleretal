@@ -1,6 +1,6 @@
 use super::{
-    import::Vec3, AccelerationField, Duration, IntegrationStep, Integrator, Position, Samples,
-    Scenario, StartCondition,
+    import::Vec3, AccelerationField, Duration, IntegrationStep, Integrator, Samples, Scenario,
+    StartCondition,
 };
 use ::std::{
     collections::hash_map::DefaultHasher,
@@ -99,32 +99,29 @@ impl Integration {
     }
 
     /// returns (ReferenceSample,ComputedSample)
-    pub fn closest_sample(&self, pos: Vec3) -> Option<(&IntegrationStep, &IntegrationStep)> {
-        self.reference_samples.as_ref().and_then(|references| {
-            self.samples.as_ref().map(|samples| {
-                let (idx_reference, dist_reference) =
-                    Self::find_closest(references.step_positions(), pos);
-                let (idx_sample, dist_sample) = Self::find_closest(samples.step_positions(), pos);
-                if dist_reference < dist_sample {
-                    (references.at(idx_reference), samples.at(idx_reference))
+    pub fn closest_sample(&self, pos: &Vec3) -> Option<(&IntegrationStep, &IntegrationStep)> {
+        if let (Some(references), Some(samples)) =
+            (self.reference_samples.as_ref(), self.samples.as_ref())
+        {
+            if let (Some(closest_reference), Some(closest_sample)) =
+                (references.closest(pos), samples.closest(pos))
+            {
+                if closest_reference.distance < closest_sample.distance {
+                    Some((
+                        references.at(closest_reference.index),
+                        samples.at(closest_reference.index),
+                    ))
                 } else {
-                    (references.at(idx_sample), samples.at(idx_sample))
+                    Some((
+                        references.at(closest_sample.index),
+                        samples.at(closest_sample.index),
+                    ))
                 }
-            })
-        })
-    }
-
-    fn find_closest(points: impl Iterator<Item = Position>, search_pos: Position) -> (usize, f32) {
-        points
-            .map(|pos| (pos - search_pos).norm_squared())
-            .enumerate()
-            .reduce(|closest_so_far, current| {
-                if closest_so_far.1 <= current.1 {
-                    closest_so_far
-                } else {
-                    current
-                }
-            })
-            .unwrap()
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     }
 }

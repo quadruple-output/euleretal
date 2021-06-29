@@ -14,7 +14,7 @@ pub fn render(
     let canvas = canvas.borrow();
     canvas.integrations().for_each(|integration| {
         canvas.on_hover(response, |mouse_pos| {
-            if let Some((ref_sample, calc_sample)) = integration.borrow().closest_sample(mouse_pos)
+            if let Some((ref_sample, calc_sample)) = integration.borrow().closest_sample(&mouse_pos)
             {
                 let focus_on_velocity = response.ctx.input().modifiers.alt;
 
