@@ -1,7 +1,7 @@
 use super::{
     constants,
     core::Obj,
-    entities::{Canvas, Integration, Integrator, StepSize},
+    entities::{Canvas, Integration, Integrator, ObjExtras, StepSize},
     layers,
     misc::Settings,
     ui_import::{
@@ -36,17 +36,18 @@ pub enum CanvasOperation {
 
 pub fn show_canvas(ui: &mut Ui, canvas: &Obj<Canvas>, size: Vec2, settings: &Settings) {
     ui.vertical(|ui| {
-        let (response, painter) = canvas.borrow_mut().allocate_painter(ui, size);
+        let canvas_painter = canvas.allocate_painter(ui, size);
 
+        canvas_painter.pan_and_zoom();
         if settings.layerflags.coordinates {
-            layers::coordinates::render(&settings.strokes, canvas, &response.rect, &painter);
+            layers::coordinates::render(&settings.strokes, &canvas_painter);
         }
         if settings.layerflags.acceleration_field {
-            layers::acceleration_field::render(settings, canvas, &response, &painter);
+            layers::acceleration_field::render(settings, &canvas_painter);
         }
-        layers::integrations::render(&settings.strokes, canvas, &painter);
+        layers::integrations::render(&settings.strokes, &canvas_painter);
         if settings.layerflags.inspector {
-            layers::inspector::render(settings, canvas, &response, &painter);
+            layers::inspector::render(settings, &canvas_painter);
         }
     });
 }

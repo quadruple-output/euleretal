@@ -1,6 +1,6 @@
 use super::{
     core::{IntegrationStep, Obj, Position, Scenario},
-    ui_import::{egui, Color32, Hsva, Stroke},
+    ui_import::{Color32, Hsva, Stroke},
     Integrator, StepSize,
 };
 use ::std::rc::Rc;
@@ -73,11 +73,11 @@ impl Integration {
         );
     }
 
-    pub fn draw_on(&self, canvas: &super::Canvas, painter: &egui::Painter) {
+    pub fn draw_on(&self, canvas: &super::CanvasPainter) {
         let sample_color = Color32::from(self.step_size.borrow().color);
         let stroke = self.integrator.borrow().stroke;
         if let Some(samples) = self.core_integration.samples() {
-            canvas.draw_sample_trajectory(samples, stroke, painter);
+            canvas.draw_sample_trajectory(samples, stroke);
         }
         for samples in self
             .core_integration
@@ -85,7 +85,7 @@ impl Integration {
             .iter()
             .chain(self.core_integration.samples().iter())
         {
-            canvas.draw_sample_dots(samples, sample_color, painter);
+            canvas.draw_sample_dots(samples, sample_color);
         }
     }
 }

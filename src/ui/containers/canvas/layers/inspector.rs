@@ -1,22 +1,15 @@
 use super::{
-    core::{Obj, PhysicalQuantityKind},
-    entities::Canvas,
+    core::PhysicalQuantityKind,
+    entities::CanvasPainter,
     misc::Settings,
-    ui_import::{egui, Color32, Stroke},
+    ui_import::{Color32, Stroke},
 };
 
-pub fn render(
-    settings: &Settings,
-    canvas: &Obj<Canvas>,
-    response: &egui::Response,
-    painter: &egui::Painter,
-) {
-    let canvas = canvas.borrow();
-    canvas.integrations().for_each(|integration| {
-        canvas.on_hover(response, |mouse_pos| {
-            if let Some((ref_sample, calc_sample)) = integration.borrow().closest_sample(&mouse_pos)
-            {
-                let focus_on_velocity = response.ctx.input().modifiers.alt;
+pub fn render(settings: &Settings, canvas: &CanvasPainter) {
+    canvas.on_hover(|mouse_pos| {
+        canvas.for_each_integration(|integration| {
+            if let Some((ref_sample, calc_sample)) = integration.closest_sample(&mouse_pos) {
+                let focus_on_velocity = canvas.input().modifiers.alt;
 
                 // *** reference sample:
                 // mark current reference sample with color:
@@ -27,10 +20,9 @@ pub fn render(
                         ref_sample.last_v() * ref_sample.dt,
                         Stroke::new(1., Color32::GREEN),
                         // settings.strokes.focussed_velocity,
-                        painter,
                     );
                 } else {
-                    canvas.draw_sample_dot(ref_sample.last_s(), Color32::GREEN, painter);
+                    canvas.draw_sample_dot(ref_sample.last_s(), Color32::GREEN);
                 }
 
                 // *** calculated sample:
@@ -50,14 +42,12 @@ pub fn render(
                                     settings.strokes.focussed_acceleration
                                 }
                             },
-                            painter,
                         );
                     }
                     canvas.draw_vector(
                         last_velocity.sampling_position(),
                         last_velocity.v() * calc_sample.dt,
                         Stroke::new(1., Color32::GREEN),
-                        painter,
                     );
                 } else {
                     let last_position = calc_sample.last_computed_position();
@@ -71,7 +61,6 @@ pub fn render(
                                     contribution.sampling_position(),
                                     contribution.vector().unwrap(),
                                     settings.strokes.focussed_velocity,
-                                    painter,
                                 );
                             }
                             PhysicalQuantityKind::Acceleration => {
@@ -79,7 +68,6 @@ pub fn render(
                                     contribution.sampling_position(),
                                     contribution.vector().unwrap(),
                                     settings.strokes.focussed_acceleration,
-                                    painter,
                                 );
                             }
                         }
@@ -92,7 +80,6 @@ pub fn render(
                                 canvas.draw_sample_dot(
                                     contribution.sampling_position(),
                                     Color32::RED,
-                                    painter,
                                 );
                             }
                             PhysicalQuantityKind::Velocity | PhysicalQuantityKind::Acceleration => {
@@ -101,7 +88,7 @@ pub fn render(
                     }
 
                     // finally draw the calculated sample position:
-                    canvas.draw_sample_dot(last_position.s(), Color32::GREEN, painter);
+                    canvas.draw_sample_dot(last_position.s(), Color32::GREEN);
                 }
 
                 // ui.label("Inspector");
