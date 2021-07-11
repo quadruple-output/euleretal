@@ -79,12 +79,6 @@ impl Painter {
         ))
     }
 
-    pub fn interact_pointer_pos(&self) -> Option<Position> {
-        self.response
-            .interact_pointer_pos()
-            .map(|pointer_pos| self.canvas.borrow().screen_to_user(pointer_pos))
-    }
-
     pub fn pan_and_zoom(&self) {
         let input = self.response.ctx.input();
         // todo: propose pull request to integrate the below check for `touch.start_pos` into
