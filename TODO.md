@@ -23,9 +23,12 @@
 - add setting for `Inspector` to not scale velocities by dt (may be useful when
   comparing integrations with different step sizes)
 - add option to (continuously) synchronize the view point of all canvases
+- add button to move an integration from one canvas to another (possibly new
+  one)
 
 ## Functional Features
-- change all step sizes proportionally with a single slider (to test convergence)
+- change selected ("linked") step sizes proportionally with a single slider
+  (useful for testing convergence)
 - interactively change scenario start conditions (velocity&direction)
 - add more Integrators
 - make canvas grid more flexible
