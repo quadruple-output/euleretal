@@ -35,21 +35,19 @@ pub enum CanvasOperation {
 }
 
 pub fn show_canvas(ui: &mut Ui, canvas: &Obj<Canvas>, size: Vec2, settings: &Settings) {
-    ui.vertical(|ui| {
-        let canvas_painter = canvas.allocate_painter(ui, size);
+    let mut canvas_painter = canvas.allocate_painter(ui, size);
 
-        canvas_painter.pan_and_zoom();
-        if settings.layerflags.coordinates {
-            layers::coordinates::render(&settings.strokes, &canvas_painter);
-        }
-        if settings.layerflags.acceleration_field {
-            layers::acceleration_field::render(settings, &canvas_painter);
-        }
-        layers::integrations::render(&settings.strokes, &canvas_painter);
-        if settings.layerflags.inspector {
-            layers::inspector::render(settings, &canvas_painter);
-        }
-    });
+    canvas_painter.pan_and_zoom();
+    if settings.layerflags.coordinates {
+        layers::coordinates::render(&settings.strokes, &canvas_painter);
+    }
+    if settings.layerflags.acceleration_field {
+        layers::acceleration_field::render(settings, &canvas_painter);
+    }
+    layers::integrations::render(&settings.strokes, &mut canvas_painter);
+    if settings.layerflags.inspector {
+        layers::inspector::render(settings, &canvas_painter);
+    }
 }
 
 /// returns the `CanvasOperation` as `inner`

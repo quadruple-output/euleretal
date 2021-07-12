@@ -7,16 +7,18 @@ use ::std::{
     rc::Rc,
 };
 
-pub struct Painter {
-    // TODO, TODO, TODO, TODO: get rid of Obj<…> and use &Canvas without runtime overhead.
-    // Hint: use GhostCell if &mut access to Canvas is required and collides with possibly required aliasing.
-    canvas: Obj<Canvas>,
+pub struct Painter<'c> {
+    canvas: RefMut<'c, Canvas>,
     response: egui::Response,
     painter: egui::Painter,
 }
 
-impl Painter {
-    pub fn new(canvas: Obj<Canvas>, response: egui::Response, painter: egui::Painter) -> Self {
+impl<'c> Painter<'c> {
+    pub fn new(canvas: &'c Obj<Canvas>, response: egui::Response, painter: egui::Painter) -> Self {
+        // borrowing here makes further borrowing unnecessary, until the new Self gets dropped
+        let mut canvas = canvas.borrow_mut();
+        // this initialization is required before first rendering:
+        canvas.adjust_scale_and_center(&response.rect);
         Self {
             canvas,
             response,
@@ -26,7 +28,6 @@ impl Painter {
 
     pub fn for_each_integration(&self, f: impl FnMut(Ref<'_, Integration>)) {
         self.canvas
-            .borrow()
             .integrations
             .iter()
             .map(|integration_obj| integration_obj.borrow())
@@ -35,7 +36,6 @@ impl Painter {
 
     pub fn for_each_integration_mut(&self, f: impl FnMut(RefMut<'_, Integration>)) {
         self.canvas
-            .borrow()
             .integrations
             .iter()
             .map(|integration_obj| integration_obj.borrow_mut())
@@ -48,7 +48,6 @@ impl Painter {
         F: FnMut(RefMut<Integration>) -> B,
     {
         self.canvas
-            .borrow()
             .integrations
             .iter()
             .map(|integration_obj| integration_obj.borrow_mut())
@@ -58,7 +57,7 @@ impl Painter {
     }
 
     pub fn scenario(&self) -> Obj<Scenario> {
-        Rc::clone(self.canvas.borrow().scenario())
+        Rc::clone(self.canvas.scenario())
     }
 
     pub fn input(&self) -> &egui::InputState {
@@ -66,20 +65,20 @@ impl Painter {
     }
 
     pub fn rect_min(&self) -> Position {
-        self.canvas.borrow().screen_to_user(Pos2::new(
+        self.canvas.screen_to_user(Pos2::new(
             self.response.rect.min.x,
             self.response.rect.max.y, // user coords go from bottom to top
         ))
     }
 
     pub fn rect_max(&self) -> Position {
-        self.canvas.borrow().screen_to_user(Pos2::new(
+        self.canvas.screen_to_user(Pos2::new(
             self.response.rect.max.x,
             self.response.rect.min.y, // user coords go from bottom to top
         ))
     }
 
-    pub fn pan_and_zoom(&self) {
+    pub fn pan_and_zoom(&mut self) {
         let input = self.response.ctx.input();
         // todo: propose pull request to integrate the below check for `touch.start_pos` into
         // `response.hovered()`
@@ -95,22 +94,17 @@ impl Painter {
 
             #[allow(clippy::float_cmp)]
             if zoom != 1. || translation != Vec2::ZERO {
-                let mut canvas = self.canvas.borrow_mut();
-                canvas.visible_units /= zoom;
-                let screen_focus = canvas.user_to_screen(canvas.focus);
-                canvas.focus = canvas.screen_to_user(screen_focus - translation);
+                self.canvas.visible_units /= zoom;
+                let screen_focus = self.canvas.user_to_screen(self.canvas.focus);
+                self.canvas.focus = self.canvas.screen_to_user(screen_focus - translation);
 
-                canvas.adjust_scale_and_center(&self.response.rect);
+                self.canvas.adjust_scale_and_center(&self.response.rect);
             }
         }
     }
 
     pub fn draw_hline(&self, y: f32, stroke: egui::Stroke) {
-        let transformed_y = self
-            .canvas
-            .borrow()
-            .user_to_screen(Position::new(0., y, 0.))
-            .y;
+        let transformed_y = self.canvas.user_to_screen(Position::new(0., y, 0.)).y;
         self.painter.line_segment(
             [
                 Pos2::new(self.response.rect.left(), transformed_y),
@@ -121,11 +115,7 @@ impl Painter {
     }
 
     pub fn draw_vline(&self, x: f32, stroke: egui::Stroke) {
-        let transformed_x = self
-            .canvas
-            .borrow()
-            .user_to_screen(Position::new(x, 0., 0.))
-            .x;
+        let transformed_x = self.canvas.user_to_screen(Position::new(x, 0., 0.)).x;
         self.painter.line_segment(
             [
                 Pos2::new(transformed_x, self.response.rect.top()),
@@ -136,7 +126,7 @@ impl Painter {
     }
 
     pub fn draw_line_segment(&self, start: Position, end: Position, stroke: egui::Stroke) {
-        let canvas = self.canvas.borrow();
+        let canvas = &self.canvas;
         self.painter.line_segment(
             [canvas.user_to_screen(start), canvas.user_to_screen(end)],
             stroke,
@@ -145,14 +135,14 @@ impl Painter {
 
     pub fn draw_sample_dot(&self, position: Position, color: Color32) {
         self.painter.circle_filled(
-            self.canvas.borrow().user_to_screen(position),
+            self.canvas.user_to_screen(position),
             constants::SAMPLE_DOT_RADIUS,
             color,
         );
     }
 
     pub fn draw_sample_dots(&self, samples: &Samples, color: Color32) {
-        let canvas = self.canvas.borrow();
+        let canvas = &self.canvas;
         samples
             .step_positions()
             .map(|position| canvas.user_to_screen(position))
@@ -169,10 +159,9 @@ impl Painter {
 
     pub fn draw_vector(&self, start: Position, vec: Vec3, stroke: egui::Stroke) {
         let (start, end) = {
-            let canvas = self.canvas.borrow();
             (
-                canvas.user_to_screen(start),
-                canvas.user_to_screen(start + vec),
+                self.canvas.user_to_screen(start),
+                self.canvas.user_to_screen(start + vec),
             )
         };
         let direction = end - start;
@@ -197,7 +186,7 @@ impl Painter {
         let pointer = &self.response.ctx.input().pointer;
         if self.response.hovered() && pointer.has_pointer() {
             if let Some(mouse_pos) = pointer.hover_pos() {
-                add_contents(self.canvas.borrow().screen_to_user(mouse_pos));
+                add_contents(self.canvas.screen_to_user(mouse_pos));
             }
         }
     }
@@ -211,7 +200,7 @@ impl Painter {
                 response.id.with("tooltip"),
                 |ui| {
                     if let Some(mouse_pos) = ui.input().pointer.hover_pos() {
-                        add_contents(ui, self.canvas.borrow().screen_to_user(mouse_pos));
+                        add_contents(ui, self.canvas.screen_to_user(mouse_pos));
                     }
                 },
             );
@@ -219,16 +208,15 @@ impl Painter {
     }
 
     pub fn has_trajectory(&self) -> bool {
-        self.canvas.borrow().has_trajectory()
+        self.canvas.has_trajectory()
     }
 
-    pub fn update_trajectory(&self, min_dt: R32) {
-        self.canvas.borrow_mut().update_trajectory(min_dt);
+    pub fn update_trajectory(&mut self, min_dt: R32) {
+        self.canvas.update_trajectory(min_dt);
     }
 
     pub fn draw_trajectory(&self, stroke: egui::Stroke) {
-        let buffer_option = &self.canvas.borrow().trajectory_buffer;
-        if let Some(ref buffer) = buffer_option {
+        if let Some(ref buffer) = &self.canvas.trajectory_buffer {
             self.draw_connected_samples(buffer.trajectory.iter().copied(), stroke);
         }
     }
@@ -242,7 +230,7 @@ impl Painter {
         positions: impl Iterator<Item = Position>,
         stroke: egui::Stroke,
     ) {
-        let canvas = self.canvas.borrow();
+        let canvas = &self.canvas;
         positions
             .map(|p| canvas.user_to_screen(p))
             .reduce(|u0, u1| {
@@ -256,14 +244,12 @@ impl Painter {
             });
     }
 
-    pub fn update_bounding_box(&self) {
-        let bbox_option = self.canvas.borrow().bbox(); // need this extra assignment to drop the borrowed canvas
-        if let Some(mut bbox) = bbox_option {
+    pub fn update_bounding_box(&mut self) {
+        if let Some(mut bbox) = self.canvas.bbox() {
             self.canvas
-                .borrow()
                 .integrations()
                 .for_each(|integration| integration.borrow().stretch_bbox(&mut bbox));
-            self.canvas.borrow_mut().set_visible_bbox(&bbox);
+            self.canvas.set_visible_bbox(&bbox);
         }
     }
 }

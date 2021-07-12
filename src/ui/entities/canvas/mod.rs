@@ -31,8 +31,7 @@ pub trait ObjExtras {
 impl ObjExtras for Obj<Canvas> {
     fn allocate_painter(&self, ui: &mut Ui, size: Vec2) -> Painter {
         let (response, painter) = ui.allocate_painter(size, egui::Sense::click_and_drag());
-        self.borrow_mut().adjust_scale_and_center(&response.rect); // this initialization is required before first rendering
-        Painter::new(Rc::clone(self), response, painter)
+        Painter::new(self, response, painter)
     }
 }
 
