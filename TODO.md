@@ -9,7 +9,6 @@
 ## UI features
 - predefine list of colors which can be used as defaults for new Step Sizes or
   Integrators
-- support for mobile devices (touch gestures)
 - Button for auto-zoom
 - render Integrator formulas in browser (KaTeX or MathJax)
 - Dark and Light themes
@@ -30,11 +29,10 @@
 - interactively change scenario start conditions (velocity&direction)
 - add more Integrators
 - make canvas grid more flexible
-- save/restore state automatically
+- save&restore state automatically
 - customizable Integrators
-- save/load state in file
+- save/load state in/from file
 
 ## Clean Code
 - remove methods like `expected_accelerations_for_step` and determine
   "expected" values for next step from previous one.
-- Create a version of Vec3, based on R32, so we can `#[derive(Hash)]` for it.
