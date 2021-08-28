@@ -276,6 +276,51 @@ impl IntegrationStep {
         .into()
     }
 
+    pub fn closest_computed_velocity(&self, pos: Position) -> ComputedVelocity {
+        ComputedVelocity {
+            step: self,
+            internal: self
+                .all_velocities
+                .iter()
+                .filter(|v| !v.contributions.is_empty()) // no predecessor → not 'computed'
+                .map(|v| {
+                    (
+                        v,
+                        (self.internal_get_position(v.sampling_position).s - pos).norm_squared(),
+                    )
+                })
+                .reduce(|(v1, dist1), (v2, dist2)| {
+                    if dist1 < dist2 {
+                        (v1, dist1)
+                    } else {
+                        (v2, dist2)
+                    }
+                })
+                .unwrap()
+                .0,
+        }
+    }
+
+    pub fn closest_computed_position(&self, pos: Position) -> ComputedPosition {
+        ComputedPosition {
+            step: self,
+            internal: self
+                .all_positions
+                .iter()
+                .filter(|p| !p.contributions.is_empty()) // no predecessor → not 'computed'
+                .map(|p| (p, (p.s - pos).norm_squared()))
+                .reduce(|(p1, dist1), (p2, dist2)| {
+                    if dist1 < dist2 {
+                        (p1, dist1)
+                    } else {
+                        (p2, dist2)
+                    }
+                })
+                .unwrap()
+                .0,
+        }
+    }
+
     fn add_computed_position(&mut self, p: ComputedPositionInternal) -> PositionRefInternal {
         self.all_positions.push(p);
         PositionRefInternal(self.all_positions.len() - 1)

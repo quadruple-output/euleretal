@@ -4,7 +4,72 @@ use ::std::fmt;
 pub struct Settings {
     pub layerflags: LayerFlags,
     pub strokes: Strokes,
+    pub colors: Colors,
     pub format_precision: usize,
+}
+
+pub struct LayerFlags {
+    pub coordinates: bool,
+    pub acceleration_field: bool,
+    pub inspector: bool,
+}
+
+pub struct Strokes {
+    pub trajectory: Stroke,
+    pub acceleration: Stroke,
+    pub coordinates: Stroke,
+    pub focussed_velocity: Stroke,
+    pub focussed_acceleration: Stroke,
+    /// to be used for velocities that are the basis for a derived velocity
+    pub start_velocity: Stroke,
+    /// to be used for velocities that contribute to a derived position
+    pub contributing_velocity: Stroke,
+    /// to be used for acceleration that contribute to a derived position or velocity
+    pub contributing_acceleration: Stroke,
+    pub derived_velocity: Stroke,
+}
+
+pub struct Colors {
+    /// to be used for positions that are the basis for a derived position
+    pub start_position: Color32,
+    pub derived_position: Color32,
+}
+
+impl Default for LayerFlags {
+    fn default() -> Self {
+        Self {
+            coordinates: true,
+            acceleration_field: false,
+            inspector: true,
+        }
+    }
+}
+
+impl Default for Colors {
+    fn default() -> Self {
+        Self {
+            start_position: Color32::RED,
+            derived_position: Color32::GREEN,
+        }
+    }
+}
+
+impl Default for Strokes {
+    fn default() -> Self {
+        let col_accel = Rgba::from_rgb(0.3, 0.3, 0.8);
+        let col_velo = Rgba::from(Color32::WHITE);
+        Self {
+            trajectory: Stroke::new(1., col_velo * 0.25),
+            focussed_velocity: Stroke::new(1., col_velo * 1.),
+            acceleration: Stroke::new(1., col_accel * 0.25),
+            focussed_acceleration: Stroke::new(1., col_accel * 1.),
+            coordinates: Stroke::new(1., Rgba::from_rgb(0., 0.5, 0.) * 0.3),
+            start_velocity: Stroke::new(1., Colors::default().start_position),
+            contributing_velocity: Stroke::new(1., col_velo),
+            contributing_acceleration: Stroke::new(1., col_accel),
+            derived_velocity: Stroke::new(1., Colors::default().derived_position),
+        }
+    }
 }
 
 impl Default for Settings {
@@ -12,6 +77,7 @@ impl Default for Settings {
         Self {
             layerflags: LayerFlags::default(),
             strokes: Strokes::default(),
+            colors: Colors::default(),
             format_precision: 3,
         }
     }
@@ -34,43 +100,5 @@ pub struct FormatterF32 {
 impl fmt::Display for FormatterF32 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:.*}", self.precision, self.n)
-    }
-}
-
-pub struct LayerFlags {
-    pub coordinates: bool,
-    pub acceleration_field: bool,
-    pub inspector: bool,
-}
-
-impl Default for LayerFlags {
-    fn default() -> Self {
-        Self {
-            coordinates: true,
-            acceleration_field: false,
-            inspector: true,
-        }
-    }
-}
-
-pub struct Strokes {
-    pub trajectory: Stroke,
-    pub acceleration: Stroke,
-    pub coordinates: Stroke,
-    pub focussed_velocity: Stroke,
-    pub focussed_acceleration: Stroke,
-}
-
-impl Default for Strokes {
-    fn default() -> Self {
-        let col_accel = Rgba::from_rgb(0.3, 0.3, 0.8);
-        let col_velo = Rgba::from(Color32::WHITE);
-        Self {
-            trajectory: Stroke::new(1., col_velo * 0.25),
-            focussed_velocity: Stroke::new(1., col_velo * 1.),
-            acceleration: Stroke::new(1., col_accel * 0.25),
-            focussed_acceleration: Stroke::new(1., col_accel * 1.),
-            coordinates: Stroke::new(1., Rgba::from_rgb(0., 0.5, 0.) * 0.3),
-        }
     }
 }

@@ -17,7 +17,9 @@ pub use acceleration_field::AccelerationField;
 pub use duration::Duration;
 pub use fraction::Fraction;
 pub use integration::Integration;
-pub use integration_step::IntegrationStep;
+pub use integration_step::{
+    ComputedAcceleration, ComputedPosition, ComputedVelocity, IntegrationStep,
+};
 pub use integrator::Integrator;
 pub use obj::Obj;
 pub use samples::{Samples, StartCondition};
