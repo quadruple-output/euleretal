@@ -7,6 +7,11 @@
 - Description tool tips sometimes break text too early → increase width.
 
 ## UI features
+- For position contributions of `½a dt^2`, draw a curved trajectory.
+- Different colors for reference points and calculated points.
+- Layer 'Acceleration Field' should draw scaled vectors at each sampling point
+  of a Step (transparent color, so they can be distinguished from
+  contributions).
 - Predefine a list of colors which can be used as defaults for new Step Sizes
   or Integrators.
 - Button for auto-zoom.
@@ -25,6 +30,8 @@
 - Add option to (continuously) synchronize the view point of all canvases.
 - Add button to move an integration from one canvas to another (possibly new
   one).
+- Group Integrators by number of samples from acceletation field they require.
+- More flexible canvas grid layouts.
 
 ## Functional Features
 - Change selected ("linked") step sizes proportionally with a single slider
