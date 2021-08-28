@@ -1,15 +1,14 @@
-use super::{
-    AccelerationField, Duration, IntegrationStep, Integrator, Position, Samples, Scenario,
-    StartCondition,
-};
+use super::{AccelerationField, Duration, Integrator, Position, Samples, Scenario, StartCondition};
 use ::std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
 };
 
 pub struct Integration {
+    /// invariant: samples.len() == reference_samples.len()
     samples: Option<Samples>,
     sample_validity: u64,
+    /// invariant: samples.len() == reference_samples.len()
     reference_samples: Option<Samples>,
     ref_sample_validity: u64,
 }
@@ -25,12 +24,13 @@ impl Integration {
     }
 
     #[allow(clippy::missing_panics_doc)]
+    /// returns `true` if something was actually updated
     pub fn update(
         &mut self,
         scenario: &Scenario,
         integrator: &dyn Integrator,
         step_duration: Duration,
-    ) {
+    ) -> bool {
         // check if we have to re-calculate:
         let mut hasher = DefaultHasher::new();
         scenario.hash_default(&mut hasher);
@@ -39,7 +39,9 @@ impl Integration {
         integrator.hash(&mut hasher);
         let sample_validity = hasher.finish();
 
-        if self.sample_validity != sample_validity {
+        if sample_validity == self.sample_validity {
+            false
+        } else {
             #[allow(clippy::cast_sign_loss)]
             let num_steps = (scenario.duration.0 / step_duration.0).into_inner() as usize;
 
@@ -66,6 +68,7 @@ impl Integration {
                 self.reference_samples = Some(reference_samples);
                 self.ref_sample_validity = ref_sample_validity;
             }
+            true
         }
     }
 
@@ -90,33 +93,32 @@ impl Integration {
         samples.finalized()
     }
 
+    /// invariant: `samples()?.len() == reference_samples()?.len()`
     pub fn reference_samples(&self) -> Option<&Samples> {
         self.reference_samples.as_ref()
     }
 
+    /// invariant: `samples()?.len() == reference_samples()?.len()`
     pub fn samples(&self) -> Option<&Samples> {
         self.samples.as_ref()
     }
 
-    /// returns (ReferenceSample,ComputedSample)
-    pub fn closest_sample(&self, pos: &Position) -> Option<(&IntegrationStep, &IntegrationStep)> {
+    /// Finds the (computed or reference) sample which is closest to the given pointer position.
+    /// Returns `None` if there are no samples.
+    pub fn closest_sample_index(&self, pos: &Position) -> Option<usize> {
         if let (Some(references), Some(samples)) =
             (self.reference_samples.as_ref(), self.samples.as_ref())
         {
             if let (Some(closest_reference), Some(closest_sample)) =
                 (references.closest(pos), samples.closest(pos))
             {
-                let closest_index = if closest_reference.distance < closest_sample.distance {
-                    closest_reference.index
+                return if closest_reference.distance < closest_sample.distance {
+                    Some(closest_reference.index)
                 } else {
-                    closest_sample.index
+                    Some(closest_sample.index)
                 };
-                Some((references.at(closest_index), samples.at(closest_index)))
-            } else {
-                None
             }
-        } else {
-            None
         }
+        None
     }
 }

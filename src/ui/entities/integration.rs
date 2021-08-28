@@ -9,6 +9,7 @@ pub struct Integration {
     pub core_integration: crate::core::Integration,
     pub integrator: Obj<Integrator>,
     pub step_size: Obj<StepSize>,
+    current_sample_index: Option<usize>,
 }
 
 impl Clone for Integration {
@@ -23,6 +24,7 @@ impl Integration {
             core_integration: crate::core::Integration::new(),
             integrator,
             step_size,
+            current_sample_index: None,
         }
     }
 
@@ -61,16 +63,45 @@ impl Integration {
         }
     }
 
-    pub fn closest_sample(&self, pos: &Position) -> Option<(&IntegrationStep, &IntegrationStep)> {
-        self.core_integration.closest_sample(pos)
+    pub fn focus_closest_sample(&mut self, pos: &Position) {
+        self.current_sample_index = self.core_integration.closest_sample_index(pos);
+    }
+
+    /// returns (ReferenceSample,ComputedSample)
+    pub fn focussed_sample(&self) -> Option<(&IntegrationStep, &IntegrationStep)> {
+        self.current_sample_index.map(|idx| {
+            (
+                self.core_integration.reference_samples().unwrap().at(idx),
+                self.core_integration.samples().unwrap().at(idx),
+            )
+        })
     }
 
     pub fn update(&mut self, scenario: &Scenario) {
-        self.core_integration.update(
+        if self.core_integration.update(
             scenario,
             &*self.integrator.borrow().integrator,
             self.step_size.borrow().duration,
-        );
+        ) {
+            self.adjust_focussed_sample();
+        };
+    }
+
+    fn adjust_focussed_sample(&mut self) {
+        if let Some(prev_sample_idx) = self.current_sample_index {
+            if let Some(samples) = self.core_integration.samples() {
+                let num_samples = samples.len();
+                if prev_sample_idx >= num_samples {
+                    if num_samples > 0 {
+                        self.current_sample_index = Some(num_samples - 1);
+                    } else {
+                        self.current_sample_index = None;
+                    }
+                }
+            } else {
+                self.current_sample_index = None;
+            }
+        }
     }
 
     pub fn draw_on(&self, canvas: &super::CanvasPainter) {
