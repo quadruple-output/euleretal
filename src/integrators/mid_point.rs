@@ -18,8 +18,8 @@ impl Integrator for Euler {
          s₁ = s + v₁ ½dt\n\
          a₁ = a(s₁)\n\
          v' = v + a₁ dt\n\
-         s' = s + v' dt\n\
-             = s + v dt + a₁ dt²" // !! string contains non-breakable spaces
+         s' = s + v' dt\n    \
+            = s + v dt + a₁ dt²"
             .to_string()
     }
 

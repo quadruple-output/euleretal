@@ -15,8 +15,8 @@ edition = "2018"
 # more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-eframe = "0.13" # gives us egui, epi and web+native backends
-parry3d = "0.5" # geometric and collision detection libraries, including `nalgebra`
+eframe = "0.14" # gives us egui, epi and web+native backends
+parry3d = "0.7" # geometric and collision detection libraries, including `nalgebra`
 decorum = "0.3" # Total ordering (and more) for floating-point types
 log = "0.4"
 simple_logger = "1.11"

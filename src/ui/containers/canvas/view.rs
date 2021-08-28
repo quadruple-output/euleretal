@@ -242,6 +242,7 @@ fn show_integrator_selector(
             .on_hover_text(selectable_integrator.borrow().integrator.description());
         });
     })
+    .response
     .on_hover_text(
         integration
             .borrow()
