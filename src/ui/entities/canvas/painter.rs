@@ -222,7 +222,13 @@ impl<'c> Painter<'c> {
     }
 
     pub fn draw_sample_trajectory(&self, samples: &Samples, stroke: egui::Stroke) {
-        self.draw_connected_samples(samples.step_positions(), stroke);
+        if samples.len() > 0 {
+            let start_position = samples.at(0).positions_iter().next();
+            self.draw_connected_samples(
+                start_position.into_iter().chain(samples.step_positions()),
+                stroke,
+            );
+        }
     }
 
     fn draw_connected_samples(

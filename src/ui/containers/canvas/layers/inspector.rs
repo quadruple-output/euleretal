@@ -92,26 +92,6 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
                 // finally draw the calculated sample position:
                 canvas.draw_sample_dot(last_position.s(), Color32::GREEN);
             }
-
-            // ui.label("Inspector");
-            // ui.separator();
-            // ui.label(format!(
-            //     "#{}: t = {}",
-            //     calc_sample.n,
-            //     settings.format_f32(calc_sample.t.into())
-            // ));
-            // ui.label(format!(
-            //     "ds = {}",
-            //     settings.format_f32((calc_sample.s - ref_sample.s).length())
-            // ));
-            // ui.label(format!(
-            //     "dv = {}",
-            //     settings.format_f32((calc_sample.v - ref_sample.v).length())
-            // ));
-            // ui.label(format!(
-            //     "da = {}",
-            //     settings.format_f32((calc_sample.a - ref_sample.a).length())
-            // ));
         }
     });
 }
