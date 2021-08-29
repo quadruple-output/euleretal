@@ -355,15 +355,16 @@ impl IntegrationStep {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 struct PositionRefInternal(usize);
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 struct VelocityRefInternal(usize);
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 struct AccelerationRefInternal(usize);
 
+#[derive(PartialEq)]
 struct ComputedPositionInternal {
     s: Position,
     contributions: Vec<PositionContributionInternal>,
@@ -381,6 +382,7 @@ struct ComputedAccelerationInternal {
     //contributions: Vec<AccelerationContributionInternal>,
 }
 
+#[derive(PartialEq)]
 enum PositionContributionInternal {
     StartPosition {
         sref: PositionRefInternal,
@@ -411,6 +413,12 @@ enum VelocityContributionInternal {
 pub struct ComputedPosition<'a> {
     step: &'a IntegrationStep,
     internal: &'a ComputedPositionInternal,
+}
+
+impl<'a> PartialEq for ComputedPosition<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        std::ptr::eq(self.step, other.step) && *self.internal == *other.internal
+    }
 }
 
 impl<'a> ComputedPosition<'a> {

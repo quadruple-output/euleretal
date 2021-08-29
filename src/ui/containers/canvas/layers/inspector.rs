@@ -5,9 +5,9 @@ use super::{
 };
 
 pub fn render(settings: &Settings, canvas: &CanvasPainter) {
-    let mut pointer_pos_or_none = None;
+    let mut pointer_position = None;
     canvas.on_hover(|pointer_pos| {
-        pointer_pos_or_none = Some(pointer_pos);
+        pointer_position = Some(pointer_pos);
         if canvas.input().pointer.primary_down() {
             canvas.for_each_integration_mut(|mut integration| {
                 integration.focus_closest_sample(&pointer_pos);
@@ -18,19 +18,22 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
     canvas.for_each_integration(|integration| {
         if let Some((ref_sample, calc_sample)) = integration.focussed_sample() {
             if show_velocity {
-                highlight_reference_velocity(canvas, ref_sample, settings);
-                let derived_velocity = pointer_pos_or_none.map_or_else(
+                let velocity_to_explain = pointer_position.map_or_else(
                     || calc_sample.last_computed_velocity(),
                     |pos| calc_sample.closest_computed_velocity(pos),
                 );
-                explain_derived_velocity(&derived_velocity, calc_sample.dt, canvas, settings);
+                highlight_reference_velocity(canvas, ref_sample, settings);
+                explain_derived_velocity(&velocity_to_explain, calc_sample.dt, canvas, settings);
             } else {
-                highlight_reference_position(canvas, ref_sample, settings);
-                let derived_position = pointer_pos_or_none.map_or_else(
+                let position_to_explain = pointer_position.map_or_else(
                     || calc_sample.last_computed_position(),
                     |pos| calc_sample.closest_computed_position(pos),
                 );
-                explain_derived_position(&derived_position, canvas, settings);
+                // only highlight the ref. position if it corresponds to the position_to_explain
+                if position_to_explain == calc_sample.last_computed_position() {
+                    highlight_reference_position(canvas, ref_sample, settings);
+                }
+                explain_derived_position(&position_to_explain, canvas, settings);
             }
         }
     });
