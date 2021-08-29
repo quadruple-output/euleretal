@@ -3,3 +3,4 @@
 workspace.code-workspace
 /docs/euleretal.js
 /docs/euleretal_bg.wasm
+.DS_Store

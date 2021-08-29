@@ -8,7 +8,7 @@
 
 ## UI features
 - For position contributions of `½a dt^2`, draw a curved trajectory.
-- Different colors for reference points and calculated points.
+- Different colors or shapes for reference points and calculated points.
 - Layer 'Acceleration Field' should draw scaled vectors at each sampling point
   of a Step (transparent color, so they can be distinguished from
   contributions).
