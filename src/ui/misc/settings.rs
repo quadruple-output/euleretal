@@ -35,6 +35,7 @@ pub struct PointFormats {
     pub start_position: PointFormat,
     pub derived_position: PointFormat,
     pub reference_position: PointFormat,
+    pub other_position: PointFormat,
 }
 
 #[derive(Clone)]
@@ -79,6 +80,11 @@ impl Default for PointFormats {
                 shape: PointShape::CrossHair,
                 size: 8.,
                 stroke: Stroke::new(1., Color32::GREEN),
+            },
+            other_position: PointFormat {
+                shape: PointShape::Dot,
+                size: 5.,
+                stroke: Stroke::new(1., Color32::GRAY),
             },
         }
     }

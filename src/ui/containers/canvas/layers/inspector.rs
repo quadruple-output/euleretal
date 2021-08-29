@@ -17,6 +17,9 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
     let show_velocity = canvas.input().modifiers.alt;
     canvas.for_each_integration(|integration| {
         if let Some((ref_sample, calc_sample)) = integration.focussed_sample() {
+            for position in calc_sample.positions_iter() {
+                canvas.draw_sample_point(position, &settings.point_formats.other_position);
+            }
             if show_velocity {
                 let velocity_to_explain = pointer_position.map_or_else(
                     || calc_sample.last_computed_velocity(),
