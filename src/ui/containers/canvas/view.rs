@@ -44,7 +44,7 @@ pub fn show_canvas(ui: &mut Ui, canvas: &Obj<Canvas>, size: Vec2, settings: &Set
     if settings.layerflags.acceleration_field {
         layers::acceleration_field::render(settings, &canvas_painter);
     }
-    layers::integrations::render(&settings.strokes, &mut canvas_painter);
+    layers::integrations::render(settings, &mut canvas_painter);
     if settings.layerflags.inspector {
         layers::inspector::render(settings, &canvas_painter);
     }
@@ -193,7 +193,10 @@ fn show_integrations_pop_up(
                         super::misc::my_stroke_preview(
                             ui,
                             integration.borrow().get_stroke(),
-                            Some(integration.borrow().get_step_color().into()),
+                            Some((
+                                &world.settings.point_formats.derived_position,
+                                integration.borrow().get_step_color().into(),
+                            )),
                         );
                         // wrappind the combobox in a horizontal ui help aligning the grid
                         ui.horizontal(|ui| {

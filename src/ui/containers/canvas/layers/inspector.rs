@@ -61,18 +61,20 @@ fn explain_derived_position(
             }
         }
     }
+    // ...then contributing positions...
     for contribution in position.contributions_iter() {
         match contribution.kind() {
             PhysicalQuantityKind::Position => {
-                canvas.draw_sample_dot(
+                canvas.draw_sample_point(
                     contribution.sampling_position(),
-                    settings.colors.start_position,
+                    &settings.point_formats.start_position,
                 );
             }
             PhysicalQuantityKind::Velocity | PhysicalQuantityKind::Acceleration => {}
         }
     }
-    canvas.draw_sample_dot(position.s(), settings.colors.derived_position);
+    // ...and finally the derived position itself:
+    canvas.draw_sample_point(position.s(), &settings.point_formats.derived_position);
 }
 
 fn explain_derived_velocity(
@@ -106,7 +108,10 @@ fn highlight_reference_position(
     ref_sample: &IntegrationStep,
     settings: &Settings,
 ) {
-    canvas.draw_sample_dot(ref_sample.last_s(), settings.colors.derived_position);
+    canvas.draw_sample_point(
+        ref_sample.last_s(),
+        &settings.point_formats.reference_position,
+    );
 }
 
 fn highlight_reference_velocity(
@@ -117,6 +122,6 @@ fn highlight_reference_velocity(
     canvas.draw_vector(
         ref_sample.last_s(),
         ref_sample.last_v() * ref_sample.dt,
-        settings.strokes.derived_velocity,
+        settings.strokes.reference_velocity,
     );
 }

@@ -1,5 +1,6 @@
 use super::{
     core::{IntegrationStep, Obj, Position, Scenario},
+    misc::Settings,
     ui_import::{Color32, Hsva, Stroke},
     Integrator, StepSize,
 };
@@ -104,19 +105,25 @@ impl Integration {
         }
     }
 
-    pub fn draw_on(&self, canvas: &super::CanvasPainter) {
+    pub fn draw_on(&self, canvas: &super::CanvasPainter, settings: &Settings) {
         let sample_color = Color32::from(self.step_size.borrow().color);
         let stroke = self.integrator.borrow().stroke;
         if let Some(samples) = self.core_integration.samples() {
             canvas.draw_sample_trajectory(samples, stroke);
         }
-        for samples in self
-            .core_integration
-            .reference_samples()
-            .iter()
-            .chain(self.core_integration.samples().iter())
-        {
-            canvas.draw_sample_dots(samples, sample_color);
+        if let Some(ref_samples) = self.core_integration.reference_samples() {
+            canvas.draw_sample_dots(
+                ref_samples,
+                sample_color,
+                &settings.point_formats.reference_position,
+            );
+        }
+        if let Some(samples) = self.core_integration.samples() {
+            canvas.draw_sample_dots(
+                samples,
+                sample_color,
+                &settings.point_formats.derived_position,
+            );
         }
     }
 }

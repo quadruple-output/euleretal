@@ -1,5 +1,5 @@
 use super::{
-    constants, egui, Canvas, Color32, Integration, Obj, Pos2, Position, Samples, Scenario, Vec2,
+    egui, Canvas, Color32, Integration, Obj, PointFormat, Pos2, Position, Samples, Scenario, Vec2,
     Vec3, R32,
 };
 use ::std::{
@@ -133,23 +133,20 @@ impl<'c> Painter<'c> {
         );
     }
 
-    pub fn draw_sample_dot(&self, position: Position, color: Color32) {
-        self.painter.circle_filled(
-            self.canvas.user_to_screen(position),
-            constants::SAMPLE_DOT_RADIUS,
-            color,
-        );
+    pub fn draw_sample_point(&self, position: Position, format: &PointFormat) {
+        format.draw_position_on(self.canvas.user_to_screen(position), &self.painter);
     }
 
-    pub fn draw_sample_dots(&self, samples: &Samples, color: Color32) {
+    pub fn draw_sample_dots(&self, samples: &Samples, color: Color32, format: &PointFormat) {
         let canvas = &self.canvas;
+        let mut adapted_format = (*format).clone();
+        adapted_format.stroke.color = color;
         samples
             .step_positions()
             .map(|position| canvas.user_to_screen(position))
             .fold(Pos2::new(f32::MAX, f32::MAX), |u0, u1| {
                 if (u0.x - u1.x).abs() > 1. || (u0.y - u1.y).abs() > 1. {
-                    self.painter
-                        .circle_filled(u1, constants::SAMPLE_DOT_RADIUS, color);
+                    adapted_format.draw_position_on(u1, &self.painter);
                     u1
                 } else {
                     u0

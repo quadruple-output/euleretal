@@ -2,10 +2,9 @@ mod painter;
 
 pub use self::painter::Painter;
 use super::{
-    constants,
     core::{Obj, Position, Samples, Scenario},
     import::{Vec3, R32},
-    misc::BoundingBox,
+    misc::{BoundingBox, PointFormat},
     ui_import::{egui, Color32, Pos2, Ui, Vec2},
     Integration,
 };

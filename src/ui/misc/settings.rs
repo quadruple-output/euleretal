@@ -1,10 +1,10 @@
-use super::ui_import::{Color32, Rgba, Stroke};
+use super::ui_import::{egui::Painter, Color32, Pos2, Rgba, Stroke, Vec2};
 use ::std::fmt;
 
 pub struct Settings {
     pub layerflags: LayerFlags,
     pub strokes: Strokes,
-    pub colors: Colors,
+    pub point_formats: PointFormats,
     pub format_precision: usize,
 }
 
@@ -27,12 +27,29 @@ pub struct Strokes {
     /// to be used for acceleration that contribute to a derived position or velocity
     pub contributing_acceleration: Stroke,
     pub derived_velocity: Stroke,
+    pub reference_velocity: Stroke,
 }
 
-pub struct Colors {
+pub struct PointFormats {
     /// to be used for positions that are the basis for a derived position
-    pub start_position: Color32,
-    pub derived_position: Color32,
+    pub start_position: PointFormat,
+    pub derived_position: PointFormat,
+    pub reference_position: PointFormat,
+}
+
+#[derive(Clone)]
+pub struct PointFormat {
+    pub shape: PointShape,
+    // size of the shape in screen dimensions
+    pub size: f32,
+    // for circles, only the stroke's color is considered
+    pub stroke: Stroke,
+}
+
+#[derive(Clone)]
+pub enum PointShape {
+    Dot,
+    CrossHair,
 }
 
 impl Default for LayerFlags {
@@ -45,11 +62,24 @@ impl Default for LayerFlags {
     }
 }
 
-impl Default for Colors {
+impl Default for PointFormats {
     fn default() -> Self {
         Self {
-            start_position: Color32::RED,
-            derived_position: Color32::GREEN,
+            start_position: PointFormat {
+                shape: PointShape::Dot,
+                size: 5.,
+                stroke: Stroke::new(1., Color32::RED),
+            },
+            derived_position: PointFormat {
+                shape: PointShape::Dot,
+                size: 5.,
+                stroke: Stroke::new(1., Color32::GREEN),
+            },
+            reference_position: PointFormat {
+                shape: PointShape::CrossHair,
+                size: 8.,
+                stroke: Stroke::new(1., Color32::GREEN),
+            },
         }
     }
 }
@@ -64,10 +94,11 @@ impl Default for Strokes {
             acceleration: Stroke::new(1., col_accel * 0.25),
             focussed_acceleration: Stroke::new(1., col_accel * 1.),
             coordinates: Stroke::new(1., Rgba::from_rgb(0., 0.5, 0.) * 0.3),
-            start_velocity: Stroke::new(1., Colors::default().start_position),
+            start_velocity: Stroke::new(1., PointFormats::default().start_position.stroke.color),
             contributing_velocity: Stroke::new(1., col_velo),
             contributing_acceleration: Stroke::new(1., col_accel),
-            derived_velocity: Stroke::new(1., Colors::default().derived_position),
+            derived_velocity: PointFormats::default().derived_position.stroke,
+            reference_velocity: PointFormats::default().reference_position.stroke,
         }
     }
 }
@@ -77,7 +108,7 @@ impl Default for Settings {
         Self {
             layerflags: LayerFlags::default(),
             strokes: Strokes::default(),
-            colors: Colors::default(),
+            point_formats: PointFormats::default(),
             format_precision: 3,
         }
     }
@@ -100,5 +131,22 @@ pub struct FormatterF32 {
 impl fmt::Display for FormatterF32 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:.*}", self.precision, self.n)
+    }
+}
+
+impl PointFormat {
+    pub fn draw_position_on(&self, position: Pos2, painter: &Painter) {
+        let radius = self.size * 0.5;
+        match self.shape {
+            PointShape::Dot => {
+                painter.circle_filled(position, radius, self.stroke.color);
+            }
+            PointShape::CrossHair => {
+                let x_radius = Vec2::new(radius, 0.);
+                let y_radius = Vec2::new(0., radius);
+                painter.line_segment([position - x_radius, position + x_radius], self.stroke);
+                painter.line_segment([position - y_radius, position + y_radius], self.stroke);
+            }
+        }
     }
 }

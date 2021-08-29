@@ -8,4 +8,4 @@ pub use integration::Integration;
 pub use integrator::Integrator;
 pub use step_size::StepSize;
 
-use super::{constants, core, import, misc, ui_import};
+use super::{core, import, misc, ui_import};

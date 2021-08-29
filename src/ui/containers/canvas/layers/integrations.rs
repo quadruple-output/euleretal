@@ -1,6 +1,6 @@
-use super::{entities::CanvasPainter, misc::settings};
+use super::{entities::CanvasPainter, misc::Settings};
 
-pub fn render(strokes: &settings::Strokes, canvas: &mut CanvasPainter) {
+pub fn render(settings: &Settings, canvas: &mut CanvasPainter) {
     let min_dt = canvas
         .map_integrations(|integration| integration.step_size.borrow().duration.0)
         .min() // this crate depends on decorum::R32 just to be able to use this min() function
@@ -20,8 +20,8 @@ pub fn render(strokes: &settings::Strokes, canvas: &mut CanvasPainter) {
         canvas.update_bounding_box();
     }
 
-    canvas.draw_trajectory(strokes.trajectory);
+    canvas.draw_trajectory(settings.strokes.trajectory);
     canvas.for_each_integration(|integration| {
-        integration.draw_on(canvas);
+        integration.draw_on(canvas, settings);
     });
 }
