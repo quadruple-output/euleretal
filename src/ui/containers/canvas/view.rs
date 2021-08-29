@@ -1,7 +1,7 @@
 use super::{
     constants,
     core::Obj,
-    entities::{Canvas, Integration, Integrator, StepSize},
+    entities::{Canvas, Integration, Integrator, ObjExtras, StepSize},
     layers,
     misc::Settings,
     ui_import::{
@@ -35,20 +35,19 @@ pub enum CanvasOperation {
 }
 
 pub fn show_canvas(ui: &mut Ui, canvas: &Obj<Canvas>, size: Vec2, settings: &Settings) {
-    ui.vertical(|ui| {
-        let (response, painter) = canvas.borrow_mut().allocate_painter(ui, size);
+    let mut canvas_painter = canvas.allocate_painter(ui, size);
 
-        if settings.layerflags.coordinates {
-            layers::coordinates::render(&settings.strokes, canvas, &response.rect, &painter);
-        }
-        if settings.layerflags.acceleration_field {
-            layers::acceleration_field::render(settings, canvas, &response, &painter);
-        }
-        layers::integrations::render(&settings.strokes, canvas, &painter);
-        if settings.layerflags.inspector {
-            layers::inspector::render(settings, canvas, &response, &painter);
-        }
-    });
+    canvas_painter.pan_and_zoom();
+    if settings.layerflags.coordinates {
+        layers::coordinates::render(&settings.strokes, &canvas_painter);
+    }
+    if settings.layerflags.acceleration_field {
+        layers::acceleration_field::render(settings, &canvas_painter);
+    }
+    layers::integrations::render(settings, &mut canvas_painter);
+    if settings.layerflags.inspector {
+        layers::inspector::render(settings, &canvas_painter);
+    }
 }
 
 /// returns the `CanvasOperation` as `inner`
@@ -194,7 +193,10 @@ fn show_integrations_pop_up(
                         super::misc::my_stroke_preview(
                             ui,
                             integration.borrow().get_stroke(),
-                            Some(integration.borrow().get_step_color().into()),
+                            Some((
+                                &world.settings.point_formats.derived_position,
+                                integration.borrow().get_step_color().into(),
+                            )),
                         );
                         // wrappind the combobox in a horizontal ui help aligning the grid
                         ui.horizontal(|ui| {
@@ -243,6 +245,7 @@ fn show_integrator_selector(
             .on_hover_text(selectable_integrator.borrow().integrator.description());
         });
     })
+    .response
     .on_hover_text(
         integration
             .borrow()

@@ -1,30 +1,22 @@
-use super::{core::Obj, entities::Canvas, import::Vec3, misc::settings, ui_import::egui};
+use super::{core::Position, entities::CanvasPainter, misc::settings};
 
-pub fn render(
-    strokes: &settings::Strokes,
-    canvas: &Obj<Canvas>,
-    paint_area: &egui::Rect,
-    painter: &egui::Painter,
-) {
-    let canvas = canvas.borrow();
-    canvas.draw_hline(0., strokes.coordinates, paint_area, painter);
-    canvas.draw_vline(0., strokes.coordinates, paint_area, painter);
-    let min = canvas.min(paint_area);
-    let max = canvas.max(paint_area);
+pub fn render(strokes: &settings::Strokes, canvas: &CanvasPainter) {
+    canvas.draw_hline(0., strokes.coordinates);
+    canvas.draw_vline(0., strokes.coordinates);
+    let min = canvas.rect_min();
+    let max = canvas.rect_max();
     for step in ((min.x - 1.) as i32)..=((max.x + 1.) as i32) {
         canvas.draw_line_segment(
-            Vec3::new(step as f32, -0.05, 0.),
-            Vec3::new(step as f32, 0.05, 0.),
+            Position::new(step as f32, -0.05, 0.),
+            Position::new(step as f32, 0.05, 0.),
             strokes.coordinates,
-            painter,
         );
     }
     for step in ((min.y - 1.) as i32)..=((max.y + 1.) as i32) {
         canvas.draw_line_segment(
-            Vec3::new(-0.05, step as f32, 1.),
-            Vec3::new(0.05, step as f32, 1.),
+            Position::new(-0.05, step as f32, 1.),
+            Position::new(0.05, step as f32, 1.),
             strokes.coordinates,
-            painter,
         );
     }
 

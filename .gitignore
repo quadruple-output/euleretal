@@ -1,3 +1,4 @@
 /.vscode
 /target
 workspace.code-workspace
+.DS_Store

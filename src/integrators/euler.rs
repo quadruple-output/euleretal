@@ -67,8 +67,8 @@ impl Integrator for Euler {
 
     fn description(&self) -> String {
         "v' = v + a dt\n\
-         s' = s + v' dt\n\
-             = s + v dt + a dt²" // !! this string contains non-breaking spaces
+         s' = s + v' dt\n    \
+            = s + v dt + a dt²"
             .to_string()
     }
 
