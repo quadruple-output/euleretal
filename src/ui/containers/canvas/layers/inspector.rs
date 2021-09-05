@@ -1,5 +1,8 @@
 use super::{
-    core::{ComputedPosition, ComputedVelocity, Duration, IntegrationStep, PhysicalQuantityKind},
+    core::{
+        ComputedPosition, ComputedVelocity, Duration, IntegrationStep, PhysicalQuantityKind,
+        Position,
+    },
     entities::CanvasPainter,
     misc::Settings,
 };
@@ -15,11 +18,14 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
         }
     });
     let show_velocity = canvas.input().modifiers.alt;
+
     canvas.for_each_integration(|integration| {
         if let Some((ref_sample, calc_sample)) = integration.focussed_sample() {
+            // Draw all sample points. Highlighted points will be re-painted below.
             for position in calc_sample.positions_iter() {
                 canvas.draw_sample_point(position, &settings.point_formats.other_position);
             }
+
             if show_velocity {
                 let velocity_to_explain = pointer_position.map_or_else(
                     || calc_sample.last_computed_velocity(),
@@ -32,10 +38,21 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
                     || calc_sample.last_computed_position(),
                     |pos| calc_sample.closest_computed_position(pos),
                 );
-                // only highlight the ref. position if it corresponds to the position_to_explain
-                if position_to_explain == calc_sample.last_computed_position() {
-                    highlight_reference_position(canvas, ref_sample, settings);
-                }
+                // highlight the ref. position that corresponds to `position_to_explain`
+                highlight_reference_position(
+                    canvas,
+                    if position_to_explain == calc_sample.last_computed_position() {
+                        ref_sample.last_s()
+                    } else {
+                        // calculate reference sample corresponding to position_to_explain:
+                        let (s, _v) = canvas.scenario().borrow().calc_intermediate_sample(
+                            &ref_sample.get_start_condition(),
+                            position_to_explain.dt_fraction() * calc_sample.dt,
+                        );
+                        s
+                    },
+                    settings,
+                );
                 explain_derived_position(&position_to_explain, canvas, settings);
             }
         }
@@ -109,15 +126,8 @@ fn explain_derived_velocity(
     );
 }
 
-fn highlight_reference_position(
-    canvas: &CanvasPainter,
-    ref_sample: &IntegrationStep,
-    settings: &Settings,
-) {
-    canvas.draw_sample_point(
-        ref_sample.last_s(),
-        &settings.point_formats.reference_position,
-    );
+fn highlight_reference_position(canvas: &CanvasPainter, position: Position, settings: &Settings) {
+    canvas.draw_sample_point(position, &settings.point_formats.reference_position);
 }
 
 fn highlight_reference_velocity(
