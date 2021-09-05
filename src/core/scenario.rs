@@ -1,8 +1,6 @@
 use super::{
-    import::{Vec3, Zero, R32},
-    integrator::ExpectedCapacities,
-    AccelerationField, Duration, IntegrationStep, Position, Samples, StartCondition, StartPosition,
-    StartVelocity, Velocity,
+    import::Vec3, integrator::ExpectedCapacities, AccelerationField, Duration, IntegrationStep,
+    Position, Samples, StartCondition, StartPosition, StartVelocity, Velocity,
 };
 use ::std::{collections::hash_map::DefaultHasher, hash::Hash};
 
@@ -29,8 +27,7 @@ impl Scenario {
 
     pub fn calculate_trajectory(&self, min_dt: Duration) -> Vec<Vec3> {
         #[allow(clippy::cast_sign_loss)]
-        let num_steps =
-            (self.duration / min_dt * R32::new(STEPS_PER_DT as f32).unwrap()).into_inner() as usize;
+        let num_steps = (self.duration / min_dt * STEPS_PER_DT as f32) as usize;
         let (trajectory, _samples) = calculate_trajectory_and_samples(
             &*self.acceleration,
             self.start_position.0,
@@ -65,7 +62,7 @@ impl Scenario {
 
     pub fn calculate_reference_samples(&self, dt: Duration) -> Samples {
         #[allow(clippy::cast_sign_loss)]
-        let num_iterations = (self.duration / dt).into_inner() as usize;
+        let num_iterations = (self.duration / dt) as usize;
         let (trajectory, samples) = calculate_trajectory_and_samples(
             &*self.acceleration,
             self.start_position.0,
@@ -92,7 +89,7 @@ fn calculate_trajectory_and_samples(
     dt: Duration,
     steps_per_dt: usize,
 ) -> (Vec<Vec3>, Samples) {
-    let mut t0 = Duration(R32::zero());
+    let mut t0 = 0.0.into();
     let mut s0 = start_position;
     let mut v0 = start_velocity;
     let mut a0 = acceleration.value_at(s0);

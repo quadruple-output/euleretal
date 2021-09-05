@@ -44,7 +44,7 @@ mod public_refs {
 }
 
 use super::{
-    import::{shape, PointQuery, R32},
+    import::{shape, PointQuery},
     integrator, Acceleration, AccelerationField, Duration, Fraction, PhysicalQuantityKind,
     Position, StartCondition, Velocity,
 };
@@ -258,15 +258,12 @@ impl IntegrationStep {
         })
     }
 
-    pub fn distance_to(&self, pos: &Position) -> R32 {
-        R32::new(
-            shape::Segment::new(
-                self.positions_iter().next().unwrap().into(),
-                self.positions_iter().last().unwrap().into(),
-            )
-            .distance_to_local_point(&(*pos).into(), true),
+    pub fn distance_to(&self, pos: &Position) -> f32 {
+        shape::Segment::new(
+            self.positions_iter().next().unwrap().into(),
+            self.positions_iter().last().unwrap().into(),
         )
-        .unwrap()
+        .distance_to_local_point(&(*pos).into(), true)
     }
 
     pub fn closest_computed_velocity(&self, pos: Position) -> ComputedVelocity {
@@ -390,12 +387,12 @@ enum PositionContributionInternal {
         sref: PositionRefInternal,
     },
     VelocityDt {
-        factor: R32,
+        factor: f32,
         vref: VelocityRefInternal,
         dt_fraction: Fraction,
     },
     AccelerationDtDt {
-        factor: R32,
+        factor: f32,
         aref: AccelerationRefInternal,
         dt_fraction: Fraction,
     },
@@ -406,7 +403,7 @@ enum VelocityContributionInternal {
         vref: VelocityRefInternal,
     },
     AccelerationDt {
-        factor: R32,
+        factor: f32,
         aref: AccelerationRefInternal,
         dt_fraction: Fraction,
     },
@@ -573,7 +570,7 @@ impl<'a> PositionBuilder<'a> {
     pub fn add_velocity_dt(mut self, vref: VelocityRef, factor: f32) -> Self {
         self.contributions
             .push(PositionContributionInternal::VelocityDt {
-                factor: R32::new(factor).unwrap(),
+                factor,
                 vref: vref.internal_for(self.step),
                 dt_fraction: self.dt_fraction,
             });
@@ -583,7 +580,7 @@ impl<'a> PositionBuilder<'a> {
     pub fn add_acceleration_dt_dt(mut self, aref: AccelerationRef, factor: f32) -> Self {
         self.contributions
             .push(PositionContributionInternal::AccelerationDtDt {
-                factor: R32::new(factor).unwrap(),
+                factor,
                 aref: aref.internal_for(self.step),
                 dt_fraction: self.dt_fraction,
             });
@@ -635,7 +632,7 @@ impl<'a> VelocityBuilder<'a> {
     pub fn add_acceleration_dt(mut self, aref: AccelerationRef, factor: f32) -> Self {
         self.contributions
             .push(VelocityContributionInternal::AccelerationDt {
-                factor: R32::new(factor).unwrap(),
+                factor,
                 aref: aref.internal_for(self.step),
                 dt_fraction: self.dt_fraction,
             });
@@ -712,18 +709,18 @@ impl VelocityContributionInternal {
     }
 }
 
-impl Mul<&ComputedVelocityInternal> for R32 {
+impl Mul<&ComputedVelocityInternal> for f32 {
     type Output = Velocity;
 
     fn mul(self, rhs: &ComputedVelocityInternal) -> Self::Output {
-        self.into_inner() * rhs.v
+        self * rhs.v
     }
 }
 
-impl Mul<&ComputedAccelerationInternal> for R32 {
+impl Mul<&ComputedAccelerationInternal> for f32 {
     type Output = Acceleration;
 
     fn mul(self, rhs: &ComputedAccelerationInternal) -> Self::Output {
-        self.into_inner() * rhs.a
+        self * rhs.a
     }
 }

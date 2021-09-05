@@ -112,10 +112,10 @@ impl Mul<Duration> for Fraction {
 }
 
 impl Div<Duration> for Duration {
-    type Output = R32;
+    type Output = f32;
 
     fn div(self, rhs: Duration) -> Self::Output {
-        self.0 / rhs.0
+        self.0.into_inner() / rhs.0.into_inner()
     }
 }
 

@@ -8,7 +8,7 @@ mod type_state {
     impl TypeState for NonFinalized {}
 }
 
-use super::{import::R32, Acceleration, IntegrationStep, Position, Velocity};
+use super::{Acceleration, IntegrationStep, Position, Velocity};
 use ::std::marker::PhantomData;
 use type_state::{Finalized, NonFinalized, TypeState};
 
@@ -112,6 +112,6 @@ pub struct StartCondition {
 
 #[derive(Clone, Copy)]
 pub struct SampleIdxWithDistance {
-    pub distance: R32,
+    pub distance: f32,
     pub index: usize,
 }

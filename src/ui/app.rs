@@ -2,9 +2,9 @@ use ::std::rc::Rc;
 
 use super::{
     containers,
-    core::{Duration, Scenario, StartPosition, StartVelocity},
+    core::{Scenario, StartPosition, StartVelocity},
     entities::{Canvas, Integration, Integrator, StepSize},
-    import::{Vec3, R32},
+    import::Vec3,
     integrators,
     misc::UserLabel,
     scenarios,
