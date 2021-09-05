@@ -2,7 +2,6 @@ use super::{
     constants,
     core::{Duration, Obj},
     entities::StepSize,
-    import::R32,
     misc::UserLabel,
     ui_import::{
         egui,
@@ -20,7 +19,7 @@ enum Operation {
     Noop,
     Create,
     Delete(Obj<StepSize>),
-    SetDuration(Obj<StepSize>, R32),
+    SetDuration(Obj<StepSize>, Duration),
     SetColor(Obj<StepSize>, Hsva),
     SetLabel(Obj<StepSize>, String),
 }
@@ -31,7 +30,7 @@ pub fn show(ui: &mut Ui, world: &mut World) {
         Operation::Create => {
             world.add_step_size(StepSize {
                 user_label: UserLabel("".into()),
-                duration: Duration(0.5.into()),
+                duration: 0.5.into(),
                 color: Hsva::default(),
             });
         }
@@ -39,7 +38,7 @@ pub fn show(ui: &mut Ui, world: &mut World) {
             world.remove_step_size(step_size);
         }
         Operation::SetDuration(step_size, new_duration) => {
-            step_size.borrow_mut().duration.0 = new_duration.max(0.01.into());
+            step_size.borrow_mut().duration = new_duration.max(0.01.into());
         }
         Operation::SetColor(step_size, new_color) => {
             step_size.borrow_mut().color = new_color;

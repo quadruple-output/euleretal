@@ -62,7 +62,7 @@ impl Integration {
             self.sample_validity = sample_validity;
 
             if self.ref_sample_validity != ref_sample_validity {
-                let reference_samples = scenario.calculate_reference_samples(step_duration.0);
+                let reference_samples = scenario.calculate_reference_samples(step_duration);
                 let num_refs = reference_samples.len();
                 assert!(num_refs == num_samples);
                 self.reference_samples = Some(reference_samples);

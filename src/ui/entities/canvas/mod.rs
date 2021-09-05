@@ -2,8 +2,8 @@ mod painter;
 
 pub use self::painter::Painter;
 use super::{
-    core::{Obj, Position, Samples, Scenario},
-    import::{Vec3, R32},
+    core::{Duration, Obj, Position, Samples, Scenario},
+    import::Vec3,
     misc::{BoundingBox, PointFormat},
     ui_import::{egui, Color32, Pos2, Ui, Vec2},
     Integration,
@@ -16,7 +16,7 @@ pub struct Canvas {
     scenario: Obj<Scenario>,
     integrations: Vec<Obj<Integration>>,
     visible_units: f32,
-    focus: Vec3,
+    focus: Position,
     scale: Vec3,
     area_center: Pos2,
     trajectory_buffer: Option<TrajectoryBuffer>,
@@ -71,7 +71,7 @@ impl Canvas {
             .retain(|candidate| !Rc::ptr_eq(candidate, &integration));
     }
 
-    pub fn update_trajectory(&mut self, min_dt: R32) {
+    pub fn update_trajectory(&mut self, min_dt: Duration) {
         if let Some(ref mut buffer) = self.trajectory_buffer {
             buffer.update_trajectory(&self.scenario.borrow(), min_dt);
         } else {
@@ -121,11 +121,11 @@ impl Canvas {
 struct TrajectoryBuffer {
     trajectory: Vec<Vec3>,
     scenario_hash: u64,
-    trajectory_min_dt: R32,
+    trajectory_min_dt: Duration,
 }
 
 impl TrajectoryBuffer {
-    fn new(scenario: &Scenario, min_dt: R32) -> Self {
+    fn new(scenario: &Scenario, min_dt: Duration) -> Self {
         Self {
             trajectory: scenario.calculate_trajectory(min_dt),
             trajectory_min_dt: min_dt,
@@ -139,7 +139,7 @@ impl TrajectoryBuffer {
         hasher.finish()
     }
 
-    fn update_trajectory(&mut self, scenario: &Scenario, min_dt: R32) {
+    fn update_trajectory(&mut self, scenario: &Scenario, min_dt: Duration) {
         let scenario_hash = Self::hash_scenario(scenario);
         if self.scenario_hash != scenario_hash || self.trajectory_min_dt > min_dt {
             self.trajectory = scenario.calculate_trajectory(min_dt);

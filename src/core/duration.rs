@@ -2,22 +2,37 @@ use super::{
     import::{Vec3, R32},
     Fraction,
 };
-use ::std::{
-    hash::Hash,
-    ops::{Add, Mul, Sub},
-};
+use ::std::ops::{Add, Div, Mul, Sub};
 
-#[derive(Clone, Copy, Debug)]
-pub struct Duration(pub R32);
+#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Ord, Eq, Hash)]
+pub struct Duration(pub R32); // todo: make self.0 private and use into() for instantiation
 
-impl Hash for Duration {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.0.hash(state);
+impl From<f32> for Duration {
+    fn from(n: f32) -> Self {
+        Self(R32::new(n).unwrap())
+    }
+}
+
+impl From<R32> for Duration {
+    fn from(n: R32) -> Self {
+        Self(n)
+    }
+}
+
+impl From<Duration> for R32 {
+    fn from(d: Duration) -> Self {
+        d.0
+    }
+}
+
+impl From<Duration> for f32 {
+    fn from(d: Duration) -> Self {
+        d.0.into_inner()
     }
 }
 
 impl Add<Duration> for Duration {
-    type Output = Duration;
+    type Output = Self;
 
     fn add(self, rhs: Duration) -> Self::Output {
         Duration(self.0 + rhs.0)
@@ -25,7 +40,7 @@ impl Add<Duration> for Duration {
 }
 
 impl Sub<Duration> for Duration {
-    type Output = Duration;
+    type Output = Self;
 
     fn sub(self, rhs: Duration) -> Self::Output {
         Duration(self.0 - rhs.0)
@@ -33,7 +48,7 @@ impl Sub<Duration> for Duration {
 }
 
 impl Mul<f32> for Duration {
-    type Output = Duration;
+    type Output = Self;
 
     fn mul(self, rhs: f32) -> Self::Output {
         Self(self.0 * rhs)
@@ -41,7 +56,7 @@ impl Mul<f32> for Duration {
 }
 
 impl Mul<R32> for Duration {
-    type Output = Duration;
+    type Output = Self;
 
     fn mul(self, rhs: R32) -> Self::Output {
         Self(self.0 * rhs)
@@ -64,17 +79,11 @@ impl Mul<Duration> for Vec3 {
     }
 }
 
-impl From<Duration> for R32 {
-    fn from(d: Duration) -> Self {
-        d.0
-    }
-}
-
 impl Mul<Fraction> for Duration {
-    type Output = Duration;
+    type Output = Self;
 
     fn mul(self, rhs: Fraction) -> Self::Output {
-        self * rhs.to_f32()
+        self * f32::from(rhs)
     }
 }
 
@@ -99,5 +108,29 @@ impl Mul<Duration> for Fraction {
 
     fn mul(self, duration: Duration) -> Self::Output {
         duration * self
+    }
+}
+
+impl Div<Duration> for Duration {
+    type Output = R32;
+
+    fn div(self, rhs: Duration) -> Self::Output {
+        self.0 / rhs.0
+    }
+}
+
+impl Div<f32> for Duration {
+    type Output = Self;
+
+    fn div(self, rhs: f32) -> Self::Output {
+        Self(self.0 / rhs)
+    }
+}
+
+impl Div<R32> for Duration {
+    type Output = Self;
+
+    fn div(self, rhs: R32) -> Self::Output {
+        Self(self.0 / rhs)
     }
 }

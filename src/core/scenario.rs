@@ -1,5 +1,5 @@
 use super::{
-    import::{Vec3, R32},
+    import::{Vec3, Zero, R32},
     integrator::ExpectedCapacities,
     AccelerationField, Duration, IntegrationStep, Position, Samples, StartCondition, StartPosition,
     StartVelocity, Velocity,
@@ -27,16 +27,16 @@ impl Scenario {
         self.duration.hash(state);
     }
 
-    pub fn calculate_trajectory(&self, min_dt: R32) -> Vec<Vec3> {
+    pub fn calculate_trajectory(&self, min_dt: Duration) -> Vec<Vec3> {
         #[allow(clippy::cast_sign_loss)]
         let num_steps =
-            (self.duration.0 / min_dt * R32::from(STEPS_PER_DT as f32)).into_inner() as usize;
+            (self.duration / min_dt * R32::new(STEPS_PER_DT as f32).unwrap()).into_inner() as usize;
         let (trajectory, _samples) = calculate_trajectory_and_samples(
             &*self.acceleration,
             self.start_position.0,
             self.start_velocity.0,
             1,
-            self.duration.0,
+            self.duration,
             num_steps,
         );
         log::info!("Calculated trajectory with {} segments", trajectory.len(),);
@@ -53,7 +53,7 @@ impl Scenario {
             start_condition.position,
             start_condition.velocity,
             1,
-            dt.0,
+            dt,
             STEPS_PER_DT,
         );
         let sample = samples.at(0);
@@ -63,9 +63,9 @@ impl Scenario {
         )
     }
 
-    pub fn calculate_reference_samples(&self, dt: R32) -> Samples {
+    pub fn calculate_reference_samples(&self, dt: Duration) -> Samples {
         #[allow(clippy::cast_sign_loss)]
-        let num_iterations = (self.duration.0 / dt).into_inner() as usize;
+        let num_iterations = (self.duration / dt).into_inner() as usize;
         let (trajectory, samples) = calculate_trajectory_and_samples(
             &*self.acceleration,
             self.start_position.0,
@@ -89,10 +89,10 @@ fn calculate_trajectory_and_samples(
     start_position: Vec3,
     start_velocity: Vec3,
     iterations: usize,
-    dt: R32,
+    dt: Duration,
     steps_per_dt: usize,
 ) -> (Vec<Vec3>, Samples) {
-    let mut t0 = Duration(R32::from(0.));
+    let mut t0 = Duration(R32::zero());
     let mut s0 = start_position;
     let mut v0 = start_velocity;
     let mut a0 = acceleration.value_at(s0);
@@ -101,7 +101,6 @@ fn calculate_trajectory_and_samples(
     trajectory.push(s0);
     let mut samples = Samples::new(iterations);
 
-    let dt = Duration(dt);
     let step_capacities = ExpectedCapacities {
         positions: 2,
         velocities: 2,

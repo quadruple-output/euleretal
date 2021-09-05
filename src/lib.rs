@@ -16,9 +16,11 @@ mod ui;
 
 mod import {
     pub type Vec3 = ::parry3d::math::Vector<f32>; //todo: do not re-export and do not use directly
-    pub use ::decorum::R32;
+    pub use ::num_traits::{One, Zero};
+    pub use ::ordered_float::NotNan;
     pub use ::parry3d::{query::PointQuery, shape};
     pub use ::std::rc::Rc;
+    pub type R32 = NotNan<f32>;
 }
 
 mod ui_import {

@@ -8,9 +8,9 @@ impl Hash for StartPosition {
         let vec = self.0;
         // todo: it would be nice to have an R32-based Vec3, so we do not have to do this
         // conversion here:
-        R32::from(vec.x).hash(state);
-        R32::from(vec.y).hash(state);
-        R32::from(vec.z).hash(state);
+        R32::new(vec.x).unwrap().hash(state);
+        R32::new(vec.y).unwrap().hash(state);
+        R32::new(vec.z).unwrap().hash(state);
     }
 }
 // todo: impl Deref

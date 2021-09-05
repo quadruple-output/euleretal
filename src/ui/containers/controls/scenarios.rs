@@ -17,9 +17,9 @@ pub fn show(ui: &mut Ui, world: &mut World) {
                 //for (acceleration, mut duration) in
                 //world.query_mut::<(&Box<dyn AccelerationField>, &mut Duration)>()
                 //{
-                let mut duration_for_edit = scenario.borrow().duration.0.into_inner();
+                let mut duration_for_edit = scenario.borrow().duration.into();
                 ui.add(Slider::new(&mut duration_for_edit, 0.1..=50.).logarithmic(true));
-                scenario.borrow_mut().duration.0 = duration_for_edit.into();
+                scenario.borrow_mut().duration = duration_for_edit.into();
 
                 ui.label(scenario.borrow().acceleration.label());
                 ui.end_row();

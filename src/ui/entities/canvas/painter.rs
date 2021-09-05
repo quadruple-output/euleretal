@@ -1,6 +1,6 @@
 use super::{
-    egui, Canvas, Color32, Integration, Obj, PointFormat, Pos2, Position, Samples, Scenario, Vec2,
-    Vec3, R32,
+    egui, Canvas, Color32, Duration, Integration, Obj, PointFormat, Pos2, Position, Samples,
+    Scenario, Vec2, Vec3,
 };
 use ::std::{
     cell::{Ref, RefMut},
@@ -208,7 +208,7 @@ impl<'c> Painter<'c> {
         self.canvas.has_trajectory()
     }
 
-    pub fn update_trajectory(&mut self, min_dt: R32) {
+    pub fn update_trajectory(&mut self, min_dt: Duration) {
         self.canvas.update_trajectory(min_dt);
     }
 

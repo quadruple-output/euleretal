@@ -98,7 +98,7 @@ impl Euleretal {
     fn initialize_scenario(&mut self) {
         let step_size = Rc::clone(self.world.add_step_size(StepSize {
             user_label: UserLabel("default".to_string()),
-            duration: Duration(R32::from(0.11)),
+            duration: 0.11.into(),
             color: Hsva::from(Color32::YELLOW),
         }));
 
@@ -131,14 +131,14 @@ impl Euleretal {
             acceleration: Box::new(scenarios::CenterMass),
             start_position: StartPosition(Vec3::new(0., 1., 0.)),
             start_velocity: StartVelocity(Vec3::new(1., 0., 0.)),
-            duration: Duration(std::f32::consts::TAU.into()),
+            duration: std::f32::consts::TAU.into(),
         }));
 
         let _scenario_constant_acceleration = self.world.add_scenario(Scenario {
             acceleration: Box::new(scenarios::ConstantAcceleration),
             start_position: StartPosition(Vec3::new(0., 0., 0.)),
             start_velocity: StartVelocity(Vec3::new(1., 0., 0.)),
-            duration: Duration(2_f32.into()),
+            duration: 2_f32.into(),
         });
 
         let canvas_center_mass = self.world.add_canvas(Canvas::new(scenario_center_mass));

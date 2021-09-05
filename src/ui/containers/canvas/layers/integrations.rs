@@ -2,8 +2,8 @@ use super::{entities::CanvasPainter, misc::Settings};
 
 pub fn render(settings: &Settings, canvas: &mut CanvasPainter) {
     let min_dt = canvas
-        .map_integrations(|integration| integration.step_size.borrow().duration.0)
-        .min() // this crate depends on decorum::R32 just to be able to use this min() function
+        .map_integrations(|integration| integration.step_size.borrow().duration)
+        .min() // this crate depends on R32 just to be able to use this min() function
         .unwrap_or_else(|| 0.1.into());
 
     let first_time = !canvas.has_trajectory();

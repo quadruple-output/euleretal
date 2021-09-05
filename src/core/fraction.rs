@@ -19,14 +19,6 @@ impl Fraction {
             denominator,
         }
     }
-
-    pub fn to_f32(self) -> f32 {
-        self.numerator as f32 / self.denominator as f32
-    }
-
-    pub fn to_r32(self) -> R32 {
-        self.to_f32().into()
-    }
 }
 
 impl Default for Fraction {
@@ -38,27 +30,21 @@ impl Default for Fraction {
     }
 }
 
+impl From<Fraction> for f32 {
+    fn from(f: Fraction) -> Self {
+        f.numerator as f32 / f.denominator as f32
+    }
+}
+
+impl From<Fraction> for R32 {
+    fn from(f: Fraction) -> Self {
+        R32::new(f.into()).unwrap()
+    }
+}
+
 impl Mul<Fraction> for Vec3 {
     type Output = Vec3;
     fn mul(self, rhs: Fraction) -> Vec3 {
-        self * rhs.to_f32()
-    }
-}
-
-impl Mul<&Fraction> for Vec3 {
-    type Output = Vec3;
-    fn mul(self, rhs: &Fraction) -> Vec3 {
-        self * rhs.to_f32()
-    }
-}
-
-impl<IF32> Mul<IF32> for Fraction
-where
-    IF32: Into<f32>,
-{
-    type Output = f32;
-
-    fn mul(self, rhs: IF32) -> f32 {
-        self.to_f32() * rhs.into()
+        self * f32::from(rhs)
     }
 }

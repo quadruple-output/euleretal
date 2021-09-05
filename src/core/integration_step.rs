@@ -259,12 +259,14 @@ impl IntegrationStep {
     }
 
     pub fn distance_to(&self, pos: &Position) -> R32 {
-        shape::Segment::new(
-            self.positions_iter().next().unwrap().into(),
-            self.positions_iter().last().unwrap().into(),
+        R32::new(
+            shape::Segment::new(
+                self.positions_iter().next().unwrap().into(),
+                self.positions_iter().last().unwrap().into(),
+            )
+            .distance_to_local_point(&(*pos).into(), true),
         )
-        .distance_to_local_point(&(*pos).into(), true)
-        .into()
+        .unwrap()
     }
 
     pub fn closest_computed_velocity(&self, pos: Position) -> ComputedVelocity {
@@ -571,7 +573,7 @@ impl<'a> PositionBuilder<'a> {
     pub fn add_velocity_dt(mut self, vref: VelocityRef, factor: f32) -> Self {
         self.contributions
             .push(PositionContributionInternal::VelocityDt {
-                factor: factor.into(),
+                factor: R32::new(factor).unwrap(),
                 vref: vref.internal_for(self.step),
                 dt_fraction: self.dt_fraction,
             });
@@ -581,7 +583,7 @@ impl<'a> PositionBuilder<'a> {
     pub fn add_acceleration_dt_dt(mut self, aref: AccelerationRef, factor: f32) -> Self {
         self.contributions
             .push(PositionContributionInternal::AccelerationDtDt {
-                factor: factor.into(),
+                factor: R32::new(factor).unwrap(),
                 aref: aref.internal_for(self.step),
                 dt_fraction: self.dt_fraction,
             });
@@ -633,7 +635,7 @@ impl<'a> VelocityBuilder<'a> {
     pub fn add_acceleration_dt(mut self, aref: AccelerationRef, factor: f32) -> Self {
         self.contributions
             .push(VelocityContributionInternal::AccelerationDt {
-                factor: factor.into(),
+                factor: R32::new(factor).unwrap(),
                 aref: aref.internal_for(self.step),
                 dt_fraction: self.dt_fraction,
             });

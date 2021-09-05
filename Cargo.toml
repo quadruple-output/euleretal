@@ -17,9 +17,12 @@ edition = "2018"
 [dependencies]
 eframe = "0.14" # gives us egui, epi and web+native backends
 parry3d = "0.7" # geometric and collision detection libraries, including `nalgebra`
-decorum = "0.3" # Total ordering (and more) for floating-point types
+ordered-float = { version = "2", features = [] } # Total ordering (and more) for floating-point types
+#ordered-float = { version = "2", features = ["serde"] } # Total ordering (and more) for floating-point types
+#fraction = { version = "0.9", default-features = false }
+num-traits = "0.2"
 log = "0.4"
-simple_logger = "1.11"
+simple_logger = "1"
 
 [dependencies.serde] # serialization/deserialization framework
 version = "1"
