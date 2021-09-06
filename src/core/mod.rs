@@ -22,7 +22,7 @@ pub use integration_step::{
 };
 pub use integrator::Integrator;
 pub use obj::Obj;
-pub use position::{Hash as PositionHash, Position, Translation};
+pub use position::{AuxHash as PositionHash, Position, Translation};
 pub use samples::{Samples, StartCondition};
 pub use scenario::Scenario;
 pub use start_velocity::StartVelocity;
