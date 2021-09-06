@@ -1,12 +1,12 @@
 use super::{
     import::Vec3, integrator::ExpectedCapacities, AccelerationField, Duration, IntegrationStep,
-    Position, Samples, StartCondition, StartPosition, StartVelocity, Velocity,
+    Position, PositionHash, Samples, StartCondition, StartVelocity, Velocity,
 };
 use ::std::{collections::hash_map::DefaultHasher, hash::Hash};
 
 pub struct Scenario {
     pub acceleration: Box<dyn AccelerationField>,
-    pub start_position: StartPosition,
+    pub start_position: Position,
     pub start_velocity: StartVelocity,
     pub duration: Duration,
 }
@@ -25,12 +25,12 @@ impl Scenario {
         self.duration.hash(state);
     }
 
-    pub fn calculate_trajectory(&self, min_dt: Duration) -> Vec<Vec3> {
+    pub fn calculate_trajectory(&self, min_dt: Duration) -> Vec<Position> {
         #[allow(clippy::cast_sign_loss)]
         let num_steps = (self.duration / min_dt * STEPS_PER_DT as f32) as usize;
         let (trajectory, _samples) = calculate_trajectory_and_samples(
             &*self.acceleration,
-            self.start_position.0,
+            self.start_position,
             self.start_velocity.0,
             1,
             self.duration,
@@ -65,7 +65,7 @@ impl Scenario {
         let num_iterations = (self.duration / dt) as usize;
         let (trajectory, samples) = calculate_trajectory_and_samples(
             &*self.acceleration,
-            self.start_position.0,
+            self.start_position,
             self.start_velocity.0,
             num_iterations,
             dt,
@@ -83,12 +83,12 @@ impl Scenario {
 /// returns (trajectory, samples)
 fn calculate_trajectory_and_samples(
     acceleration: &dyn AccelerationField,
-    start_position: Vec3,
+    start_position: Position,
     start_velocity: Vec3,
     iterations: usize,
     dt: Duration,
     steps_per_dt: usize,
-) -> (Vec<Vec3>, Samples) {
+) -> (Vec<Position>, Samples) {
     let mut t0 = 0.0.into();
     let mut s0 = start_position;
     let mut v0 = start_velocity;

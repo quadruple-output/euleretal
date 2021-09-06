@@ -60,7 +60,7 @@ impl Integration {
         {
             samples
                 .step_positions()
-                .for_each(|point| bbox.expand_to(point));
+                .for_each(|point| bbox.expand_to(&point));
         }
     }
 

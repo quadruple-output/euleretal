@@ -611,7 +611,6 @@ version = "0.1.0"
 dependencies = [
  "eframe",
  "log",
- "num-traits",
  "ordered-float",
  "parry3d",
  "serde",

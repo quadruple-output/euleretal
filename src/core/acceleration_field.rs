@@ -1,8 +1,8 @@
-use super::import::Vec3;
+use super::{Acceleration, Position};
 use ::std::{any::TypeId, collections::hash_map::DefaultHasher, hash::Hash};
 
 pub trait AccelerationField: Send + Sync + 'static {
-    fn value_at(&self, pos: Vec3) -> Vec3;
+    fn value_at(&self, pos: Position) -> Acceleration;
 
     fn label(&self) -> String;
 

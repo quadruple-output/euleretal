@@ -40,7 +40,7 @@ impl Canvas {
             scenario,
             integrations: Vec::default(),
             visible_units: 1.,
-            focus: Vec3::default(),
+            focus: Position::origin(),
             scale: Vec3::default(),
             area_center: Pos2::default(),
             trajectory_buffer: None,
@@ -79,17 +79,18 @@ impl Canvas {
         }
     }
 
-    #[must_use]
     pub fn has_trajectory(&self) -> bool {
         self.trajectory_buffer.is_some()
     }
 
-    #[must_use]
     pub fn bbox(&self) -> Option<BoundingBox> {
-        self.trajectory_buffer.as_ref().map(|buf| {
-            let mut bbox = BoundingBox::default();
-            buf.trajectory.iter().for_each(|&s| bbox.expand_to(s));
-            bbox
+        self.trajectory_buffer.as_ref().and_then(|buf| {
+            let mut points = buf.trajectory.iter();
+            points.next().map(|first_point| {
+                let mut bbox = BoundingBox::new_at(first_point);
+                points.for_each(|s| bbox.expand_to(s));
+                bbox
+            })
         })
     }
 
@@ -110,16 +111,16 @@ impl Canvas {
 
     fn screen_to_user(&self, pos: Pos2) -> Position {
         debug_assert!(self.scale != Vec3::default());
-        (pos - self.area_center.to_vec2())
-            .to_vec3()
-            .component_div(&self.scale)
-            + self.focus
+        self.focus
+            + (pos - self.area_center.to_vec2())
+                .to_vec3()
+                .component_div(&self.scale)
     }
 }
 
 #[derive(Default)]
 struct TrajectoryBuffer {
-    trajectory: Vec<Vec3>,
+    trajectory: Vec<Position>,
     scenario_hash: u64,
     trajectory_min_dt: Duration,
 }

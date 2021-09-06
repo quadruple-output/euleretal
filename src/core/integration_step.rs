@@ -46,7 +46,7 @@ mod public_refs {
 use super::{
     import::{shape, PointQuery},
     integrator, Acceleration, AccelerationField, Duration, Fraction, PhysicalQuantityKind,
-    Position, StartCondition, Velocity,
+    Position, StartCondition, Translation, Velocity,
 };
 use ::std::ops::Mul;
 pub use public_refs::{AccelerationRef, PositionRef, VelocityRef};
@@ -260,10 +260,10 @@ impl IntegrationStep {
 
     pub fn distance_to(&self, pos: &Position) -> f32 {
         shape::Segment::new(
-            self.positions_iter().next().unwrap().into(),
-            self.positions_iter().last().unwrap().into(),
+            self.positions_iter().next().unwrap(),
+            self.positions_iter().last().unwrap(),
         )
-        .distance_to_local_point(&(*pos).into(), true)
+        .distance_to_local_point(pos, true)
     }
 
     pub fn closest_computed_velocity(&self, pos: Position) -> ComputedVelocity {
@@ -467,7 +467,7 @@ impl<'a> PositionContribution<'a> {
         self.internal.kind()
     }
 
-    pub fn vector(&self) -> Option<Position> {
+    pub fn vector(&self) -> Option<Translation> {
         match self.internal {
             PositionContributionInternal::StartPosition { .. } => None,
             _ => Some(self.internal.evaluate_for(self.position.step)),
@@ -588,7 +588,7 @@ impl<'a> PositionBuilder<'a> {
     }
 
     pub fn create(self) -> PositionRef {
-        let mut s = Position::zeros();
+        let mut s = Position::origin();
         for contrib in &self.contributions {
             s += contrib.evaluate_for(self.step);
         }
@@ -663,9 +663,9 @@ impl PositionContributionInternal {
         }
     }
 
-    fn evaluate_for(&self, step: &IntegrationStep) -> Position {
+    fn evaluate_for(&self, step: &IntegrationStep) -> Translation {
         match *self {
-            Self::StartPosition { sref } => step.internal_get_position(sref).s,
+            Self::StartPosition { sref } => step.internal_get_position(sref).s.coords,
             Self::VelocityDt {
                 factor,
                 vref,

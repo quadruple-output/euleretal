@@ -4,4 +4,4 @@ mod constant_acceleration;
 pub use center_mass::CenterMass;
 pub use constant_acceleration::ConstantAcceleration;
 
-use super::{core, import};
+use super::core;

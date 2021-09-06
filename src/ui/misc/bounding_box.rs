@@ -1,30 +1,32 @@
-use super::import::Vec3;
+use super::core::Position;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct BoundingBox {
-    pub min: Vec3,
-    pub max: Vec3,
+    min: Position,
+    max: Position,
 }
 
 impl BoundingBox {
-    pub fn expand_to(&mut self, s: Vec3) {
-        self.min.x = self.min.x.min(s.x);
-        self.min.y = self.min.y.min(s.y);
-        self.min.z = self.min.z.min(s.z);
-        self.max.x = self.max.x.max(s.x);
-        self.max.y = self.max.y.max(s.y);
-        self.max.z = self.max.z.max(s.z);
+    pub fn new_at(center: &Position) -> Self {
+        Self {
+            min: *center,
+            max: *center,
+        }
+    }
+
+    pub fn expand_to(&mut self, s: &Position) {
+        self.min = self.min.inf(s);
+        self.max = self.max.sup(s);
     }
 
     #[must_use]
-    pub fn center(&self) -> Vec3 {
-        0.5 * (self.max + self.min)
+    pub fn center(&self) -> Position {
+        Position::from(0.5 * (self.max.coords + self.min.coords))
     }
 
     #[must_use]
     pub fn diameter(&self) -> f32 {
-        (self.max.x - self.min.x)
-            .max(self.max.y - self.min.y)
-            .max(self.max.z - self.min.z)
+        let min2max = self.max - self.min;
+        min2max.x.max(min2max.y).max(min2max.z)
     }
 }
