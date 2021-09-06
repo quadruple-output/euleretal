@@ -10,9 +10,9 @@ pub struct StepSize {
 impl std::fmt::Display for StepSize {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.user_label.is_empty() {
-            write!(f, "{}", self.duration.0)
+            write!(f, "{}", self.duration)
         } else {
-            write!(f, "{} \"{}\"", self.duration.0, self.user_label)
+            write!(f, "{} \"{}\"", self.duration, self.user_label)
         }
     }
 }

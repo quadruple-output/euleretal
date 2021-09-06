@@ -34,7 +34,7 @@ impl Integration {
         // check if we have to re-calculate:
         let mut hasher = DefaultHasher::new();
         scenario.hash_default(&mut hasher);
-        step_duration.0.hash(&mut hasher);
+        step_duration.hash(&mut hasher);
         let ref_sample_validity = hasher.finish();
         integrator.hash(&mut hasher);
         let sample_validity = hasher.finish();
@@ -43,7 +43,7 @@ impl Integration {
             false
         } else {
             #[allow(clippy::cast_sign_loss)]
-            let num_steps = (scenario.duration.0 / step_duration.0).into_inner() as usize;
+            let num_steps = (scenario.duration / step_duration) as usize;
 
             let samples = Self::integrate(
                 integrator,
@@ -79,12 +79,10 @@ impl Integration {
         num_steps: usize,
         dt: Duration,
     ) -> Samples {
-        let dt = dt.0;
         let mut samples = Samples::new(num_steps);
         let mut current_condition = (*start_condition).clone();
         for _ in 0..num_steps {
-            let mut next =
-                integrator.integrate_step(&current_condition, Duration(dt), acceleration_field);
+            let mut next = integrator.integrate_step(&current_condition, dt, acceleration_field);
             next.compute_acceleration_at_last_position(acceleration_field);
 
             current_condition = next.next_condition().unwrap();

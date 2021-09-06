@@ -2,10 +2,13 @@ use super::{
     import::{Vec3, R32},
     Fraction,
 };
-use ::std::ops::{Add, Div, Mul, Sub};
+use ::std::{
+    fmt::Display,
+    ops::{Add, Div, Mul, Sub},
+};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Ord, Eq, Hash)]
-pub struct Duration(pub R32); // todo: make self.0 private and use into() for instantiation
+pub struct Duration(R32);
 
 impl From<f32> for Duration {
     fn from(n: f32) -> Self {
@@ -132,5 +135,11 @@ impl Div<R32> for Duration {
 
     fn div(self, rhs: R32) -> Self::Output {
         Self(self.0 / rhs)
+    }
+}
+
+impl Display for Duration {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
     }
 }

@@ -76,7 +76,7 @@ fn show_step_size_table(ui: &mut Ui, world: &World) -> Operation {
                     ui.label("");
                 }
                 // edit dt:
-                let mut dt = step_size.borrow().duration.0.into_inner();
+                let mut dt = step_size.borrow().duration.into();
                 if ui
                     .add(Slider::new(&mut dt, 0.01..=2.).logarithmic(true))
                     .changed()
