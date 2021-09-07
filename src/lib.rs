@@ -15,18 +15,23 @@ mod scenarios;
 mod ui;
 
 mod import {
-    pub type Vec3 = ::parry3d::math::Vector<f32>; //todo: do not re-export and do not use directly
     pub use ::ordered_float::NotNan;
     pub use ::parry3d::{query::PointQuery, shape};
     pub use ::std::rc::Rc;
+    pub type Vec3 = ::parry3d::math::Vector<f32>; //todo: do not re-export and do not use directly
     pub type R32 = NotNan<f32>;
 }
 
 mod ui_import {
-    pub use ::eframe::{egui, epi};
-    pub use egui::{
-        color::{Hsva, Rgba},
-        Color32, Pos2, Stroke, Ui, Vec2,
+    pub use ::eframe::{
+        egui::{
+            self,
+            color::{Color32, Hsva, Rgba},
+            emath::{Pos2, Vec2},
+            epaint::Stroke,
+            Ui,
+        },
+        epi,
     };
 }
 

@@ -1,5 +1,3 @@
-use ::std::rc::Rc;
-
 use super::{
     containers,
     core::{Position, Scenario, StartVelocity},
@@ -9,11 +7,12 @@ use super::{
     misc::UserLabel,
     scenarios,
     ui_import::{
-        egui::{self, color::Hsva, CentralPanel, Color32, Rgba, SidePanel, Stroke, Vec2},
-        epi,
+        egui::{self, CentralPanel, SidePanel},
+        epi, Color32, Hsva, Rgba, Stroke, Vec2,
     },
     World,
 };
+use ::std::rc::Rc;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
