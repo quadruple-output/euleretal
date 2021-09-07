@@ -1,8 +1,7 @@
 use super::{
     containers,
-    core::{Position, Scenario, StartVelocity},
+    core::{Position, Scenario, Velocity},
     entities::{Canvas, Integration, Integrator, StepSize},
-    import::Vec3,
     integrators,
     misc::UserLabel,
     scenarios,
@@ -129,14 +128,14 @@ impl Euleretal {
         let scenario_center_mass = Rc::clone(self.world.add_scenario(Scenario {
             acceleration: Box::new(scenarios::CenterMass),
             start_position: Position::new(0., 1., 0.),
-            start_velocity: StartVelocity(Vec3::new(1., 0., 0.)),
+            start_velocity: Velocity::new(1., 0., 0.),
             duration: std::f32::consts::TAU.into(),
         }));
 
         let _scenario_constant_acceleration = self.world.add_scenario(Scenario {
             acceleration: Box::new(scenarios::ConstantAcceleration),
             start_position: Position::origin(),
-            start_velocity: StartVelocity(Vec3::new(1., 0., 0.)),
+            start_velocity: Velocity::new(1., 0., 0.),
             duration: 2_f32.into(),
         });
 

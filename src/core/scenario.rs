@@ -1,13 +1,13 @@
 use super::{
-    import::Vec3, integrator::ExpectedCapacities, AccelerationField, Duration, IntegrationStep,
-    Position, PositionHash, Samples, StartCondition, StartVelocity, Velocity,
+    integrator::ExpectedCapacities, AccelerationField, Duration, IntegrationStep, Position,
+    PositionHash, Samples, StartCondition, Velocity,
 };
 use ::std::{collections::hash_map::DefaultHasher, hash::Hash};
 
 pub struct Scenario {
     pub acceleration: Box<dyn AccelerationField>,
     pub start_position: Position,
-    pub start_velocity: StartVelocity,
+    pub start_velocity: Velocity,
     pub duration: Duration,
 }
 
@@ -31,7 +31,7 @@ impl Scenario {
         let (trajectory, _samples) = calculate_trajectory_and_samples(
             &*self.acceleration,
             self.start_position,
-            self.start_velocity.0,
+            self.start_velocity,
             1,
             self.duration,
             num_steps,
@@ -66,7 +66,7 @@ impl Scenario {
         let (trajectory, samples) = calculate_trajectory_and_samples(
             &*self.acceleration,
             self.start_position,
-            self.start_velocity.0,
+            self.start_velocity,
             num_iterations,
             dt,
             STEPS_PER_DT,
@@ -84,7 +84,7 @@ impl Scenario {
 fn calculate_trajectory_and_samples(
     acceleration: &dyn AccelerationField,
     start_position: Position,
-    start_velocity: Vec3,
+    start_velocity: Velocity,
     iterations: usize,
     dt: Duration,
     steps_per_dt: usize,

@@ -50,7 +50,7 @@ impl Integration {
                 &*scenario.acceleration,
                 &StartCondition {
                     position: scenario.start_position,
-                    velocity: scenario.start_velocity.0,
+                    velocity: scenario.start_velocity,
                     acceleration: scenario.acceleration.value_at(scenario.start_position),
                 },
                 num_steps,
