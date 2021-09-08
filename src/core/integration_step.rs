@@ -45,8 +45,8 @@ mod public_refs {
 
 use super::{
     import::{shape, PointQuery},
-    integrator, Acceleration, AccelerationField, Duration, Fraction, PhysicalQuantityKind,
-    Position, StartCondition, Translation, Velocity,
+    integrator, Acceleration, AccelerationField, Duration, Fraction, Move, PhysicalQuantityKind,
+    Position, StartCondition, Velocity,
 };
 use ::std::ops::Mul;
 pub use public_refs::{AccelerationRef, PositionRef, VelocityRef};
@@ -467,7 +467,7 @@ impl<'a> PositionContribution<'a> {
         self.internal.kind()
     }
 
-    pub fn vector(&self) -> Option<Translation> {
+    pub fn vector(&self) -> Option<Move> {
         match self.internal {
             PositionContributionInternal::StartPosition { .. } => None,
             _ => Some(self.internal.evaluate_for(self.position.step)),
@@ -663,9 +663,9 @@ impl PositionContributionInternal {
         }
     }
 
-    fn evaluate_for(&self, step: &IntegrationStep) -> Translation {
+    fn evaluate_for(&self, step: &IntegrationStep) -> Move {
         match *self {
-            Self::StartPosition { sref } => step.internal_get_position(sref).s.coords,
+            Self::StartPosition { sref } => step.internal_get_position(sref).s.coords.into(),
             Self::VelocityDt {
                 factor,
                 vref,

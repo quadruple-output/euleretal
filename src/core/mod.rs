@@ -8,6 +8,7 @@ mod duration;
 mod integration;
 mod integration_step;
 mod integrator;
+mod r#move;
 mod obj;
 mod position;
 pub mod samples;
@@ -25,7 +26,8 @@ pub use integration_step::{
 };
 pub use integrator::Integrator;
 pub use obj::Obj;
-pub use position::{AuxHash as PositionHash, Position, Translation};
+pub use position::{AuxHash as PositionHash, Position};
+pub use r#move::Move;
 pub use samples::{Samples, StartCondition};
 pub use scenario::Scenario;
 pub use velocity::Velocity;
@@ -35,3 +37,5 @@ pub enum PhysicalQuantityKind {
     Velocity,
     Acceleration,
 }
+
+use vector_quantity::VectorQuantity;

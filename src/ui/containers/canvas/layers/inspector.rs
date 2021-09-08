@@ -71,14 +71,14 @@ fn explain_derived_position(
             PhysicalQuantityKind::Velocity => {
                 canvas.draw_vector(
                     contribution.sampling_position(),
-                    contribution.vector().unwrap(),
+                    contribution.vector().unwrap().into(),
                     settings.strokes.contributing_velocity,
                 );
             }
             PhysicalQuantityKind::Acceleration => {
                 canvas.draw_vector(
                     contribution.sampling_position(),
-                    contribution.vector().unwrap(),
+                    contribution.vector().unwrap().into(),
                     settings.strokes.contributing_acceleration,
                 );
             }
@@ -109,7 +109,7 @@ fn explain_derived_velocity(
     for contribution in velocity.contributions_iter() {
         canvas.draw_vector(
             contribution.sampling_position(),
-            contribution.vector() * scale,
+            (contribution.vector() * scale).into(),
             match contribution.kind() {
                 PhysicalQuantityKind::Position => {
                     panic!("A position is not expected to contribute to a velocity")
@@ -121,7 +121,7 @@ fn explain_derived_velocity(
     }
     canvas.draw_vector(
         velocity.sampling_position(),
-        velocity.v() * scale,
+        (velocity.v() * scale).into(),
         settings.strokes.derived_velocity,
     );
 }
@@ -137,7 +137,7 @@ fn highlight_reference_velocity(
 ) {
     canvas.draw_vector(
         ref_sample.last_s(),
-        ref_sample.last_v() * ref_sample.dt,
+        (ref_sample.last_v() * ref_sample.dt).into(),
         settings.strokes.reference_velocity,
     );
 }

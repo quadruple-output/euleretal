@@ -1,7 +1,6 @@
 use super::import::R32;
 
 pub type Position = ::parry3d::math::Point<f32>;
-pub type Translation = ::parry3d::math::Vector<f32>;
 
 /// `Position` cannot implement `std::hash::Hash` since we neither own `Hash`, nor `Position`.
 /// Therefore, we define our own Trait which serves our Purpose of calculating a hash value.

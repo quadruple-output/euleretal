@@ -1,6 +1,6 @@
-use super::vector_quantity::VectorQuantity;
+use super::VectorQuantity;
 
 #[derive(Clone, Copy)]
 pub struct Unit;
 
-pub type Velocity = VectorQuantity<Unit, super::position::Translation>;
+pub type Velocity = VectorQuantity<Unit, super::Move>;
