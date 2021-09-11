@@ -1,6 +1,9 @@
 use super::{
-    egui, Canvas, Color32, Duration, Integration, Obj, PointFormat, Pos2, Position, Samples,
-    Scenario, Vec2, Vec3,
+    core::{Duration, Obj, Position, Samples, Scenario},
+    import::{Point3, Vec3},
+    misc::PointFormat,
+    ui_import::{egui, Color32, Pos2, Vec2},
+    Canvas, Integration,
 };
 use ::std::{
     cell::{Ref, RefMut},
@@ -64,14 +67,14 @@ impl<'c> Painter<'c> {
         self.response.ctx.input()
     }
 
-    pub fn rect_min(&self) -> Position {
+    pub fn rect_min(&self) -> Point3 {
         self.canvas.screen_to_user(Pos2::new(
             self.response.rect.min.x,
             self.response.rect.max.y, // user coords go from bottom to top
         ))
     }
 
-    pub fn rect_max(&self) -> Position {
+    pub fn rect_max(&self) -> Point3 {
         self.canvas.screen_to_user(Pos2::new(
             self.response.rect.max.x,
             self.response.rect.min.y, // user coords go from bottom to top
@@ -104,7 +107,7 @@ impl<'c> Painter<'c> {
     }
 
     pub fn draw_hline(&self, y: f32, stroke: egui::Stroke) {
-        let transformed_y = self.canvas.user_to_screen(Position::new(0., y, 0.)).y;
+        let transformed_y = self.canvas.user_to_screen(Point3::new(0., y, 0.)).y;
         self.painter.line_segment(
             [
                 Pos2::new(self.response.rect.left(), transformed_y),
@@ -115,7 +118,7 @@ impl<'c> Painter<'c> {
     }
 
     pub fn draw_vline(&self, x: f32, stroke: egui::Stroke) {
-        let transformed_x = self.canvas.user_to_screen(Position::new(x, 0., 0.)).x;
+        let transformed_x = self.canvas.user_to_screen(Point3::new(x, 0., 0.)).x;
         self.painter.line_segment(
             [
                 Pos2::new(transformed_x, self.response.rect.top()),
@@ -125,7 +128,12 @@ impl<'c> Painter<'c> {
         );
     }
 
-    pub fn draw_line_segment(&self, start: Position, end: Position, stroke: egui::Stroke) {
+    pub fn draw_line_segment(
+        &self,
+        start: impl Into<Point3>,
+        end: impl Into<Point3>,
+        stroke: egui::Stroke,
+    ) {
         let canvas = &self.canvas;
         self.painter.line_segment(
             [canvas.user_to_screen(start), canvas.user_to_screen(end)],
@@ -133,8 +141,8 @@ impl<'c> Painter<'c> {
         );
     }
 
-    pub fn draw_sample_point(&self, position: Position, format: &PointFormat) {
-        format.draw_position_on(self.canvas.user_to_screen(position), &self.painter);
+    pub fn draw_sample_point(&self, p: impl Into<Point3>, format: &PointFormat) {
+        format.draw_position_on(self.canvas.user_to_screen(p), &self.painter);
     }
 
     pub fn draw_sample_dots(&self, samples: &Samples, color: Color32, format: &PointFormat) {
@@ -154,7 +162,13 @@ impl<'c> Painter<'c> {
             });
     }
 
-    pub fn draw_vector(&self, start: Position, vec: Vec3, stroke: egui::Stroke) {
+    pub fn draw_vector(
+        &self,
+        start: impl Into<Point3>,
+        vec: impl Into<Vec3>,
+        stroke: egui::Stroke,
+    ) {
+        let (start, vec) = (start.into(), vec.into());
         let (start, end) = {
             (
                 self.canvas.user_to_screen(start),
@@ -179,7 +193,7 @@ impl<'c> Painter<'c> {
 
     /// Execute `add_contents` when hovered, passing the mouse position translated to application
     /// coordinates.
-    pub fn on_hover(&self, add_contents: impl FnOnce(Position)) {
+    pub fn on_hover(&self, add_contents: impl FnOnce(Point3)) {
         let pointer = &self.response.ctx.input().pointer;
         if self.response.hovered() && pointer.has_pointer() {
             if let Some(mouse_pos) = pointer.hover_pos() {
@@ -189,7 +203,7 @@ impl<'c> Painter<'c> {
     }
 
     /// show a pop-up window if hovered
-    pub fn on_hover_ui(&self, add_contents: impl FnOnce(&mut egui::Ui, Position)) {
+    pub fn on_hover_ui(&self, add_contents: impl FnOnce(&mut egui::Ui, Point3)) {
         let response = &self.response;
         if response.hovered() && response.ctx.input().pointer.has_pointer() {
             egui::popup::show_tooltip_at_pointer(
@@ -214,7 +228,7 @@ impl<'c> Painter<'c> {
 
     pub fn draw_trajectory(&self, stroke: egui::Stroke) {
         if let Some(ref buffer) = &self.canvas.trajectory_buffer {
-            self.draw_connected_samples(buffer.trajectory.iter().copied(), stroke);
+            self.draw_connected_samples(buffer.iter().copied(), stroke);
         }
     }
 

@@ -13,7 +13,7 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
         pointer_position = Some(pointer_pos);
         if canvas.input().pointer.primary_down() {
             canvas.for_each_integration_mut(|mut integration| {
-                integration.focus_closest_sample(&pointer_pos);
+                integration.focus_closest_sample(&pointer_pos.into());
             });
         }
     });
@@ -71,14 +71,14 @@ fn explain_derived_position(
             PhysicalQuantityKind::Velocity => {
                 canvas.draw_vector(
                     contribution.sampling_position(),
-                    contribution.vector().unwrap().into(),
+                    contribution.vector().unwrap(),
                     settings.strokes.contributing_velocity,
                 );
             }
             PhysicalQuantityKind::Acceleration => {
                 canvas.draw_vector(
                     contribution.sampling_position(),
-                    contribution.vector().unwrap().into(),
+                    contribution.vector().unwrap(),
                     settings.strokes.contributing_acceleration,
                 );
             }
@@ -109,7 +109,7 @@ fn explain_derived_velocity(
     for contribution in velocity.contributions_iter() {
         canvas.draw_vector(
             contribution.sampling_position(),
-            (contribution.vector() * scale).into(),
+            contribution.vector() * scale,
             match contribution.kind() {
                 PhysicalQuantityKind::Position => {
                     panic!("A position is not expected to contribute to a velocity")
@@ -121,7 +121,7 @@ fn explain_derived_velocity(
     }
     canvas.draw_vector(
         velocity.sampling_position(),
-        (velocity.v() * scale).into(),
+        velocity.v() * scale,
         settings.strokes.derived_velocity,
     );
 }
@@ -137,7 +137,7 @@ fn highlight_reference_velocity(
 ) {
     canvas.draw_vector(
         ref_sample.last_s(),
-        (ref_sample.last_v() * ref_sample.dt).into(),
+        ref_sample.last_v() * ref_sample.dt,
         settings.strokes.reference_velocity,
     );
 }

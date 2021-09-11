@@ -26,7 +26,7 @@ pub use integration_step::{
 };
 pub use integrator::Integrator;
 pub use obj::Obj;
-pub use position::{AuxHash as PositionHash, Position};
+pub use position::Position;
 pub use r#move::Move;
 pub use samples::{Samples, StartCondition};
 pub use scenario::Scenario;

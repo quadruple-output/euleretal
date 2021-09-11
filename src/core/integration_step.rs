@@ -260,13 +260,14 @@ impl IntegrationStep {
 
     pub fn distance_to(&self, pos: &Position) -> f32 {
         shape::Segment::new(
-            self.positions_iter().next().unwrap(),
-            self.positions_iter().last().unwrap(),
+            self.positions_iter().next().unwrap().into(),
+            self.positions_iter().last().unwrap().into(),
         )
-        .distance_to_local_point(pos, true)
+        .distance_to_local_point(pos.as_point(), true)
     }
 
-    pub fn closest_computed_velocity(&self, pos: Position) -> ComputedVelocity {
+    pub fn closest_computed_velocity(&self, pos: impl Into<Position>) -> ComputedVelocity {
+        let pos = pos.into();
         ComputedVelocity {
             step: self,
             internal: self
@@ -276,7 +277,9 @@ impl IntegrationStep {
                 .map(|v| {
                     (
                         v,
-                        (self.internal_get_position(v.sampling_position).s - pos).norm_squared(),
+                        self.internal_get_position(v.sampling_position)
+                            .s
+                            .distance_squared(pos),
                     )
                 })
                 .reduce(|(v1, dist1), (v2, dist2)| {
@@ -291,14 +294,15 @@ impl IntegrationStep {
         }
     }
 
-    pub fn closest_computed_position(&self, pos: Position) -> ComputedPosition {
+    pub fn closest_computed_position(&self, pos: impl Into<Position>) -> ComputedPosition {
+        let pos = pos.into();
         ComputedPosition {
             step: self,
             internal: self
                 .all_positions
                 .iter()
                 .filter(|p| !p.contributions.is_empty()) // no predecessor → not 'computed'
-                .map(|p| (p, (p.s - pos).norm_squared()))
+                .map(|p| (p, p.s.distance_squared(pos)))
                 .reduce(|(p1, dist1), (p2, dist2)| {
                     if dist1 < dist2 {
                         (p1, dist1)
@@ -665,7 +669,7 @@ impl PositionContributionInternal {
 
     fn evaluate_for(&self, step: &IntegrationStep) -> Move {
         match *self {
-            Self::StartPosition { sref } => step.internal_get_position(sref).s.coords.into(),
+            Self::StartPosition { sref } => step.internal_get_position(sref).s.into(),
             Self::VelocityDt {
                 factor,
                 vref,

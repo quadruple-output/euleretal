@@ -5,7 +5,6 @@ mod misc;
 mod world;
 
 use super::{core, import, integrators, scenarios, ui_import};
-use misc::{BoundingBox, UserLabel};
 use world::World;
 
 mod constants {

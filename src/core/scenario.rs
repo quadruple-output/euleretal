@@ -1,6 +1,6 @@
 use super::{
     integrator::ExpectedCapacities, AccelerationField, Duration, IntegrationStep, Position,
-    PositionHash, Samples, StartCondition, Velocity,
+    Samples, StartCondition, Velocity,
 };
 use ::std::{collections::hash_map::DefaultHasher, hash::Hash};
 

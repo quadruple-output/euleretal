@@ -1,13 +1,13 @@
 use super::{
-    core::{IntegrationStep, Obj, Position, Scenario},
-    misc::Settings,
+    core::{self, IntegrationStep, Obj, Position, Scenario},
+    misc::{BoundingBox, Settings},
     ui_import::{Color32, Hsva, Stroke},
     Integrator, StepSize,
 };
 use ::std::rc::Rc;
 
 pub struct Integration {
-    pub core_integration: crate::core::Integration,
+    pub core_integration: self::core::Integration,
     pub integrator: Obj<Integrator>,
     pub step_size: Obj<StepSize>,
     current_sample_index: Option<usize>,
@@ -22,7 +22,7 @@ impl Clone for Integration {
 impl Integration {
     pub fn new(integrator: Obj<Integrator>, step_size: Obj<StepSize>) -> Self {
         Self {
-            core_integration: crate::core::Integration::new(),
+            core_integration: self::core::Integration::new(),
             integrator,
             step_size,
             current_sample_index: None,
@@ -30,7 +30,7 @@ impl Integration {
     }
 
     pub fn reset(&mut self) {
-        self.core_integration = crate::core::Integration::new();
+        self.core_integration = self::core::Integration::new();
     }
 
     pub fn set_integrator(&mut self, integrator: Obj<Integrator>) {
@@ -51,7 +51,7 @@ impl Integration {
         self.integrator.borrow().stroke
     }
 
-    pub fn stretch_bbox(&self, bbox: &mut crate::ui::BoundingBox) {
+    pub fn stretch_bbox(&self, bbox: &mut BoundingBox) {
         let integration = &self.core_integration;
         for samples in integration
             .reference_samples()
@@ -60,7 +60,7 @@ impl Integration {
         {
             samples
                 .step_positions()
-                .for_each(|point| bbox.expand_to(&point));
+                .for_each(|position| bbox.expand_to(position));
         }
     }
 

@@ -8,4 +8,4 @@ pub use my_stroke_ui::{my_stroke_preview, my_stroke_ui};
 pub use settings::{PointFormat, PointShape, Settings};
 pub use user_label::UserLabel;
 
-use super::{core, ui_import};
+use super::{import, ui_import};

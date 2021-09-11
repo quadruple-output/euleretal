@@ -41,6 +41,10 @@ impl<U, VQT> VectorQuantity<U, VQT> {
     pub fn zeros() -> Self {
         Self::from(Vec3::zeros())
     }
+
+    pub fn as_vector(&self) -> &Vec3 {
+        &self.vector
+    }
 }
 
 impl<U, VQT> Hash for VectorQuantity<U, VQT> {

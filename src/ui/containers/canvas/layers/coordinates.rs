@@ -1,4 +1,4 @@
-use super::{core::Position, entities::CanvasPainter, misc::settings};
+use super::{entities::CanvasPainter, import::Point3, misc::settings};
 
 pub fn render(strokes: &settings::Strokes, canvas: &CanvasPainter) {
     canvas.draw_hline(0., strokes.coordinates);
@@ -7,15 +7,15 @@ pub fn render(strokes: &settings::Strokes, canvas: &CanvasPainter) {
     let max = canvas.rect_max();
     for step in ((min.x - 1.) as i32)..=((max.x + 1.) as i32) {
         canvas.draw_line_segment(
-            Position::new(step as f32, -0.05, 0.),
-            Position::new(step as f32, 0.05, 0.),
+            Point3::new(step as f32, -0.05, 0.),
+            Point3::new(step as f32, 0.05, 0.),
             strokes.coordinates,
         );
     }
     for step in ((min.y - 1.) as i32)..=((max.y + 1.) as i32) {
         canvas.draw_line_segment(
-            Position::new(-0.05, step as f32, 1.),
-            Position::new(0.05, step as f32, 1.),
+            Point3::new(-0.05, step as f32, 1.),
+            Point3::new(0.05, step as f32, 1.),
             strokes.coordinates,
         );
     }
