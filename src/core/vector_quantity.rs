@@ -1,5 +1,5 @@
 use super::{
-    import::{Vec3, R32},
+    import::{OrderedF32, Vec3},
     Duration, Fraction,
 };
 use ::std::{
@@ -49,9 +49,9 @@ impl<U, VQT> VectorQuantity<U, VQT> {
 
 impl<U, VQT> Hash for VectorQuantity<U, VQT> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        R32::new(self.vector.x).unwrap().hash(state);
-        R32::new(self.vector.y).unwrap().hash(state);
-        R32::new(self.vector.z).unwrap().hash(state);
+        OrderedF32::from(self.vector.x).hash(state);
+        OrderedF32::from(self.vector.y).hash(state);
+        OrderedF32::from(self.vector.z).hash(state);
     }
 }
 

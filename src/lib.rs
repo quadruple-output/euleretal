@@ -15,12 +15,10 @@ mod scenarios;
 mod ui;
 
 mod import {
-    pub use ::ordered_float::NotNan;
     pub use ::parry3d::{query::PointQuery, shape};
-    pub use ::std::rc::Rc;
+    pub type OrderedF32 = ::ordered_float::OrderedFloat<f32>;
     pub type Point3 = ::parry3d::math::Point<f32>;
     pub type Vec3 = ::parry3d::math::Vector<f32>;
-    pub type R32 = NotNan<f32>;
 }
 
 mod ui_import {

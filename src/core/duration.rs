@@ -1,5 +1,5 @@
 use super::{
-    import::{Vec3, R32},
+    import::{OrderedF32, Vec3},
     Fraction,
 };
 use ::std::{
@@ -8,29 +8,17 @@ use ::std::{
 };
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Ord, Eq, Hash)]
-pub struct Duration(R32);
+pub struct Duration(OrderedF32);
 
 impl From<f32> for Duration {
     fn from(n: f32) -> Self {
-        Self(R32::new(n).unwrap())
-    }
-}
-
-impl From<R32> for Duration {
-    fn from(n: R32) -> Self {
-        Self(n)
-    }
-}
-
-impl From<Duration> for R32 {
-    fn from(d: Duration) -> Self {
-        d.0
+        Self(n.into())
     }
 }
 
 impl From<Duration> for f32 {
     fn from(d: Duration) -> Self {
-        d.0.into_inner()
+        d.0.into()
     }
 }
 
@@ -54,14 +42,6 @@ impl Mul<f32> for Duration {
     type Output = Self;
 
     fn mul(self, rhs: f32) -> Self::Output {
-        Self(self.0 * rhs)
-    }
-}
-
-impl Mul<R32> for Duration {
-    type Output = Self;
-
-    fn mul(self, rhs: R32) -> Self::Output {
         Self(self.0 * rhs)
     }
 }
@@ -98,14 +78,6 @@ impl Mul<Duration> for f32 {
     }
 }
 
-impl Mul<Duration> for R32 {
-    type Output = Duration;
-
-    fn mul(self, duration: Duration) -> Self::Output {
-        duration * self
-    }
-}
-
 impl Mul<Duration> for Fraction {
     type Output = Duration;
 
@@ -126,14 +98,6 @@ impl Div<f32> for Duration {
     type Output = Self;
 
     fn div(self, rhs: f32) -> Self::Output {
-        Self(self.0 / rhs)
-    }
-}
-
-impl Div<R32> for Duration {
-    type Output = Self;
-
-    fn div(self, rhs: R32) -> Self::Output {
         Self(self.0 / rhs)
     }
 }

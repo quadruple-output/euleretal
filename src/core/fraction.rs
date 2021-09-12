@@ -1,4 +1,4 @@
-use super::import::{Vec3, R32};
+use super::import::Vec3;
 use ::std::ops::Mul;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -33,12 +33,6 @@ impl Default for Fraction {
 impl From<Fraction> for f32 {
     fn from(f: Fraction) -> Self {
         f.numerator as f32 / f.denominator as f32
-    }
-}
-
-impl From<Fraction> for R32 {
-    fn from(f: Fraction) -> Self {
-        R32::new(f.into()).unwrap()
     }
 }
 

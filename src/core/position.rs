@@ -1,5 +1,5 @@
 use super::{
-    import::{Point3, Vec3, R32},
+    import::{OrderedF32, Point3, Vec3},
     Move,
 };
 
@@ -56,9 +56,9 @@ impl Position {
 
 impl ::std::hash::Hash for Position {
     fn hash<H: ::std::hash::Hasher>(&self, state: &mut H) {
-        R32::new(self.0.x).unwrap().hash(state);
-        R32::new(self.0.y).unwrap().hash(state);
-        R32::new(self.0.z).unwrap().hash(state);
+        OrderedF32::from(self.0.x).hash(state);
+        OrderedF32::from(self.0.y).hash(state);
+        OrderedF32::from(self.0.z).hash(state);
     }
 }
 
@@ -72,9 +72,7 @@ impl PartialEq for Position {
         // PartialEq. In particular, the following must hold for any type:
         // `k1 == k2 ⇒ hash(k1) == hash(k2)`
         // ```
-        //
-        // Here: the implementation of Hash only works for the subset of all possible values of f32.
-        //       for the other values, the above condition holds (I assume)
+        // I believe this is true for this impl.
 
         self.0 == other.0
     }
