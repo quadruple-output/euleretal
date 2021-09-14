@@ -52,6 +52,32 @@ impl Integrator for Broken {
     }
 }
 
+#[cfg(test)]
+mod test_broken_euler {
+    use super::*;
+    use crate::core::{Acceleration, Position, StartCondition, Velocity};
+
+    #[test]
+    fn first_test() {
+        let start = StartCondition {
+            position: Position::origin(),
+            velocity: Velocity::new(0., 0., 0.),
+            acceleration: Acceleration::new(1., 0., 0.),
+        };
+        let dt = 1.0.into();
+        let integrator = Broken::new();
+        let field = crate::scenarios::ConstantAcceleration;
+        let step = integrator.integrate_step(&start, dt, &field);
+
+        let (s, v, a) = (start.position, start.velocity, start.acceleration);
+        let v1 = v + a * dt;
+        let s1 = s + v * dt;
+
+        assert!(step.last_v() == v1);
+        assert!(step.last_s() == s1);
+    }
+}
+
 pub struct Euler {}
 
 impl Euler {

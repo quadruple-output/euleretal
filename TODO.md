@@ -47,3 +47,4 @@
 ## Clean Code
 - Remove methods like `expected_accelerations_for_step` and determine
   "expected" values for next step from previous one.
+- write unit tests for specific Integrators

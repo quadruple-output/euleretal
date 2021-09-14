@@ -8,14 +8,21 @@ use ::std::{
     ops::{Add, AddAssign, Div, Mul, Sub, SubAssign},
 };
 
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, PartialOrd)]
 pub struct VectorQuantity<Unit, VQMulDuration> {
     vector: Vec3,
     _unit: PhantomData<Unit>, // TODO: do we really need `Unit` as type parameter?
     _unit_mul_time: PhantomData<VQMulDuration>,
 }
 
-impl<U: Copy + Sized, VQT: Copy + Sized> Copy for VectorQuantity<U, VQT> {} // this is a work-around for rust issue #26925
+// >>> these are work-arounds for rust issue #26925:
+impl<U: Copy + Sized, VQT: Copy + Sized> Copy for VectorQuantity<U, VQT> {}
+impl<U, VQT> PartialEq for VectorQuantity<U, VQT> {
+    fn eq(&self, other: &Self) -> bool {
+        self.vector == other.vector
+    }
+}
+// <<<
 
 impl<U, VQT> From<Vec3> for VectorQuantity<U, VQT> {
     fn from(vector: Vec3) -> Self {
