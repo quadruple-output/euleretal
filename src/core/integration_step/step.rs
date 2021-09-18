@@ -10,7 +10,7 @@ use super::{
     import::{shape, PointQuery},
 };
 
-pub struct IntegrationStep {
+pub struct Step {
     dt: Duration,
     positions: Vec<ComputedPositionData>,
     velocities: Vec<ComputedVelocityData>,
@@ -36,7 +36,7 @@ pub struct ConditionRef {
     pub a: AccelerationRef,
 }
 
-impl IntegrationStep {
+impl Step {
     pub fn new(capacities: integrator::ExpectedCapacities, dt: Duration) -> Self {
         Self {
             dt,
@@ -248,7 +248,7 @@ impl IntegrationStep {
     }
 }
 
-impl ::std::ops::Index<AccelerationRef> for IntegrationStep {
+impl ::std::ops::Index<AccelerationRef> for Step {
     type Output = ComputedAcceleration;
 
     fn index(&self, a_ref: AccelerationRef) -> &Self::Output {
@@ -256,7 +256,7 @@ impl ::std::ops::Index<AccelerationRef> for IntegrationStep {
     }
 }
 
-impl ::std::ops::Index<PositionRef> for IntegrationStep {
+impl ::std::ops::Index<PositionRef> for Step {
     type Output = ComputedPositionData;
 
     fn index(&self, p_ref: PositionRef) -> &Self::Output {
@@ -264,7 +264,7 @@ impl ::std::ops::Index<PositionRef> for IntegrationStep {
     }
 }
 
-impl ::std::ops::Index<VelocityRef> for IntegrationStep {
+impl ::std::ops::Index<VelocityRef> for Step {
     type Output = ComputedVelocityData;
 
     fn index(&self, v_ref: VelocityRef) -> &Self::Output {

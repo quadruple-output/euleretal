@@ -1,4 +1,4 @@
-use super::core::{AccelerationField, Duration, IntegrationStep, Integrator, StartCondition};
+use super::core::{AccelerationField, Duration, Integrator, StartCondition, Step};
 
 pub struct Broken {}
 
@@ -24,8 +24,8 @@ impl Integrator for Broken {
         current: &StartCondition,
         dt: Duration,
         _acceleration_field: &dyn AccelerationField,
-    ) -> IntegrationStep {
-        let mut step = IntegrationStep::new(self.expected_capacities_for_step(), dt);
+    ) -> Step {
+        let mut step = Step::new(self.expected_capacities_for_step(), dt);
         let p0 = step.initial_condition(current);
         step.compute_position(fraction!(1 / 1))
             .based_on(p0.s)
@@ -103,8 +103,8 @@ impl Integrator for Euler {
         current: &StartCondition,
         dt: Duration,
         _acceleration_field: &dyn AccelerationField,
-    ) -> IntegrationStep {
-        let mut step = IntegrationStep::new(self.expected_capacities_for_step(), dt);
+    ) -> Step {
+        let mut step = Step::new(self.expected_capacities_for_step(), dt);
         let p0 = step.initial_condition(current);
         let next_position = step
             .compute_position(fraction!(1 / 1))

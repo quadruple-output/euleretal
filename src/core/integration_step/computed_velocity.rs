@@ -1,10 +1,10 @@
 use super::{
     core::{Position, Velocity},
-    IntegrationStep, PositionRef, VelocityContribution, VelocityContributionData,
+    PositionRef, Step, VelocityContribution, VelocityContributionData,
 };
 
 pub struct ComputedVelocity<'a> {
-    step: &'a IntegrationStep,
+    step: &'a Step,
     data: &'a Data,
 }
 
@@ -40,7 +40,7 @@ impl ::std::ops::Mul<&Data> for f32 {
 }
 
 impl Data {
-    pub(super) fn public_for<'a>(&'a self, step: &'a IntegrationStep) -> ComputedVelocity<'a> {
+    pub(super) fn public_for<'a>(&'a self, step: &'a Step) -> ComputedVelocity<'a> {
         ComputedVelocity { step, data: self }
     }
 }

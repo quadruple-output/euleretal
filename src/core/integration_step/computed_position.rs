@@ -1,10 +1,10 @@
 use super::{
     core::{Fraction, Position},
-    PositionContribution, PositionContributionData, IntegrationStep,
+    PositionContribution, PositionContributionData, Step,
 };
 
 pub struct ComputedPosition<'a> {
-    step: &'a IntegrationStep,
+    step: &'a Step,
     data: &'a Data,
 }
 
@@ -41,7 +41,7 @@ pub struct Data {
 }
 
 impl Data {
-    pub(super) fn public_for<'a>(&'a self, step: &'a IntegrationStep) -> ComputedPosition<'a> {
+    pub(super) fn public_for<'a>(&'a self, step: &'a Step) -> ComputedPosition<'a> {
         ComputedPosition { step, data: self }
     }
 }

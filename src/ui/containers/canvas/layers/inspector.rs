@@ -1,6 +1,6 @@
 use super::{
     core::{
-        ComputedPosition, ComputedVelocity, Duration, IntegrationStep, PhysicalQuantityKind,
+        ComputedPosition, ComputedVelocity, Duration, Step, PhysicalQuantityKind,
         Position,
     },
     entities::CanvasPainter,
@@ -132,7 +132,7 @@ fn highlight_reference_position(canvas: &CanvasPainter, position: Position, sett
 
 fn highlight_reference_velocity(
     canvas: &CanvasPainter,
-    ref_sample: &IntegrationStep,
+    ref_sample: &Step,
     settings: &Settings,
 ) {
     canvas.draw_vector(

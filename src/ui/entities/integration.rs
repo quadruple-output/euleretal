@@ -1,5 +1,5 @@
 use super::{
-    core::{self, IntegrationStep, Obj, Position, Scenario},
+    core::{self, Obj, Position, Scenario, Step},
     misc::{BoundingBox, Settings},
     ui_import::{Color32, Hsva, Stroke},
     Integrator, StepSize,
@@ -69,7 +69,7 @@ impl Integration {
     }
 
     /// returns (ReferenceSample,ComputedSample)
-    pub fn focussed_sample(&self) -> Option<(&IntegrationStep, &IntegrationStep)> {
+    pub fn focussed_sample(&self) -> Option<(&Step, &Step)> {
         self.current_sample_index.map(|idx| {
             (
                 self.core_integration.reference_samples().unwrap().at(idx),

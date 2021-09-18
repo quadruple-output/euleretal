@@ -20,4 +20,4 @@ use contributions::{
     PositionContribution, PositionContributionData, VelocityContribution, VelocityContributionData,
 };
 pub use start_condition::StartCondition;
-pub use step::{AccelerationRef, IntegrationStep, PositionRef, VelocityRef};
+pub use step::{AccelerationRef, PositionRef, Step, VelocityRef};

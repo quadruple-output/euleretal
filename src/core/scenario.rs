@@ -1,6 +1,6 @@
 use super::{
-    integrator::ExpectedCapacities, AccelerationField, Duration, IntegrationStep, Position,
-    Samples, StartCondition, Velocity,
+    integrator::ExpectedCapacities, AccelerationField, Duration, Position, Samples, StartCondition,
+    Step, Velocity,
 };
 use ::std::{collections::hash_map::DefaultHasher, hash::Hash};
 
@@ -105,7 +105,7 @@ fn calculate_trajectory_and_samples(
     };
     for step_count in 1..=iterations {
         let t1 = (step_count as f32) * dt;
-        let mut new_step = IntegrationStep::new(step_capacities, dt);
+        let mut new_step = Step::new(step_capacities, dt);
         new_step.initial_condition(&StartCondition::new(s0, v0, a0));
         let mut ti0 = t0;
         for intermediate_step_count in 1..=steps_per_dt {

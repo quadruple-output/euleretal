@@ -1,20 +1,20 @@
 use super::{
     core::{self, Fraction},
     integration_step::{
-        AccelerationRef, ComputedVelocityData, PositionRef, IntegrationStep, VelocityContributionData,
+        AccelerationRef, ComputedVelocityData, PositionRef, Step, VelocityContributionData,
         VelocityRef,
     },
 };
 
 pub struct Velocity<'a> {
-    step: &'a mut IntegrationStep,
+    step: &'a mut Step,
     dt_fraction: Fraction,
     s_ref: PositionRef,
     contributions: Vec<VelocityContributionData>,
 }
 
 impl<'a> Velocity<'a> {
-    pub fn new(step: &'a mut IntegrationStep, dt_fraction: Fraction, s_ref: PositionRef) -> Self {
+    pub fn new(step: &'a mut Step, dt_fraction: Fraction, s_ref: PositionRef) -> Self {
         Self {
             step,
             dt_fraction,

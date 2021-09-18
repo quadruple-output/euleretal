@@ -22,7 +22,7 @@ pub use duration::Duration;
 pub use fraction::Fraction;
 pub use integration::Integration;
 pub use integration_step::{
-    ComputedAcceleration, ComputedPosition, ComputedVelocity, IntegrationStep, StartCondition,
+    ComputedAcceleration, ComputedPosition, ComputedVelocity, StartCondition, Step,
 };
 pub use integrator::Integrator;
 pub use obj::Obj;

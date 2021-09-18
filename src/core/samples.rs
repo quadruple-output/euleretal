@@ -8,12 +8,12 @@ mod type_state {
     impl TypeState for NonFinalized {}
 }
 
-use super::{Position, IntegrationStep};
+use super::{Position, Step};
 use ::std::marker::PhantomData;
 use type_state::{Finalized, NonFinalized, TypeState};
 
 pub struct Samples<TS: TypeState = Finalized> {
-    steps: Vec<IntegrationStep>,
+    steps: Vec<Step>,
     type_state: PhantomData<TS>,
 }
 
@@ -29,7 +29,7 @@ impl Samples {
 }
 
 impl Samples<NonFinalized> {
-    pub fn push_sample(&mut self, step: IntegrationStep) {
+    pub fn push_sample(&mut self, step: Step) {
         self.steps.push(step);
     }
 
@@ -53,7 +53,7 @@ impl Samples<Finalized> {
         }
     }
 
-    pub fn at(&self, idx: usize) -> &IntegrationStep {
+    pub fn at(&self, idx: usize) -> &Step {
         &self.steps[idx]
     }
 
@@ -70,7 +70,7 @@ impl Samples<Finalized> {
 }
 
 pub struct PositionIter<'a> {
-    steps_iter: ::std::slice::Iter<'a, IntegrationStep>,
+    steps_iter: ::std::slice::Iter<'a, Step>,
 }
 
 impl<'a> Iterator for PositionIter<'a> {
@@ -98,7 +98,7 @@ impl<'a> Iterator for PositionIter<'a> {
 }
 
 impl<'a> PositionIter<'a> {
-    pub fn step_to_s(step: &IntegrationStep) -> Position {
+    pub fn step_to_s(step: &Step) -> Position {
         step.last_s()
     }
 }

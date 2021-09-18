@@ -1,15 +1,15 @@
 use super::{
     core::{Fraction, Move, PhysicalQuantityKind, Position, Velocity},
-    AccelerationRef, IntegrationStep, PositionRef, VelocityRef,
+    AccelerationRef, PositionRef, Step, VelocityRef,
 };
 
 pub struct PositionContribution<'a> {
-    step: &'a IntegrationStep,
+    step: &'a Step,
     data: &'a PositionContributionData,
 }
 
 pub struct VelocityContribution<'a> {
-    step: &'a IntegrationStep,
+    step: &'a Step,
     data: &'a VelocityContributionData,
 }
 
@@ -97,7 +97,7 @@ impl PositionContributionData {
         }
     }
 
-    pub(super) fn evaluate_for(&self, step: &IntegrationStep) -> Move {
+    pub(super) fn evaluate_for(&self, step: &Step) -> Move {
         match *self {
             Self::StartPosition { s_ref: sref } => step[sref].s.into(),
             Self::VelocityDt {
@@ -113,7 +113,7 @@ impl PositionContributionData {
         }
     }
 
-    pub(super) fn public_for<'a>(&'a self, step: &'a IntegrationStep) -> PositionContribution<'a> {
+    pub(super) fn public_for<'a>(&'a self, step: &'a Step) -> PositionContribution<'a> {
         PositionContribution { step, data: self }
     }
 }
@@ -126,7 +126,7 @@ impl VelocityContributionData {
         }
     }
 
-    pub(super) fn evaluate_for(&self, step: &IntegrationStep) -> Velocity {
+    pub(super) fn evaluate_for(&self, step: &Step) -> Velocity {
         match *self {
             Self::Velocity { v_ref: vref } => step[vref].v,
             Self::AccelerationDt {
@@ -137,7 +137,7 @@ impl VelocityContributionData {
         }
     }
 
-    pub(super) fn public_for<'a>(&'a self, step: &'a IntegrationStep) -> VelocityContribution<'a> {
+    pub(super) fn public_for<'a>(&'a self, step: &'a Step) -> VelocityContribution<'a> {
         VelocityContribution { step, data: self }
     }
 }
