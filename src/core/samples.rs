@@ -8,7 +8,7 @@ mod type_state {
     impl TypeState for NonFinalized {}
 }
 
-use super::{Acceleration, IntegrationStep, Position, Velocity};
+use super::{Position, IntegrationStep};
 use ::std::marker::PhantomData;
 use type_state::{Finalized, NonFinalized, TypeState};
 
@@ -101,13 +101,6 @@ impl<'a> PositionIter<'a> {
     pub fn step_to_s(step: &IntegrationStep) -> Position {
         step.last_s()
     }
-}
-
-#[derive(Clone)]
-pub struct StartCondition {
-    pub position: Position,
-    pub velocity: Velocity,
-    pub acceleration: Acceleration,
 }
 
 #[derive(Clone, Copy)]

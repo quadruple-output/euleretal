@@ -59,17 +59,17 @@ mod test_broken_euler {
 
     #[test]
     fn first_test() {
-        let start = StartCondition {
-            position: Position::origin(),
-            velocity: Velocity::new(0., 0., 0.),
-            acceleration: Acceleration::new(1., 0., 0.),
-        };
+        let start = StartCondition::new(
+            Position::origin(),
+            Velocity::new(0., 0., 0.),
+            Acceleration::new(1., 0., 0.),
+        );
         let dt = 1.0.into();
         let integrator = Broken::new();
         let field = crate::scenarios::ConstantAcceleration;
         let step = integrator.integrate_step(&start, dt, &field);
 
-        let (s, v, a) = (start.position, start.velocity, start.acceleration);
+        let (s, v, a) = (start.position(), start.velocity(), start.acceleration());
         let v1 = v + a * dt;
         let s1 = s + v * dt;
 

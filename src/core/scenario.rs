@@ -47,8 +47,8 @@ impl Scenario {
     ) -> (Position, Velocity) {
         let (_, samples) = calculate_trajectory_and_samples(
             &*self.acceleration,
-            start_condition.position,
-            start_condition.velocity,
+            start_condition.position(),
+            start_condition.velocity(),
             1,
             dt,
             STEPS_PER_DT,
@@ -106,11 +106,7 @@ fn calculate_trajectory_and_samples(
     for step_count in 1..=iterations {
         let t1 = (step_count as f32) * dt;
         let mut new_step = IntegrationStep::new(step_capacities, dt);
-        new_step.initial_condition(&StartCondition {
-            position: s0,
-            velocity: v0,
-            acceleration: a0,
-        });
+        new_step.initial_condition(&StartCondition::new(s0, v0, a0));
         let mut ti0 = t0;
         for intermediate_step_count in 1..=steps_per_dt {
             let ti1 = t0 * ((steps_per_dt - intermediate_step_count) as f32 / steps_per_dt as f32)

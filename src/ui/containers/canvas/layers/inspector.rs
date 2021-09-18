@@ -32,7 +32,7 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
                     |pos| calc_sample.closest_computed_velocity(pos),
                 );
                 highlight_reference_velocity(canvas, ref_sample, settings);
-                explain_derived_velocity(&velocity_to_explain, calc_sample.dt, canvas, settings);
+                explain_derived_velocity(&velocity_to_explain, calc_sample.dt(), canvas, settings);
             } else {
                 let position_to_explain = pointer_position.map_or_else(
                     || calc_sample.last_computed_position(),
@@ -47,7 +47,7 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
                         // calculate reference sample corresponding to position_to_explain:
                         let (s, _v) = canvas.scenario().borrow().calc_intermediate_sample(
                             &ref_sample.get_start_condition(),
-                            position_to_explain.dt_fraction() * calc_sample.dt,
+                            position_to_explain.dt_fraction() * calc_sample.dt(),
                         );
                         s
                     },
@@ -137,7 +137,7 @@ fn highlight_reference_velocity(
 ) {
     canvas.draw_vector(
         ref_sample.last_s(),
-        ref_sample.last_v() * ref_sample.dt,
+        ref_sample.last_v() * ref_sample.dt(),
         settings.strokes.reference_velocity,
     );
 }

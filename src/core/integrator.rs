@@ -1,4 +1,4 @@
-use super::{samples::StartCondition, AccelerationField, Duration, IntegrationStep};
+use super::{integration_step::StartCondition, AccelerationField, Duration, IntegrationStep};
 use ::std::{any::TypeId, collections::hash_map::DefaultHasher, hash::Hash};
 
 pub trait Integrator: Send + Sync + 'static {

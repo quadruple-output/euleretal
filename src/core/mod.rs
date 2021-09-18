@@ -22,13 +22,13 @@ pub use duration::Duration;
 pub use fraction::Fraction;
 pub use integration::Integration;
 pub use integration_step::{
-    ComputedAcceleration, ComputedPosition, ComputedVelocity, IntegrationStep,
+    ComputedAcceleration, ComputedPosition, ComputedVelocity, IntegrationStep, StartCondition,
 };
 pub use integrator::Integrator;
 pub use obj::Obj;
 pub use position::Position;
 pub use r#move::Move;
-pub use samples::{Samples, StartCondition};
+pub use samples::Samples;
 pub use scenario::Scenario;
 pub use velocity::Velocity;
 
@@ -38,4 +38,5 @@ pub enum PhysicalQuantityKind {
     Acceleration,
 }
 
+use super::core; // explicit self-use to make `core` (==self) available in submodules as `super::core`
 use vector_quantity::VectorQuantity;
