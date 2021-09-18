@@ -1,8 +1,5 @@
 use super::{
-    core::{
-        ComputedPosition, ComputedVelocity, Duration, Step, PhysicalQuantityKind,
-        Position,
-    },
+    core::{ComputedPosition, ComputedVelocity, Duration, PhysicalQuantityKind, Position, Step},
     entities::CanvasPainter,
     misc::Settings,
 };
@@ -130,11 +127,7 @@ fn highlight_reference_position(canvas: &CanvasPainter, position: Position, sett
     canvas.draw_sample_point(position, &settings.point_formats.reference_position);
 }
 
-fn highlight_reference_velocity(
-    canvas: &CanvasPainter,
-    ref_sample: &Step,
-    settings: &Settings,
-) {
+fn highlight_reference_velocity(canvas: &CanvasPainter, ref_sample: &Step, settings: &Settings) {
     canvas.draw_vector(
         ref_sample.last_s(),
         ref_sample.last_v() * ref_sample.dt(),

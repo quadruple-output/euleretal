@@ -1,8 +1,8 @@
 use super::{
     core::{self, Fraction},
     integration_step::{
-        AccelerationRef, ComputedVelocityData, PositionRef, Step, VelocityContributionData,
-        VelocityRef,
+        step::{AccelerationRef, PositionRef, Step, VelocityRef},
+        ComputedVelocityData, VelocityContributionData,
     },
 };
 

@@ -1,23 +1,24 @@
 mod builders;
-mod computed_acceleration;
-mod computed_position;
-mod computed_velocity;
-mod contributions;
+mod computed_quantities;
+mod quantity_contributions;
 mod start_condition;
 mod step;
+
+pub use computed_quantities::Acceleration as ComputedAcceleration;
+pub use computed_quantities::Position as ComputedPosition;
+pub use computed_quantities::Velocity as ComputedVelocity;
+pub use start_condition::StartCondition;
+pub use step::Step;
 
 use super::{
     core,
     import,
     integration_step, // self-use
 };
-pub use computed_acceleration::ComputedAcceleration;
-pub use computed_position::ComputedPosition;
-use computed_position::Data as ComputedPositionData;
-pub use computed_velocity::ComputedVelocity;
-use computed_velocity::Data as ComputedVelocityData;
-use contributions::{
-    PositionContribution, PositionContributionData, VelocityContribution, VelocityContributionData,
+use computed_quantities::{
+    PositionData as ComputedPositionData, VelocityData as ComputedVelocityData,
 };
-pub use start_condition::StartCondition;
-pub use step::{AccelerationRef, PositionRef, Step, VelocityRef};
+use quantity_contributions::{
+    position::{Contribution as PositionContribution, Data as PositionContributionData},
+    velocity::{Contribution as VelocityContribution, Data as VelocityContributionData},
+};
