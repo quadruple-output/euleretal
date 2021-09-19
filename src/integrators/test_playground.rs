@@ -104,7 +104,7 @@ mod tests {
             start_velocity,
             acceleration_field.value_at(start_position),
         );
-        let builder = builders::Step::new(start, dt);
+        let builder = builders::Step::new(&start, dt);
         TheIntegrator::new().integrate_step(&builder, &acceleration_field);
         builder.result()
     }

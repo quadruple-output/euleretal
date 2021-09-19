@@ -2,6 +2,8 @@ mod position;
 mod step;
 mod velocity;
 
+mod tests;
+
 use super::core;
 use super::integration_step;
 pub use position::Position;

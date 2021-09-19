@@ -1,7 +1,7 @@
 use super::{
     super::integration_step::{
         step::{AccelerationRef, PositionRef, VelocityRef},
-        ComputedPositionData, PositionContributionData, Step,
+        PositionContributionData, Step,
     },
     core::{self, Fraction},
 };
@@ -53,10 +53,7 @@ impl<'a> Position<'a> {
         for contrib in &self.contributions {
             s += contrib.evaluate_for(self.step);
         }
-        self.step.add_computed_position(ComputedPositionData {
-            s,
-            dt_fraction: self.dt_fraction,
-            contributions: self.contributions,
-        })
+        self.step
+            .add_computed_position(s, self.dt_fraction, self.contributions)
     }
 }

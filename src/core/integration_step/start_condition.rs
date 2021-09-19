@@ -1,6 +1,6 @@
 use super::core::{Acceleration, Position, Velocity};
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct StartCondition {
     position: Position,
     velocity: Velocity,

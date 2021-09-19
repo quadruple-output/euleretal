@@ -3,7 +3,8 @@ use super::{
     core::{
         integration_step::{
             ComputedAcceleration, ComputedPosition, ComputedPositionData, ComputedVelocity,
-            ComputedVelocityData, StartCondition,
+            ComputedVelocityData, PositionContributionData, StartCondition,
+            VelocityContributionData,
         },
         integrator, Acceleration, AccelerationField, Duration, Fraction, Position, Velocity,
     },
@@ -50,38 +51,17 @@ impl Step {
     }
 
     pub fn raw_end_condition(&mut self, s: Position, v: Velocity, a: Acceleration) {
-        let p_ref = self.add_computed_position(ComputedPositionData {
-            s,
-            dt_fraction: fraction!(1 / 1),
-            contributions: Vec::new(),
-        });
-        self.last_computed_position = Some(p_ref);
-        self.last_computed_velocity = Some(self.add_computed_velocity(ComputedVelocityData {
-            v,
-            sampling_position: p_ref,
-            contributions: Vec::new(),
-        }));
-        self.acceleration_at_last_position =
-            Some(self.add_computed_acceleration(ComputedAcceleration {
-                a,
-                sampling_position: p_ref,
-            }));
+        let p_ref = self.add_computed_position(s, fraction!(1 / 1), Vec::new());
+        self.add_computed_velocity(v, p_ref, Vec::new());
+        self.acceleration_at_last_position = Some(self.add_computed_acceleration(a, p_ref));
     }
 
     pub fn start_position(&mut self, s: Position) -> PositionRef {
-        self.add_computed_position(ComputedPositionData {
-            s,
-            dt_fraction: fraction!(0 / 1),
-            contributions: Vec::new(),
-        })
+        self.add_computed_position(s, fraction!(0 / 1), Vec::new())
     }
 
     pub fn start_velocity(&mut self, v: Velocity, sampling_position: PositionRef) -> VelocityRef {
-        self.add_computed_velocity(ComputedVelocityData {
-            v,
-            sampling_position,
-            contributions: Vec::new(),
-        })
+        self.add_computed_velocity(v, sampling_position, Vec::new())
     }
 
     pub fn start_acceleration(
@@ -89,10 +69,7 @@ impl Step {
         a: Acceleration,
         sampling_position: PositionRef,
     ) -> AccelerationRef {
-        self.add_computed_acceleration(ComputedAcceleration {
-            a,
-            sampling_position,
-        })
+        self.add_computed_acceleration(a, sampling_position)
     }
 
     pub fn initial_condition(&mut self, p: &StartCondition) -> ConditionRef {
@@ -137,19 +114,13 @@ impl Step {
         sref: PositionRef,
         a: &dyn AccelerationField,
     ) -> AccelerationRef {
-        self.add_computed_acceleration(ComputedAcceleration {
-            a: a.value_at(self[sref].s),
-            sampling_position: sref,
-        })
+        self.add_computed_acceleration(a.value_at(self[sref].s), sref)
     }
 
     pub fn compute_acceleration_at_last_position(&mut self, a: &dyn AccelerationField) {
         let last_pref = self.last_computed_position.unwrap();
         self.acceleration_at_last_position =
-            Some(self.add_computed_acceleration(ComputedAcceleration {
-                a: a.value_at(self[last_pref].s),
-                sampling_position: last_pref,
-            }));
+            Some(self.add_computed_acceleration(a.value_at(self[last_pref].s), last_pref));
     }
 
     pub fn dt(&self) -> Duration {
@@ -220,23 +191,49 @@ impl Step {
             .public_for(self)
     }
 
-    pub(super) fn add_computed_position(&mut self, p: ComputedPositionData) -> PositionRef {
-        self.positions.push(p);
-        let p_ref = PositionRef(self.positions.len() - 1);
+    pub(super) fn add_computed_position(
+        &mut self,
+        s: Position,
+        dt_fraction: Fraction,
+        contributions: Vec<PositionContributionData>,
+    ) -> PositionRef {
+        let p_ref = PositionRef(self.positions.len());
+        self.positions.push(ComputedPositionData {
+            s,
+            dt_fraction,
+            contributions,
+        });
         self.last_computed_position = Some(p_ref);
         p_ref
     }
 
-    pub(super) fn add_computed_velocity(&mut self, p: ComputedVelocityData) -> VelocityRef {
-        self.velocities.push(p);
-        let v_ref = VelocityRef(self.velocities.len() - 1);
+    pub(super) fn add_computed_velocity(
+        &mut self,
+        v: Velocity,
+        sampling_position: PositionRef,
+        contributions: Vec<VelocityContributionData>,
+    ) -> VelocityRef {
+        let v_ref = VelocityRef(self.velocities.len());
+        self.velocities.push(ComputedVelocityData {
+            v,
+            sampling_position,
+            contributions,
+        });
         self.last_computed_velocity = Some(v_ref);
         v_ref
     }
 
-    pub(super) fn add_computed_acceleration(&mut self, p: ComputedAcceleration) -> AccelerationRef {
-        self.accelerations.push(p);
-        AccelerationRef(self.accelerations.len() - 1)
+    pub(super) fn add_computed_acceleration(
+        &mut self,
+        a: Acceleration,
+        sampling_position: PositionRef,
+    ) -> AccelerationRef {
+        let a_ref = AccelerationRef(self.accelerations.len());
+        self.accelerations.push(ComputedAcceleration {
+            a,
+            sampling_position,
+        });
+        a_ref
     }
 
     pub fn get_start_condition(&self) -> StartCondition {

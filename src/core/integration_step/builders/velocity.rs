@@ -2,7 +2,7 @@ use super::{
     core::{self, Fraction},
     integration_step::{
         step::{AccelerationRef, PositionRef, Step, VelocityRef},
-        ComputedVelocityData, VelocityContributionData,
+        VelocityContributionData,
     },
 };
 
@@ -45,10 +45,7 @@ impl<'a> Velocity<'a> {
         for contrib in &self.contributions {
             v += contrib.evaluate_for(self.step);
         }
-        self.step.add_computed_velocity(ComputedVelocityData {
-            v,
-            sampling_position: self.s_ref,
-            contributions: self.contributions,
-        })
+        self.step
+            .add_computed_velocity(v, self.s_ref, self.contributions)
     }
 }

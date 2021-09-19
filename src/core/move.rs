@@ -1,6 +1,6 @@
 use super::{import::Vec3, Position, VectorQuantity};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Unit;
 
 pub type Move = VectorQuantity<Unit, ()>;
