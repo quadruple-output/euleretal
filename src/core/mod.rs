@@ -6,7 +6,7 @@ mod acceleration;
 mod acceleration_field;
 mod duration;
 mod integration;
-mod integration_step;
+pub mod integration_step;
 mod integrator;
 mod r#move;
 mod obj;
