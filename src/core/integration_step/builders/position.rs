@@ -1,5 +1,6 @@
 use super::{
     super::integration_step::{
+        self,
         step::{AccelerationRef, PositionRef, VelocityRef},
         PositionContributionData, Step,
     },
@@ -55,5 +56,23 @@ impl<'a> Position<'a> {
         }
         self.step
             .add_computed_position(s, self.dt_fraction, self.contributions)
+    }
+}
+
+type Inner = integration_step::step::PositionRef;
+
+pub struct Position1 {
+    inner: Inner,
+}
+
+impl From<Inner> for Position1 {
+    fn from(s: Inner) -> Self {
+        Self { inner: s }
+    }
+}
+
+impl From<Position1> for Inner {
+    fn from(p: Position1) -> Self {
+        p.inner
     }
 }

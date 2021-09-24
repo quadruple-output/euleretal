@@ -1,11 +1,19 @@
-use crate::core::integrator::ExpectedCapacities;
-
-use super::core::{self, Acceleration, Duration, Position, StartCondition, Velocity};
+use super::{
+    acceleration::Acceleration1,
+    core::{self, integrator::ExpectedCapacities, Duration, StartCondition},
+    integration_step::{step::PositionRef, PositionContributionData},
+    position::Position1,
+    velocity::Velocity1,
+};
 
 pub struct Step {
     dt: Duration,
     start_condition: StartCondition,
     step: core::Step,
+}
+
+pub trait Push<T> {
+    fn push(&mut self, _: T);
 }
 
 impl Step {
@@ -29,11 +37,25 @@ impl Step {
         self.dt
     }
 
-    pub fn start_values(&self) -> (Position, Velocity, Acceleration) {
+    pub fn start_values(&self) -> (Position1, Velocity1, Acceleration1) {
         (
-            self.start_condition.position(),
-            self.start_condition.velocity(),
-            self.start_condition.acceleration(),
+            PositionRef::default().into(),
+            //VelocityRef::default().into(),
+            //AccelerationRef::default().into(),
+            self.start_condition.velocity().into(),
+            self.start_condition.acceleration().into(),
         )
+    }
+}
+
+impl Push<Position1> for Step {
+    fn push(&mut self, p: Position1) {
+        let s_ref: PositionRef = p.into();
+        let s = self.step[s_ref].s;
+        self.step.add_computed_position(
+            s,
+            fraction!(0 / 1),
+            vec![PositionContributionData::StartPosition { s_ref }],
+        );
     }
 }

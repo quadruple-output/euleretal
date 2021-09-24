@@ -1,7 +1,7 @@
 use super::import::Vec3;
 use ::std::ops::Mul;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Fraction {
     numerator: usize,
     denominator: usize,

@@ -29,26 +29,26 @@ trait Integrator: Send + Sync + 'static {
 
     fn expected_capacities_for_step(&self) -> ExpectedCapacities {
         ExpectedCapacities {
-            positions: self.expected_positions_for_step(),
-            velocities: self.expected_velocities_for_step(),
-            accelerations: self.expected_accelerations_for_step(),
+            _positions: self.expected_positions_for_step(),
+            _velocities: self.expected_velocities_for_step(),
+            _accelerations: self.expected_accelerations_for_step(),
         }
     }
 }
 
 #[derive(Clone, Copy)]
 struct ExpectedCapacities {
-    positions: usize,
-    velocities: usize,
-    accelerations: usize,
+    _positions: usize,
+    _velocities: usize,
+    _accelerations: usize,
 }
 
 impl Default for ExpectedCapacities {
     fn default() -> Self {
         Self {
-            positions: 1,
-            velocities: 1,
-            accelerations: 1,
+            _positions: 1,
+            _velocities: 1,
+            _accelerations: 1,
         }
     }
 }
@@ -83,17 +83,20 @@ impl Integrator for TheIntegrator {
     }
 
     /// This is an experimental example of how an integration step might ideally be implemented.
-    fn integrate_step(&self, builder: &builders::Step, a: &dyn AccelerationField) {
-        let (s0, v0, a0) = builder.start_values();
-        let dt = builder.dt();
-        let v1 = v0 + a0 * dt;
-        let s1 = s0 + v1 * dt;
+    fn integrate_step(&self, builder: &builders::Step, _a: &dyn AccelerationField) {
+        let (_s0, _v0, _a0) = builder.start_values();
+        let _dt = builder.dt();
+        //let v1 = v0 + a0 * dt;
+        //let s1 = s0 + v1 * dt;
     }
 }
 
 mod tests {
     use super::{
-        core::{integration_step::*, AccelerationField, Duration, Position, Velocity},
+        core::{
+            integration_step::{builders, StartCondition, Step},
+            AccelerationField, Duration, Position, Velocity,
+        },
         scenarios, Integrator, TheIntegrator,
     };
 
@@ -111,6 +114,6 @@ mod tests {
 
     #[test]
     fn resting_at_origin() {
-        let step = calc_step(Position::origin(), Velocity::zeros(), 0.5.into());
+        let _step = calc_step(Position::origin(), Velocity::zeros(), 0.5.into());
     }
 }

@@ -49,3 +49,19 @@ impl<'a> Velocity<'a> {
             .add_computed_velocity(v, self.s_ref, self.contributions)
     }
 }
+
+pub struct Velocity1 {
+    inner: core::Velocity,
+}
+
+impl From<core::Velocity> for Velocity1 {
+    fn from(v: core::Velocity) -> Self {
+        Self { inner: v }
+    }
+}
+
+impl From<Velocity1> for core::Velocity {
+    fn from(v: Velocity1) -> Self {
+        v.inner
+    }
+}

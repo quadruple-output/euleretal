@@ -21,13 +21,13 @@ pub struct Step {
     acceleration_at_last_position: Option<AccelerationRef>,
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, Default, PartialEq)]
 pub struct PositionRef(usize);
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, Default, PartialEq)]
 pub struct VelocityRef(usize);
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, Default, PartialEq)]
 pub struct AccelerationRef(usize);
 
 #[derive(Clone, Copy)]
