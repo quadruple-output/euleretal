@@ -1,6 +1,7 @@
 use super::{
     core::{self, Fraction},
     integration_step::{
+        self,
         step::{AccelerationRef, PositionRef, Step, VelocityRef},
         VelocityContributionData,
     },
@@ -50,18 +51,20 @@ impl<'a> Velocity<'a> {
     }
 }
 
+type Inner = integration_step::step::VelocityRef;
+
 pub struct Velocity1 {
-    inner: core::Velocity,
+    inner: Inner,
 }
 
-impl From<core::Velocity> for Velocity1 {
-    fn from(v: core::Velocity) -> Self {
-        Self { inner: v }
+impl From<Inner> for Velocity1 {
+    fn from(s: Inner) -> Self {
+        Self { inner: s }
     }
 }
 
-impl From<Velocity1> for core::Velocity {
-    fn from(v: Velocity1) -> Self {
-        v.inner
+impl From<Velocity1> for Inner {
+    fn from(p: Velocity1) -> Self {
+        p.inner
     }
 }

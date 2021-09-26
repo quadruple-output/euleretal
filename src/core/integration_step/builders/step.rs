@@ -1,7 +1,10 @@
 use super::{
     acceleration::Acceleration1,
     core::{self, integrator::ExpectedCapacities, Duration, StartCondition},
-    integration_step::{step::PositionRef, PositionContributionData},
+    integration_step::{
+        step::{PositionRef, VelocityRef},
+        PositionContributionData, VelocityContributionData,
+    },
     position::Position1,
     velocity::Velocity1,
 };
@@ -44,9 +47,8 @@ impl Step {
     pub fn start_values(&self) -> (Position1, Velocity1, Acceleration1) {
         (
             PositionRef::default().into(),
-            //VelocityRef::default().into(),
+            VelocityRef::default().into(),
             //AccelerationRef::default().into(),
-            self.start_condition.velocity().into(),
             self.start_condition.acceleration().into(),
         )
     }
@@ -59,6 +61,17 @@ impl Push<Position1> for Step {
             self.step[s_ref].s,
             self.step[s_ref].dt_fraction,
             vec![PositionContributionData::StartPosition { s_ref }],
+        );
+    }
+}
+
+impl Push<Velocity1> for Step {
+    fn push(&mut self, v: Velocity1) {
+        let v_ref: VelocityRef = v.into();
+        self.step.add_computed_velocity(
+            self.step[v_ref].v,
+            self.step[v_ref].sampling_position,
+            vec![VelocityContributionData::Velocity { v_ref }],
         );
     }
 }
