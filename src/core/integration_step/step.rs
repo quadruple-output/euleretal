@@ -50,34 +50,32 @@ impl Step {
         }
     }
 
+    pub fn from_previous(previous: &Self) -> Self {
+        let mut step = Self {
+            dt: previous.dt,
+            positions: Vec::with_capacity(previous.positions.len()),
+            velocities: Vec::with_capacity(previous.velocities.len()),
+            accelerations: Vec::with_capacity(previous.accelerations.len()),
+            last_computed_position: None,
+            last_computed_velocity: None,
+            acceleration_at_last_position: None,
+        };
+        step.set_start_condition(&previous.next_condition().unwrap());
+        step
+    }
+
     pub fn raw_end_condition(&mut self, s: Position, v: Velocity, a: Acceleration) {
         let p_ref = self.add_computed_position(s, fraction!(1 / 1), Vec::new());
         self.add_computed_velocity(v, p_ref, Vec::new());
         self.acceleration_at_last_position = Some(self.add_computed_acceleration(a, p_ref));
     }
 
-    pub fn start_position(&mut self, s: Position) -> PositionRef {
-        self.add_computed_position(s, fraction!(0 / 1), Vec::new())
-    }
-
-    pub fn start_velocity(&mut self, v: Velocity, sampling_position: PositionRef) -> VelocityRef {
-        self.add_computed_velocity(v, sampling_position, Vec::new())
-    }
-
-    pub fn start_acceleration(
-        &mut self,
-        a: Acceleration,
-        sampling_position: PositionRef,
-    ) -> AccelerationRef {
-        self.add_computed_acceleration(a, sampling_position)
-    }
-
-    pub fn initial_condition(&mut self, p: &StartCondition) -> ConditionRef {
-        let sref = self.start_position(p.position());
+    pub fn set_start_condition(&mut self, p: &StartCondition) -> ConditionRef {
+        let sref = self.add_computed_position(p.position(), fraction!(0 / 1), Vec::new());
         ConditionRef {
             s: sref,
-            v: self.start_velocity(p.velocity(), sref),
-            a: self.start_acceleration(p.acceleration(), sref),
+            v: self.add_computed_velocity(p.velocity(), sref, Vec::new()),
+            a: self.add_computed_acceleration(p.acceleration(), sref),
         }
     }
 

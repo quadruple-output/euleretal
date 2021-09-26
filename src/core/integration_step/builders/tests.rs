@@ -9,7 +9,6 @@ use super::{
     },
     Step as StepBuilder,
 };
-use crate::core::integrator::ExpectedCapacities;
 // not used in super, so we use an absolute path (only for tests!):
 use crate::scenarios;
 
@@ -37,7 +36,7 @@ impl Default for Setup {
 
 impl Setup {
     fn create_builder(&self) -> StepBuilder {
-        StepBuilder::new(&self.start_condition, self.dt)
+        StepBuilder::new(&self.acceleration_field, &self.start_condition, self.dt)
     }
 }
 
@@ -79,31 +78,41 @@ fn trivial_step_with_p1_eq_p0() {
 
     let step = builder.result();
     {
-        let comp_pos = step.last_computed_position();
-        assert_eq!(comp_pos.s(), ctx.start_condition.position());
-        assert_eq!(comp_pos.dt_fraction(), fraction!(0 / 1));
+        let computed_position = step.last_computed_position();
+        assert_eq!(computed_position.s(), ctx.start_condition.position());
+        assert_eq!(computed_position.dt_fraction(), fraction!(0 / 1));
         assert_eq!(
-            comp_pos
+            computed_position
                 .contributions_iter()
                 .next()
                 .unwrap()
                 .sampling_position(),
             ctx.start_condition.position()
         );
-        assert!(comp_pos.contributions_iter().nth(1).is_none());
+        assert!(computed_position.contributions_iter().nth(1).is_none());
     }
 
     {
-        let comp_vel = step.last_computed_velocity();
-        assert_eq!(comp_vel.v(), ctx.start_condition.velocity());
-        assert_eq!(comp_vel.sampling_position(), ctx.start_condition.position());
-        let vel_contrib = comp_vel.contributions_iter().next().unwrap();
-        assert_eq!(vel_contrib.vector(), ctx.start_condition.velocity().into());
+        let computed_velocity = step.last_computed_velocity();
+        assert_eq!(computed_velocity.v(), ctx.start_condition.velocity());
         assert_eq!(
-            vel_contrib.sampling_position(),
+            computed_velocity.sampling_position(),
             ctx.start_condition.position()
         );
-        assert!(comp_vel.contributions_iter().nth(1).is_none());
+        let velocity_contribution = computed_velocity.contributions_iter().next().unwrap();
+        assert_eq!(
+            velocity_contribution.vector(),
+            ctx.start_condition.velocity()
+        );
+        assert_eq!(
+            velocity_contribution.sampling_position(),
+            ctx.start_condition.position()
+        );
+        assert!(computed_velocity.contributions_iter().nth(1).is_none());
+    }
+    {
+        let next_condition = step.next_condition().unwrap();
+        assert_eq!(next_condition, ctx.start_condition);
     }
 }
 
@@ -111,7 +120,12 @@ fn trivial_step_with_p1_eq_p0() {
 fn create_step_from_previous() {
     let ctx = Setup::default();
     let step0 = ctx.create_builder().result();
-    let step1 = StepBuilder::from_previous(&step0).result();
+    let step1 = StepBuilder::from_previous(&ctx.acceleration_field, &step0).result();
     assert_eq!(step0.dt(), step1.dt());
     assert_eq!(step0.get_start_condition(), step1.get_start_condition());
+}
+
+#[test]
+fn two_simple_steps_in_sequence() {
+    todo!()
 }

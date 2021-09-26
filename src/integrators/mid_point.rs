@@ -30,7 +30,7 @@ impl Integrator for Euler {
         acceleration_field: &dyn AccelerationField,
     ) -> Step {
         let mut step = Step::new(self.expected_capacities_for_step(), dt);
-        let p0 = step.initial_condition(current);
+        let p0 = step.set_start_condition(current);
         let mid_point_pos = step
             .compute_position(fraction!(1 / 2))
             .based_on(p0.s)
@@ -104,7 +104,7 @@ impl Integrator for SecondOrder {
         acceleration_field: &dyn AccelerationField,
     ) -> Step {
         let mut step = Step::new(self.expected_capacities_for_step(), dt);
-        let p0 = step.initial_condition(current);
+        let p0 = step.set_start_condition(current);
         let mid_point_pos = step
             .compute_position(fraction!(1 / 2))
             .based_on(p0.s)

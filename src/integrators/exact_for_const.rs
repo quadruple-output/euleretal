@@ -31,7 +31,7 @@ impl Integrator for ExactForConst {
         // s1 | v1;
 
         let mut step = Step::new(self.expected_capacities_for_step(), dt);
-        let p0 = step.initial_condition(current);
+        let p0 = step.set_start_condition(current);
         step.compute_velocity(fraction!(1 / 1), p0.s)
             .based_on(p0.v)
             .add_acceleration_dt(p0.a, 1.)

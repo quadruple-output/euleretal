@@ -1,6 +1,6 @@
 use super::{
     acceleration::Acceleration1,
-    core::{self, integrator::ExpectedCapacities, Duration, StartCondition},
+    core::{self, integrator::ExpectedCapacities, AccelerationField, Duration, StartCondition},
     integration_step::{
         step::{PositionRef, VelocityRef},
         PositionContributionData, VelocityContributionData,
@@ -9,8 +9,8 @@ use super::{
     velocity::Velocity1,
 };
 
-pub struct Step {
-    dt: Duration,
+pub struct Step<'a> {
+    acceleration_field: &'a dyn AccelerationField,
     start_condition: StartCondition,
     step: core::Step,
 }
@@ -19,29 +19,40 @@ pub trait Push<T> {
     fn push(&mut self, _: T);
 }
 
-impl Step {
-    pub fn new(start_condition: &StartCondition, dt: Duration) -> Self {
+impl<'a> Step<'a> {
+    pub fn new(
+        acceleration_field: &'a dyn AccelerationField,
+        start_condition: &StartCondition,
+        dt: Duration,
+    ) -> Self {
         let mut step = core::Step::new(ExpectedCapacities::default(), dt);
-        let start_pos_ref = step.start_position(start_condition.position());
-        step.start_velocity(start_condition.velocity(), start_pos_ref);
-        step.start_acceleration(start_condition.acceleration(), start_pos_ref);
+        step.set_start_condition(start_condition);
         Self {
-            dt,
+            acceleration_field,
             start_condition: start_condition.clone(),
             step,
         }
     }
 
-    pub fn from_previous(previous: &core::Step) -> Self {
-        Self::new(&previous.get_start_condition(), previous.dt())
+    pub fn from_previous(
+        acceleration_field: &'a dyn AccelerationField,
+        previous: &core::Step,
+    ) -> Self {
+        Self {
+            acceleration_field,
+            start_condition: previous.get_start_condition(),
+            step: core::Step::from_previous(previous),
+        }
     }
 
-    pub fn result(self) -> core::Step {
+    pub fn result(mut self) -> core::Step {
+        self.step
+            .compute_acceleration_at_last_position(self.acceleration_field);
         self.step
     }
 
     pub fn dt(&self) -> Duration {
-        self.dt
+        self.step.dt()
     }
 
     pub fn start_values(&self) -> (Position1, Velocity1, Acceleration1) {
@@ -54,7 +65,7 @@ impl Step {
     }
 }
 
-impl Push<Position1> for Step {
+impl<'a> Push<Position1> for Step<'a> {
     fn push(&mut self, p: Position1) {
         let s_ref: PositionRef = p.into();
         self.step.add_computed_position(
@@ -65,7 +76,7 @@ impl Push<Position1> for Step {
     }
 }
 
-impl Push<Velocity1> for Step {
+impl<'a> Push<Velocity1> for Step<'a> {
     fn push(&mut self, v: Velocity1) {
         let v_ref: VelocityRef = v.into();
         self.step.add_computed_velocity(

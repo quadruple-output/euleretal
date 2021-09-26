@@ -48,3 +48,8 @@
 - Remove methods like `expected_accelerations_for_step` and determine
   "expected" values for next step from previous one.
 - write unit tests for specific Integrators
+
+## Performance
+- use a different allocator for everything related to `Step`s.  While
+  integrating, free-ing is not required.  When Integration result gets
+  discarded, all allocated mem can be freed at once.
