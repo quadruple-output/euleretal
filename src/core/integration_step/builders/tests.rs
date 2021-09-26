@@ -84,3 +84,12 @@ fn trivial_step_with_p1_eq_p0() {
     );
     assert!(comp_pos.contributions_iter().nth(1).is_none());
 }
+
+#[test]
+fn create_step_from_previous() {
+    let ctx = Setup::default();
+    let step0 = ctx.create_builder().result();
+    let step1 = StepBuilder::from_previous(&step0).result();
+    assert_eq!(step0.dt(), step1.dt());
+    assert_eq!(step0.get_start_condition(), step1.get_start_condition());
+}

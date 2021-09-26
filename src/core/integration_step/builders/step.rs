@@ -29,6 +29,10 @@ impl Step {
         }
     }
 
+    pub fn from_previous(previous: &core::Step) -> Self {
+        Self::new(&previous.get_start_condition(), previous.dt())
+    }
+
     pub fn result(self) -> core::Step {
         self.step
     }
@@ -51,10 +55,9 @@ impl Step {
 impl Push<Position1> for Step {
     fn push(&mut self, p: Position1) {
         let s_ref: PositionRef = p.into();
-        let s = self.step[s_ref].s;
         self.step.add_computed_position(
-            s,
-            fraction!(0 / 1),
+            self.step[s_ref].s,
+            self.step[s_ref].dt_fraction,
             vec![PositionContributionData::StartPosition { s_ref }],
         );
     }
