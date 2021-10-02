@@ -2,7 +2,7 @@
 
 use super::integration_step::StartCondition;
 use super::{
-    core::{AccelerationField, Duration, Position, Velocity},
+    core::{AccelerationField, Duration, Position, Step, Velocity},
     integration_step::builders::step::Push,
     Step as StepBuilder,
 };
@@ -32,25 +32,37 @@ impl Default for Setup {
 }
 
 impl Setup {
-    fn create_builder(&self) -> StepBuilder {
-        StepBuilder::new(&self.acceleration_field, &self.start_condition, self.dt)
+    fn new_builder_for<'a>(&'a self, step: &'a mut Step) -> StepBuilder<'a> {
+        StepBuilder::new(
+            &self.acceleration_field,
+            &self.start_condition,
+            self.dt,
+            step,
+        )
+    }
+
+    fn new_step(&self) -> Step {
+        Step::new(self.dt)
     }
 }
 
 #[test]
 fn step_from_new_builder_has_correct_start_condition() {
     let ctx = Setup::default();
-    let builder = ctx.create_builder();
-
-    let step = builder.result();
+    let mut step = ctx.new_step();
+    let mut builder = ctx.new_builder_for(&mut step);
+    builder.finalize();
     assert_eq!(step.get_start_condition(), ctx.start_condition);
 }
 
 #[test]
 fn create_step_from_previous() {
     let ctx = Setup::default();
-    let step0 = ctx.create_builder().result();
-    let step1 = StepBuilder::from_previous(&ctx.acceleration_field, &step0).result();
+    let mut step0 = ctx.new_step();
+    let mut builder = ctx.new_builder_for(&mut step0);
+    builder.finalize();
+    let mut step1 = builder.next_step();
+    builder.next_for(&mut step1).finalize();
     assert_eq!(step0.dt(), step1.dt());
     assert_eq!(step0.get_start_condition(), step1.get_start_condition());
 }
@@ -58,26 +70,25 @@ fn create_step_from_previous() {
 #[test]
 fn trivial_step_with_p1_eq_p0() {
     let ctx = Setup::default();
-    let mut builder = ctx.create_builder();
+    let mut step = ctx.new_step();
+    let mut builder = ctx.new_builder_for(&mut step);
 
     let (s0, v0, _a0) = builder.start_values();
     builder.push(s0);
     builder.push(v0);
 
-    let step = builder.result();
+    builder.finalize();
     {
         let computed_position = step.last_computed_position();
         assert_eq!(computed_position.s(), ctx.start_condition.position());
         assert_eq!(computed_position.dt_fraction(), fraction!(0 / 1));
+        let mut position_contribs = computed_position.contributions_iter();
+        let position_contribution = position_contribs.next().unwrap();
         assert_eq!(
-            computed_position
-                .contributions_iter()
-                .next()
-                .unwrap()
-                .sampling_position(),
+            position_contribution.sampling_position(),
             ctx.start_condition.position()
         );
-        assert!(computed_position.contributions_iter().nth(1).is_none());
+        assert!(position_contribs.next().is_none());
     }
 
     {
@@ -87,7 +98,8 @@ fn trivial_step_with_p1_eq_p0() {
             computed_velocity.sampling_position(),
             ctx.start_condition.position()
         );
-        let velocity_contribution = computed_velocity.contributions_iter().next().unwrap();
+        let mut velocity_contribs = computed_velocity.contributions_iter();
+        let velocity_contribution = velocity_contribs.next().unwrap();
         assert_eq!(
             velocity_contribution.vector(),
             ctx.start_condition.velocity()
@@ -96,7 +108,7 @@ fn trivial_step_with_p1_eq_p0() {
             velocity_contribution.sampling_position(),
             ctx.start_condition.position()
         );
-        assert!(computed_velocity.contributions_iter().nth(1).is_none());
+        assert!(velocity_contribs.next().is_none());
     }
     {
         let next_condition = step.next_condition().unwrap();
@@ -107,14 +119,15 @@ fn trivial_step_with_p1_eq_p0() {
 #[test]
 fn simple_step() {
     let ctx = Setup::default();
-    let mut builder = ctx.create_builder();
+    let mut step = ctx.new_step();
+    let mut builder = ctx.new_builder_for(&mut step);
     // calculate step:
     {
         let (s0, v0, _a0) = builder.start_values();
         let dt = builder.dt();
         builder.push(s0 + v0 * dt);
     }
-    let step = builder.result();
+    builder.finalize();
 
     // expected results:
     let (s0, v0, dt) = (
@@ -141,23 +154,24 @@ fn simple_step() {
 #[test]
 fn two_simple_steps_in_sequence() {
     let ctx = Setup::default();
-    let mut builder = ctx.create_builder();
 
     // calculate two steps:
+    let mut step1 = ctx.new_step();
+    let mut builder = ctx.new_builder_for(&mut step1);
     {
         let (s0, v0, _a0) = builder.start_values();
         let dt = builder.dt();
         builder.push(s0 + v0 * dt);
     }
-    let step = builder.result();
-
-    let mut builder = StepBuilder::from_previous(&ctx.acceleration_field, &step);
+    builder.finalize();
+    let mut step2 = builder.next_step();
+    let mut builder = builder.next_for(&mut step2);
     {
         let (s0, v0, _a0) = builder.start_values();
         let dt = builder.dt();
         builder.push(s0 + v0 * dt);
     }
-    let step = builder.result();
+    builder.finalize();
 
     // expected result:
     let s1;
@@ -174,7 +188,7 @@ fn two_simple_steps_in_sequence() {
     let s2 = s1 + v1 * dt;
 
     // check result:
-    let final_position = step.last_computed_position();
+    let final_position = step2.last_computed_position();
     assert_eq!(final_position.s(), s2);
 
     let mut contributions = final_position.contributions_iter();

@@ -25,7 +25,7 @@ impl Integrator for Broken {
         dt: Duration,
         _acceleration_field: &dyn AccelerationField,
     ) -> Step {
-        let mut step = Step::new(self.expected_capacities_for_step(), dt);
+        let mut step = Step::new_deprecated(self.expected_capacities_for_step(), dt);
         let p0 = step.set_start_condition(current);
         step.compute_position(fraction!(1 / 1))
             .based_on(p0.s)
@@ -104,7 +104,7 @@ impl Integrator for Euler {
         dt: Duration,
         _acceleration_field: &dyn AccelerationField,
     ) -> Step {
-        let mut step = Step::new(self.expected_capacities_for_step(), dt);
+        let mut step = Step::new_deprecated(self.expected_capacities_for_step(), dt);
         let p0 = step.set_start_condition(current);
         let next_position = step
             .compute_position(fraction!(1 / 1))

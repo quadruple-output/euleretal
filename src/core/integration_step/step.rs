@@ -38,7 +38,7 @@ pub struct ConditionRef {
 }
 
 impl Step {
-    pub fn new(capacities: integrator::ExpectedCapacities, dt: Duration) -> Self {
+    pub fn new_deprecated(capacities: integrator::ExpectedCapacities, dt: Duration) -> Self {
         Self {
             dt,
             positions: Vec::with_capacity(capacities.positions + 1),
@@ -50,18 +50,30 @@ impl Step {
         }
     }
 
-    pub fn from_previous(previous: &Self) -> Self {
-        let mut step = Self {
-            dt: previous.dt,
-            positions: Vec::with_capacity(previous.positions.len()),
-            velocities: Vec::with_capacity(previous.velocities.len()),
-            accelerations: Vec::with_capacity(previous.accelerations.len()),
+    pub fn new(dt: Duration) -> Self {
+        Self {
+            dt,
+            positions: Vec::new(),
+            velocities: Vec::new(),
+            accelerations: Vec::new(),
+            last_computed_position: None,
+            last_computed_velocity: None,
+            acceleration_at_last_position: None,
+        }
+    }
+
+    pub fn new_next(&self) -> Self {
+        let mut next = Self {
+            dt: self.dt,
+            positions: Vec::with_capacity(self.positions.len()),
+            velocities: Vec::with_capacity(self.velocities.len()),
+            accelerations: Vec::with_capacity(self.accelerations.len()),
             last_computed_position: None,
             last_computed_velocity: None,
             acceleration_at_last_position: None,
         };
-        step.set_start_condition(&previous.next_condition().unwrap());
-        step
+        next.set_start_condition(&self.next_condition().unwrap());
+        next
     }
 
     pub fn raw_end_condition(&mut self, s: Position, v: Velocity, a: Acceleration) {

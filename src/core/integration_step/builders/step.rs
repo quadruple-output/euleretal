@@ -13,7 +13,9 @@ use super::{
 pub struct Step<'a> {
     acceleration_field: &'a dyn AccelerationField,
     start_condition: StartCondition,
-    step: core::Step,
+    step: &'a mut core::Step,
+    #[cfg(debug_assertions)]
+    finalized: bool,
 }
 
 pub trait Push<T> {
@@ -21,35 +23,40 @@ pub trait Push<T> {
 }
 
 impl<'a> Step<'a> {
-    pub fn new(
+    pub fn new<'b>(
         acceleration_field: &'a dyn AccelerationField,
-        start_condition: &StartCondition,
+        start_condition: &'b StartCondition,
         dt: Duration,
+        step: &'a mut core::Step,
     ) -> Self {
-        let mut step = core::Step::new(ExpectedCapacities::default(), dt);
         step.set_start_condition(start_condition);
         Self {
             acceleration_field,
             start_condition: start_condition.clone(),
             step,
+            finalized: false,
         }
     }
 
-    pub fn from_previous(
-        acceleration_field: &'a dyn AccelerationField,
-        previous: &core::Step,
-    ) -> Self {
-        Self {
-            acceleration_field,
-            start_condition: previous.get_start_condition(),
-            step: core::Step::from_previous(previous),
-        }
-    }
-
-    pub fn result(mut self) -> core::Step {
+    pub fn finalize(&mut self) {
+        debug_assert!(!self.finalized);
+        self.finalized = true;
         self.step
             .compute_acceleration_at_last_position(self.acceleration_field);
-        self.step
+    }
+
+    pub fn next_step(&self) -> core::Step {
+        self.step.new_next()
+    }
+
+    pub fn next_for(self, step: &'a mut core::Step) -> Self {
+        debug_assert!(self.finalized);
+        Self {
+            acceleration_field: self.acceleration_field,
+            start_condition: self.step.get_start_condition(),
+            step,
+            finalized: false,
+        }
     }
 
     pub fn dt(&self) -> DtFraction {
