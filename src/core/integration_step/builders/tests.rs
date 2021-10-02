@@ -108,21 +108,25 @@ fn trivial_step_with_p1_eq_p0() {
 fn simple_step() {
     let ctx = Setup::default();
     let mut builder = ctx.create_builder();
-
+    // calculate step:
     {
         let (s0, v0, _a0) = builder.start_values();
         let dt = builder.dt();
         builder.push(s0 + v0 * dt);
     }
-
     let step = builder.result();
+
+    // expected results:
     let (s0, v0, dt) = (
         ctx.start_condition.position(),
         ctx.start_condition.velocity(),
         ctx.dt,
     );
+    let s1 = s0 + v0 * dt;
+
+    // check calculated result:
     let final_position = step.last_computed_position();
-    assert_eq!(final_position.s(), s0 + v0 * dt);
+    assert_eq!(final_position.s(), s1);
 
     let mut contributions = final_position.contributions_iter();
     let first_contribution = contributions.next().unwrap();
@@ -136,5 +140,49 @@ fn simple_step() {
 
 #[test]
 fn two_simple_steps_in_sequence() {
-    todo!()
+    let ctx = Setup::default();
+    let mut builder = ctx.create_builder();
+
+    // calculate two steps:
+    {
+        let (s0, v0, _a0) = builder.start_values();
+        let dt = builder.dt();
+        builder.push(s0 + v0 * dt);
+    }
+    let step = builder.result();
+
+    let mut builder = StepBuilder::from_previous(&ctx.acceleration_field, &step);
+    {
+        let (s0, v0, _a0) = builder.start_values();
+        let dt = builder.dt();
+        builder.push(s0 + v0 * dt);
+    }
+    let step = builder.result();
+
+    // expected result:
+    let s1;
+    let v1;
+    let dt = ctx.dt;
+    {
+        let (s0, v0) = (
+            ctx.start_condition.position(),
+            ctx.start_condition.velocity(),
+        );
+        s1 = s0 + v0 * dt;
+        v1 = v0;
+    }
+    let s2 = s1 + v1 * dt;
+
+    // check result:
+    let final_position = step.last_computed_position();
+    assert_eq!(final_position.s(), s2);
+
+    let mut contributions = final_position.contributions_iter();
+    let first_contribution = contributions.next().unwrap();
+    let second_contribution = contributions.next().unwrap();
+    assert!(contributions.next().is_none());
+
+    assert_eq!(first_contribution.sampling_position(), s1);
+    assert_eq!(second_contribution.sampling_position(), s1);
+    assert_eq!(second_contribution.vector().unwrap(), v1 * dt);
 }
