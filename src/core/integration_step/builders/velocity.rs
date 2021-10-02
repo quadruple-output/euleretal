@@ -1,10 +1,11 @@
 use super::{
     core::{self, Fraction},
     integration_step::{
-        self,
         step::{AccelerationRef, PositionRef, Step, VelocityRef},
-        VelocityContributionData,
+        PositionContributionData, VelocityContributionData,
     },
+    position::PositionContribution,
+    DtFraction,
 };
 
 pub struct Velocity<'a> {
@@ -51,20 +52,44 @@ impl<'a> Velocity<'a> {
     }
 }
 
-type Inner = integration_step::step::VelocityRef;
-
-pub struct Velocity1 {
-    inner: Inner,
+pub struct VelocityContribution {
+    inner: VelocityContributionData,
 }
 
-impl From<Inner> for Velocity1 {
-    fn from(s: Inner) -> Self {
-        Self { inner: s }
+impl From<VelocityContributionData> for VelocityContribution {
+    fn from(data: VelocityContributionData) -> Self {
+        Self { inner: data }
     }
 }
 
-impl From<Velocity1> for Inner {
-    fn from(p: Velocity1) -> Self {
-        p.inner
+impl From<VelocityRef> for VelocityContribution {
+    fn from(v_ref: VelocityRef) -> Self {
+        VelocityContributionData::Velocity { v_ref }.into()
+    }
+}
+
+impl From<VelocityContribution> for VelocityContributionData {
+    fn from(v: VelocityContribution) -> Self {
+        v.inner
+    }
+}
+
+impl std::ops::Mul<DtFraction> for VelocityContribution {
+    type Output = PositionContribution;
+
+    fn mul(self, dt_fraction: DtFraction) -> Self::Output {
+        match self.inner {
+            VelocityContributionData::Velocity { v_ref } => PositionContributionData::VelocityDt {
+                factor: 1.,
+                v_ref,
+                dt_fraction: dt_fraction.into(),
+            }
+            .into(),
+            VelocityContributionData::AccelerationDt {
+                factor,
+                a_ref,
+                dt_fraction,
+            } => todo!(),
+        }
     }
 }

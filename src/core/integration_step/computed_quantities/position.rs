@@ -1,6 +1,6 @@
 use super::{
     core::{self, Fraction},
-    PositionContribution, PositionContributionData, Step,
+    PositionContribution, PositionContributionDataCollection, Step,
 };
 
 pub struct Position<'a> {
@@ -14,7 +14,7 @@ pub struct Position<'a> {
 pub struct Data {
     pub(in crate::core::integration_step) s: core::Position,
     pub(in crate::core::integration_step) dt_fraction: Fraction,
-    pub(in crate::core::integration_step) contributions: Vec<PositionContributionData>,
+    pub(in crate::core::integration_step) contributions: PositionContributionDataCollection,
 }
 
 impl<'a> Position<'a> {

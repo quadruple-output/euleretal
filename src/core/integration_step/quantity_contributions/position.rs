@@ -24,6 +24,26 @@ pub(in crate::core::integration_step) enum Data {
     },
 }
 
+pub struct DataCollection(pub(in crate::core::integration_step) Vec<Data>);
+
+impl DataCollection {
+    pub const fn empty() -> Self {
+        Self(Vec::new())
+    }
+
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self(Vec::with_capacity(capacity))
+    }
+
+    pub(in crate::core::integration_step) fn iter(&self) -> impl Iterator<Item = &Data> {
+        self.0.iter()
+    }
+
+    pub(in crate::core::integration_step) fn push(&mut self, data: Data) {
+        self.0.push(data);
+    }
+}
+
 impl<'a> Contribution<'a> {
     pub fn sampling_position(&self) -> Position {
         let step = self.step;

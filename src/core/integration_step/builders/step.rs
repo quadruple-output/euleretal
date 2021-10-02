@@ -3,10 +3,11 @@ use super::{
     core::{self, integrator::ExpectedCapacities, AccelerationField, Duration, StartCondition},
     integration_step::{
         step::{PositionRef, VelocityRef},
-        PositionContributionData, VelocityContributionData,
+        PositionContributionData, PositionContributionDataCollection, VelocityContributionData,
     },
-    position::Position1,
-    velocity::Velocity1,
+    position::PositionContribution,
+    velocity::VelocityContribution,
+    DtFraction,
 };
 
 pub struct Step<'a> {
@@ -51,11 +52,11 @@ impl<'a> Step<'a> {
         self.step
     }
 
-    pub fn dt(&self) -> Duration {
-        self.step.dt()
+    pub fn dt(&self) -> DtFraction {
+        fraction!(1 / 1).into()
     }
 
-    pub fn start_values(&self) -> (Position1, Velocity1, Acceleration1) {
+    pub fn start_values(&self) -> (PositionContribution, VelocityContribution, Acceleration1) {
         (
             PositionRef::default().into(),
             VelocityRef::default().into(),
@@ -65,24 +66,61 @@ impl<'a> Step<'a> {
     }
 }
 
-impl<'a> Push<Position1> for Step<'a> {
-    fn push(&mut self, p: Position1) {
-        let s_ref: PositionRef = p.into();
-        self.step.add_computed_position(
-            self.step[s_ref].s,
-            self.step[s_ref].dt_fraction,
-            vec![PositionContributionData::StartPosition { s_ref }],
-        );
+impl<'a> Push<PositionContribution> for Step<'a> {
+    fn push(&mut self, p: PositionContribution) {
+        let position_contribution = PositionContributionData::from(p);
+        match position_contribution {
+            PositionContributionData::StartPosition { s_ref } => {
+                self.step.add_computed_position(
+                    self.step[s_ref].s,
+                    self.step[s_ref].dt_fraction,
+                    PositionContributionDataCollection(vec![position_contribution]),
+                );
+            }
+            PositionContributionData::VelocityDt {
+                factor,
+                v_ref,
+                dt_fraction,
+            } => todo!(),
+            PositionContributionData::AccelerationDtDt {
+                factor,
+                a_ref,
+                dt_fraction,
+            } => todo!(),
+        };
     }
 }
 
-impl<'a> Push<Velocity1> for Step<'a> {
-    fn push(&mut self, v: Velocity1) {
-        let v_ref: VelocityRef = v.into();
-        self.step.add_computed_velocity(
-            self.step[v_ref].v,
-            self.step[v_ref].sampling_position,
-            vec![VelocityContributionData::Velocity { v_ref }],
+impl<'a> Push<VelocityContribution> for Step<'a> {
+    fn push(&mut self, v: VelocityContribution) {
+        let velocity_contribution = VelocityContributionData::from(v);
+        match velocity_contribution {
+            VelocityContributionData::Velocity { v_ref } => {
+                self.step.add_computed_velocity(
+                    self.step[v_ref].v,
+                    self.step[v_ref].sampling_position,
+                    vec![velocity_contribution],
+                );
+            }
+            VelocityContributionData::AccelerationDt {
+                factor,
+                a_ref,
+                dt_fraction,
+            } => todo!(),
+        }
+    }
+}
+
+impl<'a> Push<PositionContributionDataCollection> for Step<'a> {
+    fn push(&mut self, contributions: PositionContributionDataCollection) {
+        let mut s = core::Position::origin();
+        for contrib in contributions.iter() {
+            s += contrib.evaluate_for(&self.step);
+        }
+        self.step.add_computed_position(
+            s,
+            fraction!(1 / 1), //todo
+            contributions,
         );
     }
 }

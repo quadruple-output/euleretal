@@ -3,10 +3,7 @@
 use super::integration_step::StartCondition;
 use super::{
     core::{AccelerationField, Duration, Position, Velocity},
-    integration_step::{
-        builders::step::Push,
-        step::{PositionRef, VelocityRef},
-    },
+    integration_step::builders::step::Push,
     Step as StepBuilder,
 };
 // not used in super, so we use an absolute path (only for tests!):
@@ -50,21 +47,12 @@ fn step_from_new_builder_has_correct_start_condition() {
 }
 
 #[test]
-fn builder_returns_start_quantities() {
+fn create_step_from_previous() {
     let ctx = Setup::default();
-    let builder = ctx.create_builder();
-
-    let (s0, v0, a0) = builder.start_values();
-    let step = builder.result();
-    assert_eq!(
-        ctx.start_condition.position(),
-        step[PositionRef::from(s0)].s
-    );
-    assert_eq!(
-        ctx.start_condition.velocity(),
-        step[VelocityRef::from(v0)].v
-    );
-    assert_eq!(ctx.start_condition.acceleration(), a0.into());
+    let step0 = ctx.create_builder().result();
+    let step1 = StepBuilder::from_previous(&ctx.acceleration_field, &step0).result();
+    assert_eq!(step0.dt(), step1.dt());
+    assert_eq!(step0.get_start_condition(), step1.get_start_condition());
 }
 
 #[test]
@@ -117,12 +105,33 @@ fn trivial_step_with_p1_eq_p0() {
 }
 
 #[test]
-fn create_step_from_previous() {
+fn simple_step() {
     let ctx = Setup::default();
-    let step0 = ctx.create_builder().result();
-    let step1 = StepBuilder::from_previous(&ctx.acceleration_field, &step0).result();
-    assert_eq!(step0.dt(), step1.dt());
-    assert_eq!(step0.get_start_condition(), step1.get_start_condition());
+    let mut builder = ctx.create_builder();
+
+    {
+        let (s0, v0, _a0) = builder.start_values();
+        let dt = builder.dt();
+        builder.push(s0 + v0 * dt);
+    }
+
+    let step = builder.result();
+    let (s0, v0, dt) = (
+        ctx.start_condition.position(),
+        ctx.start_condition.velocity(),
+        ctx.dt,
+    );
+    let final_position = step.last_computed_position();
+    assert_eq!(final_position.s(), s0 + v0 * dt);
+
+    let mut contributions = final_position.contributions_iter();
+    let first_contribution = contributions.next().unwrap();
+    let second_contribution = contributions.next().unwrap();
+    assert!(contributions.next().is_none());
+
+    assert_eq!(first_contribution.sampling_position(), s0);
+    assert_eq!(second_contribution.sampling_position(), s0);
+    assert_eq!(second_contribution.vector().unwrap(), v0 * dt);
 }
 
 #[test]

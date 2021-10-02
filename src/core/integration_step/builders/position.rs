@@ -1,8 +1,7 @@
 use super::{
     super::integration_step::{
-        self,
         step::{AccelerationRef, PositionRef, VelocityRef},
-        PositionContributionData, Step,
+        PositionContributionData, PositionContributionDataCollection, Step,
     },
     core::{self, Fraction},
 };
@@ -10,7 +9,7 @@ use super::{
 pub struct Position<'a> {
     step: &'a mut Step,
     dt_fraction: Fraction,
-    contributions: Vec<PositionContributionData>,
+    contributions: PositionContributionDataCollection,
 }
 
 impl<'a> Position<'a> {
@@ -19,7 +18,7 @@ impl<'a> Position<'a> {
             step,
             dt_fraction,
             // most of the times there will be 3 contributions:
-            contributions: Vec::with_capacity(3),
+            contributions: PositionContributionDataCollection::with_capacity(3),
         }
     }
 
@@ -51,7 +50,7 @@ impl<'a> Position<'a> {
 
     pub fn create(self) -> PositionRef {
         let mut s = core::Position::origin();
-        for contrib in &self.contributions {
+        for contrib in self.contributions.iter() {
             s += contrib.evaluate_for(self.step);
         }
         self.step
@@ -59,20 +58,32 @@ impl<'a> Position<'a> {
     }
 }
 
-type Inner = integration_step::step::PositionRef;
-
-pub struct Position1 {
-    inner: Inner,
+pub struct PositionContribution {
+    inner: PositionContributionData,
 }
 
-impl From<Inner> for Position1 {
-    fn from(s: Inner) -> Self {
-        Self { inner: s }
+impl From<PositionContributionData> for PositionContribution {
+    fn from(data: PositionContributionData) -> Self {
+        Self { inner: data }
     }
 }
 
-impl From<Position1> for Inner {
-    fn from(p: Position1) -> Self {
+impl From<PositionRef> for PositionContribution {
+    fn from(s_ref: PositionRef) -> Self {
+        PositionContributionData::StartPosition { s_ref }.into()
+    }
+}
+
+impl From<PositionContribution> for PositionContributionData {
+    fn from(p: PositionContribution) -> Self {
         p.inner
+    }
+}
+
+impl std::ops::Add<PositionContribution> for PositionContribution {
+    type Output = PositionContributionDataCollection;
+
+    fn add(self, rhs: PositionContribution) -> Self::Output {
+        PositionContributionDataCollection(vec![self.inner, rhs.inner])
     }
 }

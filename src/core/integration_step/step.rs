@@ -3,7 +3,7 @@ use super::{
     core::{
         integration_step::{
             ComputedAcceleration, ComputedPosition, ComputedPositionData, ComputedVelocity,
-            ComputedVelocityData, PositionContributionData, StartCondition,
+            ComputedVelocityData, PositionContributionDataCollection, StartCondition,
             VelocityContributionData,
         },
         integrator, Acceleration, AccelerationField, Duration, Fraction, Position, Velocity,
@@ -21,16 +21,16 @@ pub struct Step {
     acceleration_at_last_position: Option<AccelerationRef>,
 }
 
-#[derive(Clone, Copy, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct PositionRef(usize);
 
-#[derive(Clone, Copy, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct VelocityRef(usize);
 
-#[derive(Clone, Copy, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct AccelerationRef(usize);
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct ConditionRef {
     pub s: PositionRef,
     pub v: VelocityRef,
@@ -65,13 +65,21 @@ impl Step {
     }
 
     pub fn raw_end_condition(&mut self, s: Position, v: Velocity, a: Acceleration) {
-        let p_ref = self.add_computed_position(s, fraction!(1 / 1), Vec::new());
+        let p_ref = self.add_computed_position(
+            s,
+            fraction!(1 / 1),
+            PositionContributionDataCollection::empty(),
+        );
         self.add_computed_velocity(v, p_ref, Vec::new());
         self.acceleration_at_last_position = Some(self.add_computed_acceleration(a, p_ref));
     }
 
     pub fn set_start_condition(&mut self, p: &StartCondition) -> ConditionRef {
-        let sref = self.add_computed_position(p.position(), fraction!(0 / 1), Vec::new());
+        let sref = self.add_computed_position(
+            p.position(),
+            fraction!(0 / 1),
+            PositionContributionDataCollection::empty(),
+        );
         ConditionRef {
             s: sref,
             v: self.add_computed_velocity(p.velocity(), sref, Vec::new()),
@@ -175,7 +183,7 @@ impl Step {
         let pos = pos.into();
         self.positions
             .iter()
-            .filter(|p| !p.contributions.is_empty()) // no predecessor → not 'computed'
+            .filter(|p| !p.contributions.0.is_empty()) // no predecessor → not 'computed'
             .map(|p| (p, p.s.distance_squared(pos)))
             .reduce(|(p1, dist1), (p2, dist2)| {
                 if dist1 < dist2 {
@@ -193,7 +201,7 @@ impl Step {
         &mut self,
         s: Position,
         dt_fraction: Fraction,
-        contributions: Vec<PositionContributionData>,
+        contributions: PositionContributionDataCollection,
     ) -> PositionRef {
         let p_ref = PositionRef(self.positions.len());
         self.positions.push(ComputedPositionData {
