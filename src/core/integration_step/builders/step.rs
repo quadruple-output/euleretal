@@ -1,6 +1,6 @@
 use super::{
     acceleration::Acceleration1,
-    core::{self, integrator::ExpectedCapacities, AccelerationField, Duration, StartCondition},
+    core::{self, AccelerationField, Duration, StartCondition},
     integration_step::{
         step::{PositionRef, VelocityRef},
         PositionContributionData, PositionContributionDataCollection, VelocityContributionData,
@@ -12,14 +12,9 @@ use super::{
 
 pub struct Step<'a> {
     acceleration_field: &'a dyn AccelerationField,
-    start_condition: StartCondition,
     step: &'a mut core::Step,
     #[cfg(debug_assertions)]
     finalized: bool,
-}
-
-pub trait Push<T> {
-    fn push(&mut self, _: T);
 }
 
 impl<'a> Step<'a> {
@@ -32,15 +27,18 @@ impl<'a> Step<'a> {
         step.set_start_condition(start_condition);
         Self {
             acceleration_field,
-            start_condition: start_condition.clone(),
             step,
+            #[cfg(debug_assertions)]
             finalized: false,
         }
     }
 
     pub fn finalize(&mut self) {
-        debug_assert!(!self.finalized);
-        self.finalized = true;
+        #[cfg(debug_assertions)]
+        {
+            debug_assert!(!self.finalized);
+            self.finalized = true;
+        }
         self.step
             .compute_acceleration_at_last_position(self.acceleration_field);
     }
@@ -50,11 +48,12 @@ impl<'a> Step<'a> {
     }
 
     pub fn next_for(self, step: &'a mut core::Step) -> Self {
+        #[cfg(debug_assertions)]
         debug_assert!(self.finalized);
         Self {
             acceleration_field: self.acceleration_field,
-            start_condition: self.step.get_start_condition(),
             step,
+            #[cfg(debug_assertions)]
             finalized: false,
         }
     }
@@ -68,9 +67,13 @@ impl<'a> Step<'a> {
             PositionRef::default().into(),
             VelocityRef::default().into(),
             //AccelerationRef::default().into(),
-            self.start_condition.acceleration().into(),
+            self.step.get_start_condition().acceleration().into(),
         )
     }
+}
+
+pub trait Push<T> {
+    fn push(&mut self, _: T);
 }
 
 impl<'a> Push<PositionContribution> for Step<'a> {
