@@ -1,7 +1,7 @@
 use super::{
     core::{self, Position},
+    quantity_contributions,
     step::{PositionRef, Step},
-    VelocityContribution, VelocityContributionData,
 };
 
 pub struct Velocity<'a> {
@@ -15,7 +15,8 @@ pub struct Velocity<'a> {
 pub struct Data {
     pub(in crate::core::integration_step) v: core::Velocity,
     pub(in crate::core::integration_step) sampling_position: PositionRef,
-    pub(in crate::core::integration_step) contributions: Vec<VelocityContributionData>,
+    pub(in crate::core::integration_step) contributions:
+        Vec<quantity_contributions::velocity::Variant>,
 }
 
 impl<'a> Velocity<'a> {
@@ -27,11 +28,13 @@ impl<'a> Velocity<'a> {
         self.step[self.data.sampling_position].s
     }
 
-    pub fn contributions_iter(&'a self) -> impl Iterator<Item = VelocityContribution<'a>> {
+    pub fn contributions_iter(
+        &'a self,
+    ) -> impl Iterator<Item = quantity_contributions::velocity::Abstraction<'a>> {
         self.data
             .contributions
             .iter()
-            .map(move |contrib| contrib.public_for(self.step))
+            .map(move |contrib| contrib.abstraction_for(self.step))
     }
 }
 

@@ -3,12 +3,12 @@ use super::{
     step::{AccelerationRef, PositionRef, Step, VelocityRef},
 };
 
-pub struct Contribution<'a> {
+pub struct Abstraction<'a> {
     step: &'a Step,
-    data: &'a Data,
+    data: &'a Variant,
 }
 
-pub(in crate::core::integration_step) enum Data {
+pub(in crate::core::integration_step) enum Variant {
     StartPosition {
         s_ref: PositionRef,
     },
@@ -24,9 +24,15 @@ pub(in crate::core::integration_step) enum Data {
     },
 }
 
-pub struct DataCollection(pub(in crate::core::integration_step) Vec<Data>);
+pub struct Collection(pub(in crate::core::integration_step) Vec<Variant>);
 
-impl DataCollection {
+impl From<Vec<Variant>> for Collection {
+    fn from(v: Vec<Variant>) -> Self {
+        Self(v)
+    }
+}
+
+impl Collection {
     pub const fn empty() -> Self {
         Self(Vec::new())
     }
@@ -35,22 +41,22 @@ impl DataCollection {
         Self(Vec::with_capacity(capacity))
     }
 
-    pub(in crate::core::integration_step) fn iter(&self) -> impl Iterator<Item = &Data> {
+    pub(in crate::core::integration_step) fn iter(&self) -> impl Iterator<Item = &Variant> {
         self.0.iter()
     }
 
-    pub(in crate::core::integration_step) fn push(&mut self, data: Data) {
+    pub(in crate::core::integration_step) fn push(&mut self, data: Variant) {
         self.0.push(data);
     }
 }
 
-impl<'a> Contribution<'a> {
+impl<'a> Abstraction<'a> {
     pub fn sampling_position(&self) -> Position {
         let step = self.step;
         match self.data {
-            Data::StartPosition { s_ref } => step[*s_ref].s,
-            Data::VelocityDt { v_ref, .. } => step[step[*v_ref].sampling_position].s,
-            Data::AccelerationDtDt { a_ref, .. } => step[step[*a_ref].sampling_position].s,
+            Variant::StartPosition { s_ref } => step[*s_ref].s,
+            Variant::VelocityDt { v_ref, .. } => step[step[*v_ref].sampling_position].s,
+            Variant::AccelerationDtDt { a_ref, .. } => step[step[*a_ref].sampling_position].s,
         }
     }
 
@@ -60,13 +66,13 @@ impl<'a> Contribution<'a> {
 
     pub fn vector(&self) -> Option<Move> {
         match self.data {
-            Data::StartPosition { .. } => None,
+            Variant::StartPosition { .. } => None,
             _ => Some(self.data.evaluate_for(self.step)),
         }
     }
 }
 
-impl Data {
+impl Variant {
     fn kind(&self) -> PhysicalQuantityKind {
         match self {
             Self::StartPosition { .. } => PhysicalQuantityKind::Position,
@@ -91,10 +97,10 @@ impl Data {
         }
     }
 
-    pub(in crate::core::integration_step) fn public_for<'a>(
+    pub(in crate::core::integration_step) fn abstraction_for<'a>(
         &'a self,
         step: &'a Step,
-    ) -> Contribution<'a> {
-        Contribution { step, data: self }
+    ) -> Abstraction<'a> {
+        Abstraction { step, data: self }
     }
 }

@@ -3,22 +3,22 @@ use super::{
     step::{AccelerationRef, Step},
 };
 
-pub struct Contribution<'a> {
+pub struct Abstraction<'a> {
     step: &'a Step,
-    data: &'a Data,
+    data: &'a Variant,
 }
 
 #[derive(Clone, Copy)]
-pub(in crate::core::integration_step) enum Data {
+pub(in crate::core::integration_step) enum Variant {
     Acceleration { factor: f32, a_ref: AccelerationRef },
 }
 
 // todo: this could be a trait, generic over the output type of vector()
-impl<'a> Contribution<'a> {
+impl<'a> Abstraction<'a> {
     pub fn sampling_position(&self) -> Position {
         let step = self.step;
         match self.data {
-            Data::Acceleration { factor: _, a_ref } => step[step[*a_ref].sampling_position].s,
+            Variant::Acceleration { factor: _, a_ref } => step[step[*a_ref].sampling_position].s,
         }
     }
 
@@ -31,7 +31,7 @@ impl<'a> Contribution<'a> {
     }
 }
 
-impl Data {
+impl Variant {
     fn kind(&self) -> PhysicalQuantityKind {
         match self {
             Self::Acceleration { .. } => PhysicalQuantityKind::Acceleration,
@@ -47,7 +47,7 @@ impl Data {
     pub(in crate::core::integration_step) fn public_for<'a>(
         &'a self,
         step: &'a Step,
-    ) -> Contribution<'a> {
-        Contribution { step, data: self }
+    ) -> Abstraction<'a> {
+        Abstraction { step, data: self }
     }
 }

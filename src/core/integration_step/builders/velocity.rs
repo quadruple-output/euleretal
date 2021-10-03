@@ -1,8 +1,8 @@
 use super::{
     core::{self, Fraction},
     integration_step::{
+        quantity_contributions,
         step::{AccelerationRef, PositionRef, Step, VelocityRef},
-        PositionContributionData, VelocityContributionData,
     },
     position::PositionContribution,
     DtFraction,
@@ -12,7 +12,7 @@ pub struct Velocity<'a> {
     step: &'a mut Step,
     dt_fraction: Fraction,
     s_ref: PositionRef,
-    contributions: Vec<VelocityContributionData>,
+    contributions: Vec<quantity_contributions::velocity::Variant>,
 }
 
 impl<'a> Velocity<'a> {
@@ -28,13 +28,13 @@ impl<'a> Velocity<'a> {
 
     pub fn based_on(mut self, v_ref: VelocityRef) -> Self {
         self.contributions
-            .push(VelocityContributionData::Velocity { v_ref });
+            .push(quantity_contributions::velocity::Variant::Velocity { v_ref });
         self
     }
 
     pub fn add_acceleration_dt(mut self, a_ref: AccelerationRef, factor: f32) -> Self {
         self.contributions
-            .push(VelocityContributionData::AccelerationDt {
+            .push(quantity_contributions::velocity::Variant::AccelerationDt {
                 factor,
                 a_ref,
                 dt_fraction: self.dt_fraction,
@@ -53,22 +53,22 @@ impl<'a> Velocity<'a> {
 }
 
 pub struct VelocityContribution {
-    inner: VelocityContributionData,
+    inner: quantity_contributions::velocity::Variant,
 }
 
-impl From<VelocityContributionData> for VelocityContribution {
-    fn from(data: VelocityContributionData) -> Self {
+impl From<quantity_contributions::velocity::Variant> for VelocityContribution {
+    fn from(data: quantity_contributions::velocity::Variant) -> Self {
         Self { inner: data }
     }
 }
 
 impl From<VelocityRef> for VelocityContribution {
     fn from(v_ref: VelocityRef) -> Self {
-        VelocityContributionData::Velocity { v_ref }.into()
+        quantity_contributions::velocity::Variant::Velocity { v_ref }.into()
     }
 }
 
-impl From<VelocityContribution> for VelocityContributionData {
+impl From<VelocityContribution> for quantity_contributions::velocity::Variant {
     fn from(v: VelocityContribution) -> Self {
         v.inner
     }
@@ -79,20 +79,22 @@ impl std::ops::Mul<DtFraction> for VelocityContribution {
 
     fn mul(self, dt_fraction: DtFraction) -> Self::Output {
         match self.inner {
-            VelocityContributionData::Velocity { v_ref } => PositionContributionData::VelocityDt {
-                factor: 1., //todo
-                v_ref,
-                dt_fraction: dt_fraction.into(),
+            quantity_contributions::velocity::Variant::Velocity { v_ref } => {
+                quantity_contributions::position::Variant::VelocityDt {
+                    factor: 1., //todo
+                    v_ref,
+                    dt_fraction: dt_fraction.into(),
+                }
+                .into()
             }
-            .into(),
-            VelocityContributionData::AccelerationDt {
+            quantity_contributions::velocity::Variant::AccelerationDt {
                 factor,
                 a_ref,
                 dt_fraction: dt_fraction_lhs,
             } => {
                 // todo: cannot handle `a * dt * dt_2` where dt != dt_2
                 debug_assert_eq!(dt_fraction_lhs, dt_fraction.into());
-                PositionContributionData::AccelerationDtDt {
+                quantity_contributions::position::Variant::AccelerationDtDt {
                     factor,
                     a_ref,
                     dt_fraction: dt_fraction_lhs,

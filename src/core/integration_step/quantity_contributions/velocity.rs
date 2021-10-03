@@ -3,12 +3,12 @@ use super::{
     step::{AccelerationRef, Step, VelocityRef},
 };
 
-pub struct Contribution<'a> {
+pub struct Abstraction<'a> {
     step: &'a Step,
-    data: &'a Data,
+    data: &'a Variant,
 }
 
-pub(in crate::core::integration_step) enum Data {
+pub(in crate::core::integration_step) enum Variant {
     Velocity {
         v_ref: VelocityRef,
     },
@@ -19,12 +19,12 @@ pub(in crate::core::integration_step) enum Data {
     },
 }
 
-impl<'a> Contribution<'a> {
+impl<'a> Abstraction<'a> {
     pub fn sampling_position(&self) -> Position {
         let step = self.step;
         match self.data {
-            Data::Velocity { v_ref, .. } => step[step[*v_ref].sampling_position].s,
-            Data::AccelerationDt { a_ref, .. } => step[step[*a_ref].sampling_position].s,
+            Variant::Velocity { v_ref, .. } => step[step[*v_ref].sampling_position].s,
+            Variant::AccelerationDt { a_ref, .. } => step[step[*a_ref].sampling_position].s,
         }
     }
 
@@ -37,7 +37,7 @@ impl<'a> Contribution<'a> {
     }
 }
 
-impl Data {
+impl Variant {
     fn kind(&self) -> PhysicalQuantityKind {
         match self {
             Self::Velocity { .. } => PhysicalQuantityKind::Velocity,
@@ -56,10 +56,10 @@ impl Data {
         }
     }
 
-    pub(in crate::core::integration_step) fn public_for<'a>(
+    pub(in crate::core::integration_step) fn abstraction_for<'a>(
         &'a self,
         step: &'a Step,
-    ) -> Contribution<'a> {
-        Contribution { step, data: self }
+    ) -> Abstraction<'a> {
+        Abstraction { step, data: self }
     }
 }

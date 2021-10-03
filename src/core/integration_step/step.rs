@@ -2,9 +2,8 @@ use super::{
     builders,
     core::{
         integration_step::{
-            ComputedAcceleration, ComputedPosition, ComputedPositionData, ComputedVelocity,
-            ComputedVelocityData, PositionContributionDataCollection, StartCondition,
-            VelocityContributionData,
+            quantity_contributions, ComputedAcceleration, ComputedPosition, ComputedPositionData,
+            ComputedVelocity, ComputedVelocityData, StartCondition,
         },
         integrator, Acceleration, AccelerationField, Duration, Fraction, Position, Velocity,
     },
@@ -80,7 +79,7 @@ impl Step {
         let p_ref = self.add_computed_position(
             s,
             fraction!(1 / 1),
-            PositionContributionDataCollection::empty(),
+            quantity_contributions::position::Collection::empty(),
         );
         self.add_computed_velocity(v, p_ref, Vec::new());
         self.acceleration_at_last_position = Some(self.add_computed_acceleration(a, p_ref));
@@ -90,7 +89,7 @@ impl Step {
         let sref = self.add_computed_position(
             p.position(),
             fraction!(0 / 1),
-            PositionContributionDataCollection::empty(),
+            quantity_contributions::position::Collection::empty(),
         );
         ConditionRef {
             s: sref,
@@ -213,7 +212,7 @@ impl Step {
         &mut self,
         s: Position,
         dt_fraction: Fraction,
-        contributions: PositionContributionDataCollection,
+        contributions: quantity_contributions::position::Collection,
     ) -> PositionRef {
         let p_ref = PositionRef(self.positions.len());
         self.positions.push(ComputedPositionData {
@@ -229,7 +228,7 @@ impl Step {
         &mut self,
         v: Velocity,
         sampling_position: PositionRef,
-        contributions: Vec<VelocityContributionData>,
+        contributions: Vec<quantity_contributions::velocity::Variant>,
     ) -> VelocityRef {
         let v_ref = VelocityRef(self.velocities.len());
         self.velocities.push(ComputedVelocityData {

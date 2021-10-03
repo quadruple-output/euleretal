@@ -2,8 +2,8 @@ use super::{
     acceleration::AccelerationContribution,
     core::{self, AccelerationField, Duration, StartCondition},
     integration_step::{
+        quantity_contributions,
         step::{AccelerationRef, PositionRef, VelocityRef},
-        PositionContributionData, PositionContributionDataCollection, VelocityContributionData,
     },
     position::PositionContribution,
     velocity::VelocityContribution,
@@ -85,21 +85,21 @@ pub trait Push<T> {
 
 impl<'a> Push<PositionContribution> for Step<'a> {
     fn push(&mut self, p: PositionContribution) {
-        let position_contribution = PositionContributionData::from(p);
+        let position_contribution = quantity_contributions::position::Variant::from(p);
         match position_contribution {
-            PositionContributionData::StartPosition { s_ref } => {
+            quantity_contributions::position::Variant::StartPosition { s_ref } => {
                 self.step.add_computed_position(
                     self.step[s_ref].s,
                     self.step[s_ref].dt_fraction,
-                    PositionContributionDataCollection(vec![position_contribution]),
+                    vec![position_contribution].into(),
                 );
             }
-            PositionContributionData::VelocityDt {
+            quantity_contributions::position::Variant::VelocityDt {
                 factor,
                 v_ref,
                 dt_fraction,
             } => todo!(),
-            PositionContributionData::AccelerationDtDt {
+            quantity_contributions::position::Variant::AccelerationDtDt {
                 factor,
                 a_ref,
                 dt_fraction,
@@ -110,16 +110,16 @@ impl<'a> Push<PositionContribution> for Step<'a> {
 
 impl<'a> Push<VelocityContribution> for Step<'a> {
     fn push(&mut self, v: VelocityContribution) {
-        let velocity_contribution = VelocityContributionData::from(v);
+        let velocity_contribution = quantity_contributions::velocity::Variant::from(v);
         match velocity_contribution {
-            VelocityContributionData::Velocity { v_ref } => {
+            quantity_contributions::velocity::Variant::Velocity { v_ref } => {
                 self.step.add_computed_velocity(
                     self.step[v_ref].v,
                     self.step[v_ref].sampling_position,
                     vec![velocity_contribution],
                 );
             }
-            VelocityContributionData::AccelerationDt {
+            quantity_contributions::velocity::Variant::AccelerationDt {
                 factor,
                 a_ref,
                 dt_fraction,
@@ -128,8 +128,8 @@ impl<'a> Push<VelocityContribution> for Step<'a> {
     }
 }
 
-impl<'a> Push<PositionContributionDataCollection> for Step<'a> {
-    fn push(&mut self, contributions: PositionContributionDataCollection) {
+impl<'a> Push<quantity_contributions::position::Collection> for Step<'a> {
+    fn push(&mut self, contributions: quantity_contributions::position::Collection) {
         let mut s = core::Position::origin();
         for contrib in contributions.iter() {
             s += contrib.evaluate_for(self.step);
