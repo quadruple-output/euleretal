@@ -1,12 +1,12 @@
 pub mod builders;
-mod computed_quantities;
+mod computed;
 mod contributions;
 mod start_condition;
 mod step;
 
-pub use computed_quantities::Acceleration as ComputedAcceleration;
-pub use computed_quantities::Position as ComputedPosition;
-pub use computed_quantities::Velocity as ComputedVelocity;
+pub use computed::Acceleration as ComputedAcceleration;
+pub use computed::Position as ComputedPosition;
+pub use computed::Velocity as ComputedVelocity;
 pub use start_condition::StartCondition;
 pub use step::Step;
 
@@ -15,6 +15,4 @@ use super::{
     import,
     integration_step, // self-use
 };
-use computed_quantities::{
-    PositionData as ComputedPositionData, VelocityData as ComputedVelocityData,
-};
+use computed::{PositionData as ComputedPositionData, VelocityData as ComputedVelocityData};
