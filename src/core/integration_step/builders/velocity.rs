@@ -80,7 +80,7 @@ impl std::ops::Mul<DtFraction> for VelocityContribution {
     fn mul(self, dt_fraction: DtFraction) -> Self::Output {
         match self.inner {
             VelocityContributionData::Velocity { v_ref } => PositionContributionData::VelocityDt {
-                factor: 1.,
+                factor: 1., //todo
                 v_ref,
                 dt_fraction: dt_fraction.into(),
             }

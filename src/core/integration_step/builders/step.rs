@@ -58,10 +58,12 @@ impl<'a> Step<'a> {
         }
     }
 
+    #[allow(clippy::unused_self)]
     pub fn dt(&self) -> DtFraction {
         fraction!(1 / 1).into()
     }
 
+    #[allow(clippy::unused_self)]
     pub fn start_values(
         &self,
     ) -> (
@@ -130,7 +132,7 @@ impl<'a> Push<PositionContributionDataCollection> for Step<'a> {
     fn push(&mut self, contributions: PositionContributionDataCollection) {
         let mut s = core::Position::origin();
         for contrib in contributions.iter() {
-            s += contrib.evaluate_for(&self.step);
+            s += contrib.evaluate_for(self.step);
         }
         self.step.add_computed_position(
             s,
