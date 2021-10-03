@@ -1,7 +1,7 @@
 use super::core::Fraction;
 
 #[derive(Clone, Copy, Debug)]
-pub struct DtFraction(pub(in crate::core::integration_step::builders) Fraction);
+pub struct DtFraction(Fraction);
 
 impl From<Fraction> for DtFraction {
     fn from(fraction: Fraction) -> Self {

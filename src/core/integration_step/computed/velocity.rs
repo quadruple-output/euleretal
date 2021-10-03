@@ -6,7 +6,7 @@ use super::{
 
 pub struct Abstraction<'a> {
     step: &'a Step,
-    data: &'a Velocity,
+    velocity: &'a Velocity,
 }
 
 /// This type must be public because it is returned by the impl of
@@ -20,17 +20,17 @@ pub struct Velocity {
 
 impl<'a> Abstraction<'a> {
     pub fn v(&self) -> core::Velocity {
-        self.data.v
+        self.velocity.v
     }
 
     pub fn sampling_position(&self) -> Position {
-        self.step[self.data.sampling_position].s
+        self.step[self.velocity.sampling_position].s
     }
 
     pub fn contributions_iter(
         &'a self,
     ) -> impl Iterator<Item = contributions::velocity::Abstraction<'a>> {
-        self.data
+        self.velocity
             .contributions
             .iter()
             .map(move |contrib| contrib.abstraction_for(self.step))
@@ -50,6 +50,9 @@ impl Velocity {
         &'a self,
         step: &'a Step,
     ) -> Abstraction<'a> {
-        Abstraction { step, data: self }
+        Abstraction {
+            step,
+            velocity: self,
+        }
     }
 }

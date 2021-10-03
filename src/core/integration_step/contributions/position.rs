@@ -5,10 +5,32 @@ use super::{
 
 pub struct Abstraction<'a> {
     step: &'a Step,
-    data: &'a Variant,
+    variant: &'a Variant,
 }
 
-pub(in crate::core::integration_step) enum Variant {
+impl<'a> Abstraction<'a> {
+    pub fn sampling_position(&self) -> Position {
+        let step = self.step;
+        match self.variant {
+            Variant::StartPosition { s_ref } => step[*s_ref].s,
+            Variant::VelocityDt { v_ref, .. } => step[step[*v_ref].sampling_position].s,
+            Variant::AccelerationDtDt { a_ref, .. } => step[step[*a_ref].sampling_position].s,
+        }
+    }
+
+    pub fn kind(&self) -> PhysicalQuantityKind {
+        self.variant.kind()
+    }
+
+    pub fn vector(&self) -> Option<Move> {
+        match self.variant {
+            Variant::StartPosition { .. } => None,
+            _ => Some(self.variant.evaluate_for(self.step)),
+        }
+    }
+}
+
+pub enum Variant {
     StartPosition {
         s_ref: PositionRef,
     },
@@ -24,51 +46,9 @@ pub(in crate::core::integration_step) enum Variant {
     },
 }
 
-pub struct Collection(pub(in crate::core::integration_step) Vec<Variant>);
-
-impl From<Vec<Variant>> for Collection {
-    fn from(v: Vec<Variant>) -> Self {
-        Self(v)
-    }
-}
-
-impl Collection {
-    pub const fn empty() -> Self {
-        Self(Vec::new())
-    }
-
-    pub fn with_capacity(capacity: usize) -> Self {
-        Self(Vec::with_capacity(capacity))
-    }
-
-    pub(in crate::core::integration_step) fn iter(&self) -> impl Iterator<Item = &Variant> {
-        self.0.iter()
-    }
-
-    pub(in crate::core::integration_step) fn push(&mut self, data: Variant) {
-        self.0.push(data);
-    }
-}
-
-impl<'a> Abstraction<'a> {
-    pub fn sampling_position(&self) -> Position {
-        let step = self.step;
-        match self.data {
-            Variant::StartPosition { s_ref } => step[*s_ref].s,
-            Variant::VelocityDt { v_ref, .. } => step[step[*v_ref].sampling_position].s,
-            Variant::AccelerationDtDt { a_ref, .. } => step[step[*a_ref].sampling_position].s,
-        }
-    }
-
-    pub fn kind(&self) -> PhysicalQuantityKind {
-        self.data.kind()
-    }
-
-    pub fn vector(&self) -> Option<Move> {
-        match self.data {
-            Variant::StartPosition { .. } => None,
-            _ => Some(self.data.evaluate_for(self.step)),
-        }
+impl From<PositionRef> for Variant {
+    fn from(s_ref: PositionRef) -> Self {
+        Self::StartPosition { s_ref }
     }
 }
 
@@ -101,6 +81,51 @@ impl Variant {
         &'a self,
         step: &'a Step,
     ) -> Abstraction<'a> {
-        Abstraction { step, data: self }
+        Abstraction {
+            step,
+            variant: self,
+        }
+    }
+}
+
+impl std::ops::Add for Variant {
+    type Output = Collection;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Collection(vec![self, rhs])
+    }
+}
+
+pub struct Collection(pub(in crate::core::integration_step) Vec<Variant>);
+
+impl From<Vec<Variant>> for Collection {
+    fn from(v: Vec<Variant>) -> Self {
+        Self(v)
+    }
+}
+
+impl Collection {
+    pub const fn empty() -> Self {
+        Self(Vec::new())
+    }
+
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self(Vec::with_capacity(capacity))
+    }
+
+    pub(in crate::core::integration_step) fn iter(&self) -> impl Iterator<Item = &Variant> {
+        self.0.iter()
+    }
+
+    pub(in crate::core::integration_step) fn push(&mut self, data: Variant) {
+        self.0.push(data);
+    }
+}
+
+impl std::ops::Add<Variant> for Collection {
+    type Output = Self;
+
+    fn add(self, rhs: Variant) -> Self::Output {
+        Self(self.0.into_iter().chain(Some(rhs)).collect())
     }
 }
