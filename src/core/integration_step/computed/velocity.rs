@@ -4,21 +4,21 @@ use super::{
     step::{PositionRef, Step},
 };
 
-pub struct Velocity<'a> {
+pub struct Abstraction<'a> {
     step: &'a Step,
-    data: &'a Data,
+    data: &'a Velocity,
 }
 
 /// This type must be public because it is returned by the impl of
 /// [`::std::ops::Index`] for [`IntegrationStep`]. All members are non-public,
 /// however, such that it cannot be used from outside.
-pub struct Data {
+pub struct Velocity {
     pub(in crate::core::integration_step) v: core::Velocity,
     pub(in crate::core::integration_step) sampling_position: PositionRef,
     pub(in crate::core::integration_step) contributions: Vec<contributions::velocity::Variant>,
 }
 
-impl<'a> Velocity<'a> {
+impl<'a> Abstraction<'a> {
     pub fn v(&self) -> core::Velocity {
         self.data.v
     }
@@ -37,19 +37,19 @@ impl<'a> Velocity<'a> {
     }
 }
 
-impl ::std::ops::Mul<&Data> for f32 {
+impl ::std::ops::Mul<&Velocity> for f32 {
     type Output = core::Velocity;
 
-    fn mul(self, rhs: &Data) -> Self::Output {
+    fn mul(self, rhs: &Velocity) -> Self::Output {
         self * rhs.v
     }
 }
 
-impl Data {
-    pub(in crate::core::integration_step) fn public_for<'a>(
+impl Velocity {
+    pub(in crate::core::integration_step) fn abstraction_for<'a>(
         &'a self,
         step: &'a Step,
-    ) -> Velocity<'a> {
-        Velocity { step, data: self }
+    ) -> Abstraction<'a> {
+        Abstraction { step, data: self }
     }
 }

@@ -1,5 +1,4 @@
-use super::core;
-use super::step::PositionRef;
+use super::{core, step::PositionRef};
 
 pub struct Acceleration {
     pub(in crate::core::integration_step) a: core::Acceleration,

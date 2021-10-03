@@ -1,5 +1,5 @@
 use super::{
-    core::{ComputedPosition, ComputedVelocity, Duration, PhysicalQuantityKind, Position, Step},
+    core::{integration_step::computed, Duration, PhysicalQuantityKind, Position, Step},
     entities::CanvasPainter,
     misc::Settings,
 };
@@ -57,7 +57,7 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
 }
 
 fn explain_derived_position(
-    position: &ComputedPosition,
+    position: &computed::position::Abstraction,
     canvas: &CanvasPainter,
     settings: &Settings,
 ) {
@@ -98,7 +98,7 @@ fn explain_derived_position(
 }
 
 fn explain_derived_velocity(
-    velocity: &ComputedVelocity,
+    velocity: &computed::velocity::Abstraction,
     scale: Duration,
     canvas: &CanvasPainter,
     settings: &Settings,

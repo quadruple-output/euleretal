@@ -1,10 +1,7 @@
 use super::{
     builders,
     core::{
-        integration_step::{
-            contributions, ComputedAcceleration, ComputedPosition, ComputedPositionData,
-            ComputedVelocity, ComputedVelocityData, StartCondition,
-        },
+        integration_step::{computed, contributions, StartCondition},
         integrator, Acceleration, AccelerationField, Duration, Fraction, Position, Velocity,
     },
     import::{shape, PointQuery},
@@ -12,9 +9,9 @@ use super::{
 
 pub struct Step {
     dt: Duration,
-    positions: Vec<ComputedPositionData>,
-    velocities: Vec<ComputedVelocityData>,
-    accelerations: Vec<ComputedAcceleration>,
+    positions: Vec<computed::Position>,
+    velocities: Vec<computed::Velocity>,
+    accelerations: Vec<computed::Acceleration>,
     last_computed_position: Option<PositionRef>,
     last_computed_velocity: Option<VelocityRef>,
     acceleration_at_last_position: Option<AccelerationRef>,
@@ -144,12 +141,12 @@ impl Step {
         self.dt
     }
 
-    pub fn last_computed_position(&self) -> ComputedPosition {
-        self[self.last_computed_position.unwrap()].public_for(self)
+    pub fn last_computed_position(&self) -> computed::position::Abstraction {
+        self[self.last_computed_position.unwrap()].abstraction_for(self)
     }
 
-    pub fn last_computed_velocity(&self) -> ComputedVelocity {
-        self[self.last_computed_velocity.unwrap()].public_for(self)
+    pub fn last_computed_velocity(&self) -> computed::velocity::Abstraction {
+        self[self.last_computed_velocity.unwrap()].abstraction_for(self)
     }
 
     pub fn last_s(&self) -> Position {
@@ -172,7 +169,10 @@ impl Step {
         .distance_to_local_point(pos.as_point(), true)
     }
 
-    pub fn closest_computed_velocity(&self, pos: impl Into<Position>) -> ComputedVelocity {
+    pub fn closest_computed_velocity(
+        &self,
+        pos: impl Into<Position>,
+    ) -> computed::velocity::Abstraction {
         let pos = pos.into();
         self.velocities
             .iter()
@@ -187,10 +187,13 @@ impl Step {
             })
             .unwrap()
             .0
-            .public_for(self)
+            .abstraction_for(self)
     }
 
-    pub fn closest_computed_position(&self, pos: impl Into<Position>) -> ComputedPosition {
+    pub fn closest_computed_position(
+        &self,
+        pos: impl Into<Position>,
+    ) -> computed::position::Abstraction {
         let pos = pos.into();
         self.positions
             .iter()
@@ -205,7 +208,7 @@ impl Step {
             })
             .unwrap()
             .0
-            .public_for(self)
+            .abstraction_for(self)
     }
 
     pub(super) fn add_computed_position(
@@ -215,7 +218,7 @@ impl Step {
         contributions: contributions::position::Collection,
     ) -> PositionRef {
         let p_ref = PositionRef(self.positions.len());
-        self.positions.push(ComputedPositionData {
+        self.positions.push(computed::Position {
             s,
             dt_fraction,
             contributions,
@@ -231,7 +234,7 @@ impl Step {
         contributions: Vec<contributions::velocity::Variant>,
     ) -> VelocityRef {
         let v_ref = VelocityRef(self.velocities.len());
-        self.velocities.push(ComputedVelocityData {
+        self.velocities.push(computed::Velocity {
             v,
             sampling_position,
             contributions,
@@ -246,7 +249,7 @@ impl Step {
         sampling_position: PositionRef,
     ) -> AccelerationRef {
         let a_ref = AccelerationRef(self.accelerations.len());
-        self.accelerations.push(ComputedAcceleration {
+        self.accelerations.push(computed::Acceleration {
             a,
             sampling_position,
         });
@@ -263,7 +266,7 @@ impl Step {
 }
 
 impl ::std::ops::Index<AccelerationRef> for Step {
-    type Output = ComputedAcceleration;
+    type Output = computed::Acceleration;
 
     fn index(&self, a_ref: AccelerationRef) -> &Self::Output {
         &self.accelerations[a_ref.0]
@@ -271,7 +274,7 @@ impl ::std::ops::Index<AccelerationRef> for Step {
 }
 
 impl ::std::ops::Index<PositionRef> for Step {
-    type Output = ComputedPositionData;
+    type Output = computed::Position;
 
     fn index(&self, p_ref: PositionRef) -> &Self::Output {
         &self.positions[p_ref.0]
@@ -279,7 +282,7 @@ impl ::std::ops::Index<PositionRef> for Step {
 }
 
 impl ::std::ops::Index<VelocityRef> for Step {
-    type Output = ComputedVelocityData;
+    type Output = computed::Velocity;
 
     fn index(&self, v_ref: VelocityRef) -> &Self::Output {
         &self.velocities[v_ref.0]
