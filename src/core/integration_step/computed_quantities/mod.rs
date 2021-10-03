@@ -2,7 +2,7 @@ mod acceleration;
 mod position;
 mod velocity;
 
-use super::{core, quantity_contributions, step, Step};
+use super::{contributions, core, step, Step};
 pub use acceleration::Acceleration;
 pub use position::Data as PositionData;
 pub use position::Position;

@@ -1,6 +1,7 @@
 use super::{
+    contributions,
     core::{self, Fraction},
-    quantity_contributions, Step,
+    Step,
 };
 
 pub struct Position<'a> {
@@ -14,8 +15,7 @@ pub struct Position<'a> {
 pub struct Data {
     pub(in crate::core::integration_step) s: core::Position,
     pub(in crate::core::integration_step) dt_fraction: Fraction,
-    pub(in crate::core::integration_step) contributions:
-        quantity_contributions::position::Collection,
+    pub(in crate::core::integration_step) contributions: contributions::position::Collection,
 }
 
 impl<'a> Position<'a> {
@@ -27,9 +27,7 @@ impl<'a> Position<'a> {
         self.data.dt_fraction
     }
 
-    pub fn contributions_iter(
-        &self,
-    ) -> impl Iterator<Item = quantity_contributions::position::Abstraction> {
+    pub fn contributions_iter(&self) -> impl Iterator<Item = contributions::position::Abstraction> {
         self.data
             .contributions
             .iter()
