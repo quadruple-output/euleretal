@@ -232,3 +232,39 @@ fn simple_step_s_a_dt_dt() {
     assert_eq!(second_contribution.sampling_position(), s0);
     assert_eq!(second_contribution.vector().unwrap(), a0 * dt * dt);
 }
+
+#[test]
+fn simple_step_s_v_dt_12_a_dt_dt() {
+    let ctx = Setup::default();
+    let mut step = ctx.new_step();
+    let mut builder = ctx.new_builder_for(&mut step);
+
+    {
+        let (s0, v0, a0) = builder.start_values();
+        let dt = builder.dt();
+        builder.push(s0 + v0 * dt + 0.5 * a0 * dt * dt);
+        builder.finalize();
+    }
+
+    let (s0, v0, a0, dt) = (
+        ctx.start_condition.position(),
+        ctx.start_condition.velocity(),
+        ctx.start_condition.acceleration(),
+        ctx.dt,
+    );
+
+    let final_position = step.last_computed_position();
+    assert_eq!(final_position.s(), s0 + v0 * dt + 0.5 * a0 * dt * dt);
+
+    let mut contributions = final_position.contributions_iter();
+    let first_contribution = contributions.next().unwrap();
+    let second_contribution = contributions.next().unwrap();
+    let third_contribution = contributions.next().unwrap();
+    assert!(contributions.next().is_none());
+
+    assert_eq!(first_contribution.sampling_position(), s0);
+    assert_eq!(second_contribution.sampling_position(), s0);
+    assert_eq!(third_contribution.sampling_position(), s0);
+    assert_eq!(second_contribution.vector().unwrap(), v0 * dt);
+    assert_eq!(third_contribution.vector().unwrap(), 0.5 * a0 * dt * dt);
+}

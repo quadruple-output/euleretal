@@ -10,7 +10,7 @@ pub struct Contribution<'a> {
 
 #[derive(Clone, Copy)]
 pub(in crate::core::integration_step) enum Data {
-    Acceleration { a_ref: AccelerationRef },
+    Acceleration { factor: f32, a_ref: AccelerationRef },
 }
 
 // todo: this could be a trait, generic over the output type of vector()
@@ -18,7 +18,7 @@ impl<'a> Contribution<'a> {
     pub fn sampling_position(&self) -> Position {
         let step = self.step;
         match self.data {
-            Data::Acceleration { a_ref } => step[step[*a_ref].sampling_position].s,
+            Data::Acceleration { factor: _, a_ref } => step[step[*a_ref].sampling_position].s,
         }
     }
 
@@ -40,7 +40,7 @@ impl Data {
 
     pub(in crate::core::integration_step) fn evaluate_for(&self, step: &Step) -> Acceleration {
         match *self {
-            Self::Acceleration { a_ref } => step[a_ref].a,
+            Self::Acceleration { factor, a_ref } => factor * step[a_ref].a,
         }
     }
 

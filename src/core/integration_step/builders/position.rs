@@ -87,3 +87,11 @@ impl std::ops::Add<PositionContribution> for PositionContribution {
         PositionContributionDataCollection(vec![self.inner, rhs.inner])
     }
 }
+
+impl std::ops::Add<PositionContribution> for PositionContributionDataCollection {
+    type Output = Self;
+
+    fn add(self, rhs: PositionContribution) -> Self::Output {
+        Self(self.0.into_iter().chain(Some(rhs.inner)).collect())
+    }
+}

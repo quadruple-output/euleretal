@@ -19,7 +19,7 @@ impl From<AccelerationContributionData> for AccelerationContribution {
 
 impl From<AccelerationRef> for AccelerationContribution {
     fn from(a_ref: AccelerationRef) -> Self {
-        AccelerationContributionData::Acceleration { a_ref }.into()
+        AccelerationContributionData::Acceleration { factor: 1., a_ref }.into()
     }
 }
 
@@ -34,14 +34,30 @@ impl std::ops::Mul<DtFraction> for AccelerationContribution {
 
     fn mul(self, dt_fraction: DtFraction) -> Self::Output {
         match self.inner {
-            AccelerationContributionData::Acceleration { a_ref } => {
+            AccelerationContributionData::Acceleration { factor, a_ref } => {
                 VelocityContributionData::AccelerationDt {
-                    factor: 1.,
+                    factor,
                     a_ref,
                     dt_fraction: dt_fraction.into(),
                 }
                 .into()
             }
         }
+    }
+}
+
+impl std::ops::Mul<AccelerationContribution> for f32 {
+    type Output = AccelerationContribution;
+
+    fn mul(self, rhs: AccelerationContribution) -> Self::Output {
+        match rhs.inner {
+            AccelerationContributionData::Acceleration { factor, a_ref } => {
+                AccelerationContributionData::Acceleration {
+                    factor: self * factor,
+                    a_ref,
+                }
+            }
+        }
+        .into()
     }
 }
