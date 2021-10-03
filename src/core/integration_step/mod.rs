@@ -19,6 +19,7 @@ use computed_quantities::{
     PositionData as ComputedPositionData, VelocityData as ComputedVelocityData,
 };
 use quantity_contributions::{
+    acceleration::Data as AccelerationContributionData,
     position::{
         Contribution as PositionContribution, Data as PositionContributionData,
         DataCollection as PositionContributionDataCollection,

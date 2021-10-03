@@ -88,8 +88,17 @@ impl std::ops::Mul<DtFraction> for VelocityContribution {
             VelocityContributionData::AccelerationDt {
                 factor,
                 a_ref,
-                dt_fraction,
-            } => todo!(),
+                dt_fraction: dt_fraction_lhs,
+            } => {
+                // todo: cannot handle `a * dt * dt_2` where dt != dt_2
+                debug_assert_eq!(dt_fraction_lhs, dt_fraction.into());
+                PositionContributionData::AccelerationDtDt {
+                    factor,
+                    a_ref,
+                    dt_fraction: dt_fraction_lhs,
+                }
+                .into()
+            }
         }
     }
 }

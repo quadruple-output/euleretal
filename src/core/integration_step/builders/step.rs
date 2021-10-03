@@ -1,8 +1,8 @@
 use super::{
-    acceleration::Acceleration1,
+    acceleration::AccelerationContribution,
     core::{self, AccelerationField, Duration, StartCondition},
     integration_step::{
-        step::{PositionRef, VelocityRef},
+        step::{AccelerationRef, PositionRef, VelocityRef},
         PositionContributionData, PositionContributionDataCollection, VelocityContributionData,
     },
     position::PositionContribution,
@@ -62,12 +62,17 @@ impl<'a> Step<'a> {
         fraction!(1 / 1).into()
     }
 
-    pub fn start_values(&self) -> (PositionContribution, VelocityContribution, Acceleration1) {
+    pub fn start_values(
+        &self,
+    ) -> (
+        PositionContribution,
+        VelocityContribution,
+        AccelerationContribution,
+    ) {
         (
             PositionRef::default().into(),
             VelocityRef::default().into(),
-            //AccelerationRef::default().into(),
-            self.step.get_start_condition().acceleration().into(),
+            AccelerationRef::default().into(),
         )
     }
 }
