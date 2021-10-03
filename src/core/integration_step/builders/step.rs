@@ -17,7 +17,6 @@ impl<'a> Step<'a> {
     pub fn new<'b>(
         acceleration_field: &'a dyn AccelerationField,
         start_condition: &'b StartCondition,
-        dt: Duration,
         step: &'a mut core::Step,
     ) -> Self {
         step.set_start_condition(start_condition);

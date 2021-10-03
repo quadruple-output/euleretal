@@ -33,12 +33,7 @@ impl Default for Setup {
 
 impl Setup {
     fn new_builder_for<'a>(&'a self, step: &'a mut Step) -> StepBuilder<'a> {
-        StepBuilder::new(
-            &self.acceleration_field,
-            &self.start_condition,
-            self.dt,
-            step,
-        )
+        StepBuilder::new(&self.acceleration_field, &self.start_condition, step)
     }
 
     fn new_step(&self) -> Step {
