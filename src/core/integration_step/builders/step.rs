@@ -1,5 +1,5 @@
 use super::{
-    core::{self, AccelerationField, Duration, StartCondition},
+    core::{self, AccelerationField, StartCondition},
     integration_step::{
         contributions,
         step::{AccelerationRef, PositionRef, VelocityRef},
@@ -106,7 +106,7 @@ impl<'a> Push<contributions::position::Variant> for Step<'a> {
 impl<'a> Push<contributions::position::Collection> for Step<'a> {
     fn push(&mut self, contributions: contributions::position::Collection) {
         let mut s = core::Position::origin();
-        for contrib in contributions.iter() {
+        for contrib in &contributions {
             s += contrib.evaluate_for(self.step);
         }
         self.step.add_computed_position(
@@ -124,7 +124,7 @@ impl<'a> Push<contributions::velocity::Variant> for Step<'a> {
                 self.step.add_computed_velocity(
                     self.step[v_ref].v,
                     self.step[v_ref].sampling_position,
-                    vec![velocity_contribution],
+                    vec![velocity_contribution].into(),
                 );
             }
             contributions::velocity::Variant::AccelerationDt {
@@ -133,5 +133,19 @@ impl<'a> Push<contributions::velocity::Variant> for Step<'a> {
                 dt_fraction,
             } => todo!(),
         }
+    }
+}
+
+impl<'a> Push<contributions::velocity::Collection> for Step<'a> {
+    fn push(&mut self, contributions: contributions::velocity::Collection) {
+        let mut v = core::Velocity::zeros();
+        for contrib in &contributions {
+            v += contrib.evaluate_for(self.step);
+        }
+        self.step.add_computed_velocity(
+            v,
+            self.step.last_position_ref(), // just a default
+            contributions,
+        );
     }
 }

@@ -92,10 +92,11 @@ impl std::ops::Add for Variant {
     type Output = Collection;
 
     fn add(self, rhs: Self) -> Self::Output {
-        Collection(vec![self, rhs])
+        vec![self, rhs].into()
     }
 }
 
+#[derive(Default)]
 pub struct Collection(pub(in crate::core::integration_step) Vec<Variant>);
 
 impl From<Vec<Variant>> for Collection {
@@ -105,11 +106,11 @@ impl From<Vec<Variant>> for Collection {
 }
 
 impl Collection {
-    pub const fn empty() -> Self {
+    pub(in crate::core::integration_step) const fn empty() -> Self {
         Self(Vec::new())
     }
 
-    pub fn with_capacity(capacity: usize) -> Self {
+    pub(in crate::core::integration_step) fn with_capacity(capacity: usize) -> Self {
         Self(Vec::with_capacity(capacity))
     }
 
@@ -119,6 +120,16 @@ impl Collection {
 
     pub(in crate::core::integration_step) fn push(&mut self, data: Variant) {
         self.0.push(data);
+    }
+}
+
+impl<'a> IntoIterator for &'a Collection {
+    type Item = &'a Variant;
+
+    type IntoIter = std::slice::Iter<'a, Variant>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
     }
 }
 

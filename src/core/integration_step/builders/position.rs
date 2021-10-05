@@ -51,7 +51,7 @@ impl<'a> Position<'a> {
 
     pub fn create(self) -> PositionRef {
         let mut s = core::Position::origin();
-        for contrib in self.contributions.iter() {
+        for contrib in &self.contributions {
             s += contrib.evaluate_for(self.step);
         }
         self.step

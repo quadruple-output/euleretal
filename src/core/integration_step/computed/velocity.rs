@@ -15,7 +15,7 @@ pub struct Abstraction<'a> {
 pub struct Velocity {
     pub(in crate::core::integration_step) v: core::Velocity,
     pub(in crate::core::integration_step) sampling_position: PositionRef,
-    pub(in crate::core::integration_step) contributions: Vec<contributions::velocity::Variant>,
+    pub(in crate::core::integration_step) contributions: contributions::velocity::Collection,
 }
 
 impl<'a> Abstraction<'a> {

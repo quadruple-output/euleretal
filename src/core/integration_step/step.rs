@@ -78,7 +78,7 @@ impl Step {
             fraction!(1 / 1),
             contributions::position::Collection::empty(),
         );
-        self.add_computed_velocity(v, p_ref, Vec::new());
+        self.add_computed_velocity(v, p_ref, contributions::velocity::Collection::empty());
         self.acceleration_at_last_position = Some(self.add_computed_acceleration(a, p_ref));
     }
 
@@ -90,7 +90,11 @@ impl Step {
         );
         ConditionRef {
             s: sref,
-            v: self.add_computed_velocity(p.velocity(), sref, Vec::new()),
+            v: self.add_computed_velocity(
+                p.velocity(),
+                sref,
+                contributions::velocity::Collection::empty(),
+            ),
             a: self.add_computed_acceleration(p.acceleration(), sref),
         }
     }
@@ -211,6 +215,10 @@ impl Step {
             .abstraction_for(self)
     }
 
+    pub(super) fn last_position_ref(&self) -> PositionRef {
+        PositionRef(self.positions.len() - 1)
+    }
+
     pub(super) fn add_computed_position(
         &mut self,
         s: Position,
@@ -231,7 +239,7 @@ impl Step {
         &mut self,
         v: Velocity,
         sampling_position: PositionRef,
-        contributions: Vec<contributions::velocity::Variant>,
+        contributions: contributions::velocity::Collection,
     ) -> VelocityRef {
         let v_ref = VelocityRef(self.velocities.len());
         self.velocities.push(computed::Velocity {

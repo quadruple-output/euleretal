@@ -2,7 +2,7 @@
 
 use super::integration_step::StartCondition;
 use super::{
-    core::{AccelerationField, Duration, Position, Step, Velocity},
+    core::{Acceleration, AccelerationField, Duration, Position, Step, Velocity},
     integration_step::builders::step::Push,
     Step as StepBuilder,
 };
@@ -38,6 +38,14 @@ impl Setup {
 
     fn new_step(&self) -> Step {
         Step::new(self.dt)
+    }
+
+    fn start_values(&self) -> (Position, Velocity, Acceleration) {
+        (
+            self.start_condition.position(),
+            self.start_condition.velocity(),
+            self.start_condition.acceleration(),
+        )
     }
 }
 
@@ -125,11 +133,7 @@ fn simple_step_s_v_dt() {
     builder.finalize();
 
     // expected results:
-    let (s0, v0, dt) = (
-        ctx.start_condition.position(),
-        ctx.start_condition.velocity(),
-        ctx.dt,
-    );
+    let ((s0, v0, _a0), dt) = (ctx.start_values(), ctx.dt);
     let s1 = s0 + v0 * dt;
 
     // check calculated result:
@@ -169,17 +173,9 @@ fn two_simple_steps_in_sequence() {
     builder.finalize();
 
     // expected result:
-    let s1;
-    let v1;
-    let dt = ctx.dt;
-    {
-        let (s0, v0) = (
-            ctx.start_condition.position(),
-            ctx.start_condition.velocity(),
-        );
-        s1 = s0 + v0 * dt;
-        v1 = v0;
-    }
+    let ((s0, v0, _a0), dt) = (ctx.start_values(), ctx.dt);
+    let s1 = s0 + v0 * dt;
+    let v1 = v0;
     let s2 = s1 + v1 * dt;
 
     // check result:
@@ -209,11 +205,7 @@ fn simple_step_s_a_dt_dt() {
         builder.finalize();
     }
 
-    let (s0, a0, dt) = (
-        ctx.start_condition.position(),
-        ctx.start_condition.acceleration(),
-        ctx.dt,
-    );
+    let ((s0, _v0, a0), dt) = (ctx.start_values(), ctx.dt);
 
     let final_position = step.last_computed_position();
     assert_eq!(final_position.s(), s0 + a0 * dt * dt);
@@ -241,12 +233,7 @@ fn simple_step_s_v_dt_12_a_dt_dt() {
         builder.finalize();
     }
 
-    let (s0, v0, a0, dt) = (
-        ctx.start_condition.position(),
-        ctx.start_condition.velocity(),
-        ctx.start_condition.acceleration(),
-        ctx.dt,
-    );
+    let ((s0, v0, a0), dt) = (ctx.start_values(), ctx.dt);
 
     let final_position = step.last_computed_position();
     assert_eq!(final_position.s(), s0 + v0 * dt + 0.5 * a0 * dt * dt);
@@ -263,3 +250,102 @@ fn simple_step_s_v_dt_12_a_dt_dt() {
     assert_eq!(second_contribution.vector().unwrap(), v0 * dt);
     assert_eq!(third_contribution.vector().unwrap(), 0.5 * a0 * dt * dt);
 }
+
+#[test]
+fn euler() {
+    let ctx = Setup::default();
+    let mut step = ctx.new_step();
+    let mut builder = ctx.new_builder_for(&mut step);
+
+    // test:
+    {
+        let (s0, v0, a0) = builder.start_values();
+        let dt = builder.dt();
+        builder.push(v0 + a0 * dt);
+        builder.push(s0 + v0 * dt + a0 * dt * dt);
+        builder.finalize();
+    }
+
+    // expected values:
+    let ((s0, v0, a0), dt) = (ctx.start_values(), ctx.dt);
+    let s1 = s0 + v0 * dt + a0 * dt * dt;
+    let v1 = v0 + a0 * dt;
+
+    // assertions:
+    let final_position = step.last_computed_position();
+    assert_eq!(final_position.s(), s1);
+
+    let final_velocity = step.last_computed_velocity();
+    assert_eq!(final_velocity.v(), v1);
+    // tested elsewhere:
+    // assert_eq!(final_velocity.sampling_position(), s1);
+
+    let mut s_contribs = final_position.contributions_iter();
+    let s_contrib_1 = s_contribs.next().unwrap();
+    let s_contrib_2 = s_contribs.next().unwrap();
+    let s_contrib_3 = s_contribs.next().unwrap();
+    assert!(s_contribs.next().is_none());
+
+    assert_eq!(s_contrib_1.sampling_position(), s0);
+    assert_eq!(s_contrib_2.sampling_position(), s0);
+    assert_eq!(s_contrib_2.vector().unwrap(), v0 * dt);
+    assert_eq!(s_contrib_3.sampling_position(), s0);
+    assert_eq!(s_contrib_3.vector().unwrap(), a0 * dt * dt);
+
+    let mut v_contribs = final_velocity.contributions_iter();
+    let v_contrib_1 = v_contribs.next().unwrap();
+    let v_contrib_2 = v_contribs.next().unwrap();
+    assert!(v_contribs.next().is_none());
+
+    assert_eq!(v_contrib_1.sampling_position(), s0);
+    assert_eq!(v_contrib_1.vector(), v0);
+    assert_eq!(v_contrib_2.sampling_position(), s0);
+    assert_eq!(v_contrib_2.vector(), a0 * dt);
+}
+
+/*
+#[test]
+fn can_set_display_position_of_velocity() {
+    let ctx = Setup::default();
+    let mut step = ctx.new_step();
+    let mut builder = ctx.new_builder_for(&mut step);
+
+    // test:
+    {
+        let (s0, v0, a0) = builder.start_values();
+        let dt = builder.dt();
+        let v1 = builder.push(v0 + a0 * dt);
+        let s1 = builder.push(s0 + v0 * dt + 0.5 * a0 * dt * dt);
+        v1.display_at(s1);
+        builder.finalize();
+    }
+
+    // expected values:
+    let ((s0, v0, a0), dt) = (ctx.start_values(), ctx.dt);
+    let s1 = s0 + v0 * dt + 0.5 * a0 * dt * dt;
+    let v1 = v0 + a0 * dt;
+
+    // assertions:
+    let final_position = step.last_computed_position();
+    assert_eq!(final_position.s(), s1);
+
+    let final_velocity = step.last_computed_velocity();
+    assert_eq!(final_velocity.v(), v1);
+    assert_eq!(final_velocity.sampling_position(), s1);
+}
+
+#[test]
+fn euler_with_intermediate_v() {
+    let ctx = Setup::default();
+    let mut step = ctx.new_step();
+    let mut builder = ctx.new_builder_for(&mut step);
+
+    {
+        let (s0, v0, a0) = builder.start_values();
+        let dt = builder.dt();
+        //let v1 = builder.push(v0 + a0 * dt);
+        //builder.push(s0 + v1 * dt);
+    }
+    todo!()
+}
+ */

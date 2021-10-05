@@ -10,7 +10,7 @@ pub struct Velocity<'a> {
     step: &'a mut Step,
     dt_fraction: Fraction,
     s_ref: PositionRef,
-    contributions: Vec<contributions::velocity::Variant>,
+    contributions: contributions::velocity::Collection,
 }
 
 impl<'a> Velocity<'a> {
@@ -20,7 +20,7 @@ impl<'a> Velocity<'a> {
             dt_fraction,
             s_ref,
             // most of the times there will be 2 contributions:
-            contributions: Vec::with_capacity(2),
+            contributions: contributions::velocity::Collection::with_capacity(2),
         }
     }
 

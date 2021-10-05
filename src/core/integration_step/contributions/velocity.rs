@@ -28,6 +28,7 @@ impl<'a> Abstraction<'a> {
     }
 }
 
+#[derive(Clone, Copy)]
 pub enum Variant {
     Velocity {
         v_ref: VelocityRef,
@@ -75,6 +76,14 @@ impl Variant {
     }
 }
 
+impl std::ops::Add for Variant {
+    type Output = Collection;
+
+    fn add(self, rhs: Variant) -> Self::Output {
+        vec![self, rhs].into()
+    }
+}
+
 impl std::ops::Mul<DtFraction> for Variant {
     type Output = position::Variant;
 
@@ -101,5 +110,46 @@ impl std::ops::Mul<DtFraction> for Variant {
                 }
             }
         }
+    }
+}
+
+#[derive(Default)]
+pub struct Collection(pub(in crate::core::integration_step) Vec<Variant>);
+
+impl From<Vec<Variant>> for Collection {
+    fn from(v: Vec<Variant>) -> Self {
+        Self(v)
+    }
+}
+
+impl Collection {
+    pub(in crate::core::integration_step) const fn empty() -> Self {
+        Self(Vec::new())
+    }
+
+    pub(in crate::core::integration_step) fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub(in crate::core::integration_step) fn with_capacity(capacity: usize) -> Self {
+        Self(Vec::with_capacity(capacity))
+    }
+
+    pub(in crate::core::integration_step) fn iter(&self) -> impl Iterator<Item = &Variant> {
+        self.0.iter()
+    }
+
+    pub(in crate::core::integration_step) fn push(&mut self, data: Variant) {
+        self.0.push(data);
+    }
+}
+
+impl<'a> IntoIterator for &'a Collection {
+    type Item = &'a Variant;
+
+    type IntoIter = std::slice::Iter<'a, Variant>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
     }
 }
