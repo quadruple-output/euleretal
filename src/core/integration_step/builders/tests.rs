@@ -333,6 +333,7 @@ fn can_set_display_position_of_velocity() {
     assert_eq!(final_velocity.v(), v1);
     assert_eq!(final_velocity.sampling_position(), s1);
 }
+ */
 
 #[test]
 fn euler_with_intermediate_v() {
@@ -340,12 +341,43 @@ fn euler_with_intermediate_v() {
     let mut step = ctx.new_step();
     let mut builder = ctx.new_builder_for(&mut step);
 
+    // test:
     {
-        let (s0, v0, a0) = builder.start_values();
-        let dt = builder.dt();
-        //let v1 = builder.push(v0 + a0 * dt);
-        //builder.push(s0 + v1 * dt);
+        let ((s0, v0, a0), dt) = (builder.start_values(), builder.dt());
+        let v1 = builder.push(v0 + a0 * dt);
+        builder.push(s0 + v1 * dt);
     }
-    todo!()
+
+    // expected values:
+    let ((s0, v0, a0), dt) = (ctx.start_values(), ctx.dt);
+    let v1 = v0 + a0 * dt;
+    let s1 = s0 + v1 * dt;
+
+    // assertions:
+    let final_position = step.last_computed_position();
+    assert_eq!(final_position.s(), s1);
+
+    let final_velocity = step.last_computed_velocity();
+    assert_eq!(final_velocity.v(), v1);
+    // tested elsewhere:
+    // assert_eq!(final_velocity.sampling_position(), s1);
+
+    let mut s_contribs = final_position.contributions_iter();
+    let s_contrib_1 = s_contribs.next().unwrap();
+    let s_contrib_2 = s_contribs.next().unwrap();
+    assert!(s_contribs.next().is_none());
+
+    assert_eq!(s_contrib_1.sampling_position(), s0);
+    //assert_eq!(s_contrib_2.sampling_position(), s0);
+    assert_eq!(s_contrib_2.vector().unwrap(), v1 * dt);
+
+    let mut v_contribs = final_velocity.contributions_iter();
+    let v_contrib_1 = v_contribs.next().unwrap();
+    let v_contrib_2 = v_contribs.next().unwrap();
+    assert!(v_contribs.next().is_none());
+
+    assert_eq!(v_contrib_1.sampling_position(), s0);
+    assert_eq!(v_contrib_1.vector(), v0);
+    assert_eq!(v_contrib_2.sampling_position(), s0);
+    assert_eq!(v_contrib_2.vector(), a0 * dt);
 }
- */

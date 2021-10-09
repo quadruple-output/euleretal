@@ -30,6 +30,7 @@ impl<'a> Abstraction<'a> {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub enum Variant {
     StartPosition {
         s_ref: PositionRef,
