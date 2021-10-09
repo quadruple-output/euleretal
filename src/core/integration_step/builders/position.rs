@@ -7,13 +7,13 @@ use super::{
     core::{self, Fraction},
 };
 
-pub struct Position<'a> {
+pub struct PositionDeprecated<'a> {
     step: &'a mut Step,
     dt_fraction: Fraction,
     contributions: contributions::position::Collection,
 }
 
-impl<'a> Position<'a> {
+impl<'a> PositionDeprecated<'a> {
     pub fn new(step: &'a mut Step, dt_fraction: Fraction) -> Self {
         Self {
             step,

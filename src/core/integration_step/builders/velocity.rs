@@ -6,14 +6,14 @@ use super::{
     },
 };
 
-pub struct Velocity<'a> {
+pub struct VelocityDeprecated<'a> {
     step: &'a mut Step,
     dt_fraction: Fraction,
     s_ref: PositionRef,
     contributions: contributions::velocity::Collection,
 }
 
-impl<'a> Velocity<'a> {
+impl<'a> VelocityDeprecated<'a> {
     pub fn new(step: &'a mut Step, dt_fraction: Fraction, s_ref: PositionRef) -> Self {
         Self {
             step,

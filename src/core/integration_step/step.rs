@@ -115,16 +115,16 @@ impl Step {
         }
     }
 
-    pub fn compute_position(&mut self, dt_fraction: Fraction) -> builders::Position {
-        builders::Position::new(self, dt_fraction)
+    pub fn compute_position(&mut self, dt_fraction: Fraction) -> builders::PositionDeprecated {
+        builders::PositionDeprecated::new(self, dt_fraction)
     }
 
     pub fn compute_velocity(
         &mut self,
         dt_fraction: Fraction,
         sref: PositionRef,
-    ) -> builders::Velocity {
-        builders::Velocity::new(self, dt_fraction, sref)
+    ) -> builders::VelocityDeprecated {
+        builders::VelocityDeprecated::new(self, dt_fraction, sref)
     }
 
     pub fn compute_acceleration_at(
