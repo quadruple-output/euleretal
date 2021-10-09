@@ -303,7 +303,6 @@ fn euler() {
     assert_eq!(v_contrib_2.vector(), a0 * dt);
 }
 
-/*
 #[test]
 fn can_set_display_position_of_velocity() {
     let ctx = Setup::default();
@@ -316,7 +315,10 @@ fn can_set_display_position_of_velocity() {
         let dt = builder.dt();
         let v1 = builder.push(v0 + a0 * dt);
         let s1 = builder.push(s0 + v0 * dt + 0.5 * a0 * dt * dt);
-        v1.display_at(s1);
+        builder.set_display_position(v1, s1);
+        // todo: strange: this is also possible:
+        // builder.set_display_position(a0 * dt, s1);
+        // builder.set_display_position(v1, v0 * dt);
         builder.finalize();
     }
 
@@ -333,7 +335,6 @@ fn can_set_display_position_of_velocity() {
     assert_eq!(final_velocity.v(), v1);
     assert_eq!(final_velocity.sampling_position(), s1);
 }
- */
 
 #[test]
 fn euler_with_intermediate_v() {

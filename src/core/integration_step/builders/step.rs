@@ -72,6 +72,40 @@ impl<'a> Step<'a> {
             AccelerationRef::default().into(),
         )
     }
+
+    pub fn set_display_position(
+        &mut self,
+        v: contributions::velocity::Variant,
+        s: contributions::position::Variant,
+    ) {
+        use contributions::position::Variant as PositionVariant;
+        use contributions::velocity::Variant as VelocityVariant;
+        let s_ref = match s {
+            PositionVariant::StartPosition { s_ref } => s_ref,
+            PositionVariant::VelocityDt {
+                factor: _,
+                v_ref,
+                dt_fraction: _,
+            } => self.step[v_ref].sampling_position,
+            PositionVariant::AccelerationDtDt {
+                factor: _,
+                a_ref,
+                dt_fraction: _,
+            } => self.step[a_ref].sampling_position,
+        };
+        match v {
+            VelocityVariant::Velocity { v_ref } => {
+                self.step[v_ref].sampling_position = s_ref;
+            }
+            VelocityVariant::AccelerationDt {
+                factor: _,
+                a_ref,
+                dt_fraction: _,
+            } => {
+                self.step[a_ref].sampling_position = s_ref;
+            }
+        }
+    }
 }
 
 pub trait Push<Contrib> {

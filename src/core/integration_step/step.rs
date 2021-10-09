@@ -281,6 +281,12 @@ impl ::std::ops::Index<AccelerationRef> for Step {
     }
 }
 
+impl ::std::ops::IndexMut<AccelerationRef> for Step {
+    fn index_mut(&mut self, a_ref: AccelerationRef) -> &mut Self::Output {
+        &mut self.accelerations[a_ref.0]
+    }
+}
+
 impl ::std::ops::Index<PositionRef> for Step {
     type Output = computed::Position;
 
@@ -289,10 +295,22 @@ impl ::std::ops::Index<PositionRef> for Step {
     }
 }
 
+impl ::std::ops::IndexMut<PositionRef> for Step {
+    fn index_mut(&mut self, p_ref: PositionRef) -> &mut Self::Output {
+        &mut self.positions[p_ref.0]
+    }
+}
+
 impl ::std::ops::Index<VelocityRef> for Step {
     type Output = computed::Velocity;
 
     fn index(&self, v_ref: VelocityRef) -> &Self::Output {
         &self.velocities[v_ref.0]
+    }
+}
+
+impl ::std::ops::IndexMut<VelocityRef> for Step {
+    fn index_mut(&mut self, v_ref: VelocityRef) -> &mut Self::Output {
+        &mut self.velocities[v_ref.0]
     }
 }
