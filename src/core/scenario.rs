@@ -27,6 +27,8 @@ impl Scenario {
 
     pub fn calculate_trajectory(&self, min_dt: Duration) -> Vec<Position> {
         #[allow(clippy::cast_sign_loss)]
+        #[allow(clippy::cast_possible_truncation)]
+        #[allow(clippy::cast_precision_loss)]
         let num_steps = (self.duration / min_dt * STEPS_PER_DT as f32) as usize;
         let (trajectory, _samples) = calculate_trajectory_and_samples(
             &*self.acceleration,
@@ -62,6 +64,7 @@ impl Scenario {
 
     pub fn calculate_reference_samples(&self, dt: Duration) -> Samples {
         #[allow(clippy::cast_sign_loss)]
+        #[allow(clippy::cast_possible_truncation)]
         let num_iterations = (self.duration / dt) as usize;
         let (trajectory, samples) = calculate_trajectory_and_samples(
             &*self.acceleration,
@@ -89,6 +92,8 @@ fn calculate_trajectory_and_samples(
     dt: Duration,
     steps_per_dt: usize,
 ) -> (Vec<Position>, Samples) {
+    #![allow(clippy::cast_precision_loss)]
+
     let mut t0 = 0.0.into();
     let mut s0 = start_position;
     let mut v0 = start_velocity;

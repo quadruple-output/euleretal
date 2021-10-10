@@ -1,6 +1,8 @@
 use super::{core::Position, entities::CanvasPainter, import::Vec3, misc};
 
 pub fn render(settings: &misc::Settings, canvas: &CanvasPainter) {
+    #![allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)]
+
     let scenario_obj = canvas.scenario(); // need temp var to extend lifetime
     let scenario = scenario_obj.borrow();
     let acceleration = &scenario.acceleration;

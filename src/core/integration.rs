@@ -43,6 +43,7 @@ impl Integration {
             false
         } else {
             #[allow(clippy::cast_sign_loss)]
+            #[allow(clippy::cast_possible_truncation)]
             let num_steps = (scenario.duration / step_duration) as usize;
 
             let samples = Self::integrate(

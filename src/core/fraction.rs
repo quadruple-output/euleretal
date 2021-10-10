@@ -32,6 +32,7 @@ impl Default for Fraction {
 
 impl From<Fraction> for f32 {
     fn from(f: Fraction) -> Self {
+        #![allow(clippy::cast_precision_loss)]
         f.numerator as f32 / f.denominator as f32
     }
 }
