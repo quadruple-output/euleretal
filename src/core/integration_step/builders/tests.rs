@@ -126,8 +126,7 @@ fn simple_step_s_v_dt() {
     let mut builder = ctx.new_builder_for(&mut step);
     // calculate step:
     {
-        let (s0, v0, _a0) = builder.start_values();
-        let dt = builder.dt();
+        let ((s0, v0, _a0), dt) = (builder.start_values(), builder.dt());
         builder.push(s0 + v0 * dt);
     }
     builder.finalize();
@@ -158,16 +157,14 @@ fn two_simple_steps_in_sequence() {
     let mut step1 = ctx.new_step();
     let mut builder = ctx.new_builder_for(&mut step1);
     {
-        let (s0, v0, _a0) = builder.start_values();
-        let dt = builder.dt();
+        let ((s0, v0, _a0), dt) = (builder.start_values(), builder.dt());
         builder.push(s0 + v0 * dt);
     }
     builder.finalize();
     let mut step2 = builder.next_step();
     let mut builder = builder.next_for(&mut step2);
     {
-        let (s0, v0, _a0) = builder.start_values();
-        let dt = builder.dt();
+        let ((s0, v0, _a0), dt) = (builder.start_values(), builder.dt());
         builder.push(s0 + v0 * dt);
     }
     builder.finalize();
@@ -199,8 +196,7 @@ fn simple_step_s_a_dt_dt() {
     let mut builder = ctx.new_builder_for(&mut step);
 
     {
-        let (s0, _v0, a0) = builder.start_values();
-        let dt = builder.dt();
+        let ((s0, _v0, a0), dt) = (builder.start_values(), builder.dt());
         builder.push(s0 + a0 * dt * dt);
         builder.finalize();
     }
@@ -227,8 +223,7 @@ fn simple_step_s_v_dt_12_a_dt_dt() {
     let mut builder = ctx.new_builder_for(&mut step);
 
     {
-        let (s0, v0, a0) = builder.start_values();
-        let dt = builder.dt();
+        let ((s0, v0, a0), dt) = (builder.start_values(), builder.dt());
         builder.push(s0 + v0 * dt + 0.5 * a0 * dt * dt);
         builder.finalize();
     }
@@ -259,8 +254,7 @@ fn euler() {
 
     // test:
     {
-        let (s0, v0, a0) = builder.start_values();
-        let dt = builder.dt();
+        let ((s0, v0, a0), dt) = (builder.start_values(), builder.dt());
         builder.push(v0 + a0 * dt);
         builder.push(s0 + v0 * dt + a0 * dt * dt);
         builder.finalize();
@@ -311,8 +305,7 @@ fn can_set_display_position_of_velocity() {
 
     // test:
     {
-        let (s0, v0, a0) = builder.start_values();
-        let dt = builder.dt();
+        let ((s0, v0, a0), dt) = (builder.start_values(), builder.dt());
         let v1 = builder.push(v0 + a0 * dt);
         let s1 = builder.push(s0 + v0 * dt + 0.5 * a0 * dt * dt);
         builder.set_display_position(v1, s1);
