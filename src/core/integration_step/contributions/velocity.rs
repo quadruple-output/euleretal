@@ -1,8 +1,7 @@
 use super::{
-    core::{Fraction, PhysicalQuantityKind, Position, Velocity},
+    core::{DtFraction, PhysicalQuantityKind, Position, Velocity},
     position,
     step::{AccelerationRef, Step, VelocityRef},
-    DtFraction,
 };
 
 pub struct Abstraction<'a> {
@@ -36,7 +35,7 @@ pub enum Variant {
     AccelerationDt {
         factor: f32,
         a_ref: AccelerationRef,
-        dt_fraction: Fraction,
+        dt_fraction: DtFraction,
     },
 }
 
@@ -61,7 +60,11 @@ impl Variant {
                 factor,
                 a_ref,
                 dt_fraction,
-            } => factor * &step[a_ref] * dt_fraction * step.dt(),
+            } => {
+                let dt = dt_fraction * step.dt();
+                let a = step[a_ref].a;
+                factor * a * dt
+            }
         }
     }
 
@@ -93,7 +96,7 @@ impl std::ops::Mul<DtFraction> for Variant {
                 position::Variant::VelocityDt {
                     factor: 1., //todo
                     v_ref,
-                    dt_fraction: dt_fraction.into(),
+                    dt_fraction,
                 }
             }
             Variant::AccelerationDt {
@@ -102,7 +105,7 @@ impl std::ops::Mul<DtFraction> for Variant {
                 dt_fraction: dt_fraction_lhs,
             } => {
                 // todo: cannot handle `a * dt * dt_2` where dt != dt_2
-                debug_assert_eq!(dt_fraction_lhs, dt_fraction.into());
+                debug_assert_eq!(dt_fraction_lhs, dt_fraction);
                 position::Variant::AccelerationDtDt {
                     factor,
                     a_ref,

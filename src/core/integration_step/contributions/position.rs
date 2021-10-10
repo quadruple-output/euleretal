@@ -1,5 +1,5 @@
 use super::{
-    core::{Fraction, Move, PhysicalQuantityKind, Position},
+    core::{DtFraction, Move, PhysicalQuantityKind, Position},
     step::{AccelerationRef, PositionRef, Step, VelocityRef},
 };
 
@@ -38,12 +38,12 @@ pub enum Variant {
     VelocityDt {
         factor: f32,
         v_ref: VelocityRef,
-        dt_fraction: Fraction,
+        dt_fraction: DtFraction,
     },
     AccelerationDtDt {
         factor: f32,
         a_ref: AccelerationRef,
-        dt_fraction: Fraction,
+        dt_fraction: DtFraction,
     },
 }
 
@@ -69,12 +69,20 @@ impl Variant {
                 factor,
                 v_ref,
                 dt_fraction,
-            } => factor * &step[v_ref] * dt_fraction * step.dt(),
+            } => {
+                let dt = dt_fraction * step.dt();
+                let v = step[v_ref].v;
+                factor * v * dt
+            }
             Self::AccelerationDtDt {
                 factor,
                 a_ref,
                 dt_fraction,
-            } => factor * &step[a_ref] * (dt_fraction * step.dt()) * (dt_fraction * step.dt()),
+            } => {
+                let dt = dt_fraction * step.dt();
+                let a = step[a_ref].a;
+                factor * a * dt * dt
+            }
         }
     }
 

@@ -1,6 +1,6 @@
 use super::{
     contributions,
-    core::{self, Fraction},
+    core::{self, DtFraction},
     Step,
 };
 
@@ -14,7 +14,7 @@ pub struct Abstraction<'a> {
 /// however, such that it cannot be used from outside.
 pub struct Position {
     pub(in crate::core::integration_step) s: core::Position,
-    pub(in crate::core::integration_step) dt_fraction: Fraction,
+    pub(in crate::core::integration_step) dt_fraction: DtFraction,
     pub(in crate::core::integration_step) contributions: contributions::position::Collection,
 }
 
@@ -23,7 +23,7 @@ impl<'a> Abstraction<'a> {
         self.position.s
     }
 
-    pub fn dt_fraction(&self) -> Fraction {
+    pub fn dt_fraction(&self) -> DtFraction {
         self.position.dt_fraction
     }
 

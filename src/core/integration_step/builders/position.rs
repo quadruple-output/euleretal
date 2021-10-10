@@ -34,7 +34,7 @@ impl<'a> PositionDeprecated<'a> {
             .push(contributions::position::Variant::VelocityDt {
                 factor,
                 v_ref,
-                dt_fraction: self.dt_fraction,
+                dt_fraction: self.dt_fraction.into(),
             });
         self
     }
@@ -44,7 +44,7 @@ impl<'a> PositionDeprecated<'a> {
             .push(contributions::position::Variant::AccelerationDtDt {
                 factor,
                 a_ref,
-                dt_fraction: self.dt_fraction,
+                dt_fraction: self.dt_fraction.into(),
             });
         self
     }
@@ -55,6 +55,6 @@ impl<'a> PositionDeprecated<'a> {
             s += contrib.evaluate_for(self.step);
         }
         self.step
-            .add_computed_position(s, self.dt_fraction, self.contributions)
+            .add_computed_position(s, self.dt_fraction.into(), self.contributions)
     }
 }

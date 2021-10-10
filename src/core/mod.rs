@@ -4,6 +4,7 @@ use super::import;
 mod fraction; // mods with macros need to go first
 mod acceleration;
 mod acceleration_field;
+mod dt_fraction;
 mod duration;
 mod integration;
 pub mod integration_step;
@@ -18,6 +19,7 @@ mod velocity;
 
 pub use acceleration::Acceleration;
 pub use acceleration_field::AccelerationField;
+pub use dt_fraction::DtFraction;
 pub use duration::Duration;
 pub use fraction::Fraction;
 pub use integration::Integration;

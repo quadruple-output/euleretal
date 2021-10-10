@@ -3,7 +3,7 @@
 use super::integration_step::StartCondition;
 use super::{
     core::{Acceleration, AccelerationField, Duration, Position, Step, Velocity},
-    integration_step::builders::step::Push,
+    integration_step::builders::step::Collector,
     Step as StepBuilder,
 };
 // not used in super, so we use an absolute path (only for tests!):
@@ -84,7 +84,7 @@ fn trivial_step_with_p1_eq_p0() {
     {
         let computed_position = step.last_computed_position();
         assert_eq!(computed_position.s(), ctx.start_condition.position());
-        assert_eq!(computed_position.dt_fraction(), fraction!(0 / 1));
+        assert_eq!(computed_position.dt_fraction(), fraction!(0 / 1).into());
         let mut position_contribs = computed_position.contributions_iter();
         let position_contribution = position_contribs.next().unwrap();
         assert_eq!(
@@ -309,9 +309,6 @@ fn can_set_display_position_of_velocity() {
         let v1 = builder.push(v0 + a0 * dt);
         let s1 = builder.push(s0 + v0 * dt + 0.5 * a0 * dt * dt);
         builder.set_display_position(v1, s1);
-        // todo: strange: this is also possible:
-        // builder.set_display_position(a0 * dt, s1);
-        // builder.set_display_position(v1, v0 * dt);
         builder.finalize();
     }
 

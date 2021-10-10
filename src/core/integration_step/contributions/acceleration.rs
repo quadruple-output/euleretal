@@ -1,7 +1,7 @@
 use super::{
-    core::{Acceleration, PhysicalQuantityKind, Position},
+    core::{Acceleration, DtFraction, PhysicalQuantityKind, Position},
     step::{AccelerationRef, Step},
-    velocity, DtFraction,
+    velocity,
 };
 
 pub struct Abstraction<'a> {
@@ -66,7 +66,7 @@ impl std::ops::Mul<DtFraction> for Variant {
             Self::Acceleration { factor, a_ref } => velocity::Variant::AccelerationDt {
                 factor,
                 a_ref,
-                dt_fraction: dt_fraction.into(),
+                dt_fraction,
             },
         }
     }

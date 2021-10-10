@@ -1,7 +1,4 @@
-use super::{
-    import::{OrderedF32, Vec3},
-    Fraction,
-};
+use super::import::{OrderedF32, Vec3};
 use ::std::{
     fmt::Display,
     ops::{Add, Div, Mul, Sub},
@@ -62,23 +59,7 @@ impl Mul<Duration> for Vec3 {
     }
 }
 
-impl Mul<Fraction> for Duration {
-    type Output = Self;
-
-    fn mul(self, rhs: Fraction) -> Self::Output {
-        self * f32::from(rhs)
-    }
-}
-
 impl Mul<Duration> for f32 {
-    type Output = Duration;
-
-    fn mul(self, duration: Duration) -> Self::Output {
-        duration * self
-    }
-}
-
-impl Mul<Duration> for Fraction {
     type Output = Duration;
 
     fn mul(self, duration: Duration) -> Self::Output {

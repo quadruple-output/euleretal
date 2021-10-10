@@ -37,14 +37,6 @@ impl<'a> Abstraction<'a> {
     }
 }
 
-impl ::std::ops::Mul<&Velocity> for f32 {
-    type Output = core::Velocity;
-
-    fn mul(self, rhs: &Velocity) -> Self::Output {
-        self * rhs.v
-    }
-}
-
 impl Velocity {
     pub(in crate::core::integration_step) fn abstraction_for<'a>(
         &'a self,

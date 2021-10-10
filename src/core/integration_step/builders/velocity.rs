@@ -35,7 +35,7 @@ impl<'a> VelocityDeprecated<'a> {
             .push(contributions::velocity::Variant::AccelerationDt {
                 factor,
                 a_ref,
-                dt_fraction: self.dt_fraction,
+                dt_fraction: self.dt_fraction.into(),
             });
         self
     }

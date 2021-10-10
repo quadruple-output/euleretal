@@ -2,7 +2,8 @@ use super::{
     builders,
     core::{
         integration_step::{computed, contributions, StartCondition},
-        integrator, Acceleration, AccelerationField, Duration, Fraction, Position, Velocity,
+        integrator, Acceleration, AccelerationField, DtFraction, Duration, Fraction, Position,
+        Velocity,
     },
     import::{shape, PointQuery},
 };
@@ -20,11 +21,62 @@ pub struct Step {
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct PositionRef(usize);
 
+impl ::std::ops::Add<contributions::position::Variant> for PositionRef {
+    type Output = contributions::position::Collection;
+
+    fn add(self, rhs: contributions::position::Variant) -> Self::Output {
+        vec![self.into(), rhs].into()
+    }
+}
+
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct VelocityRef(usize);
 
+impl ::std::ops::Mul<DtFraction> for VelocityRef {
+    type Output = contributions::position::Variant;
+
+    fn mul(self, rhs: DtFraction) -> Self::Output {
+        contributions::position::Variant::VelocityDt {
+            factor: 1.,
+            v_ref: self,
+            dt_fraction: rhs,
+        }
+    }
+}
+
+impl ::std::ops::Add<contributions::velocity::Variant> for VelocityRef {
+    type Output = contributions::velocity::Collection;
+
+    fn add(self, rhs: contributions::velocity::Variant) -> Self::Output {
+        vec![self.into(), rhs].into()
+    }
+}
+
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct AccelerationRef(usize);
+
+impl ::std::ops::Mul<DtFraction> for AccelerationRef {
+    type Output = contributions::velocity::Variant;
+
+    fn mul(self, rhs: DtFraction) -> Self::Output {
+        contributions::velocity::Variant::AccelerationDt {
+            factor: 1.,
+            a_ref: self,
+            dt_fraction: rhs,
+        }
+    }
+}
+
+impl ::std::ops::Mul<AccelerationRef> for f32 {
+    type Output = contributions::acceleration::Variant;
+
+    fn mul(self, a_ref: AccelerationRef) -> Self::Output {
+        contributions::acceleration::Variant::Acceleration {
+            factor: self,
+            a_ref,
+        }
+    }
+}
 
 #[derive(Clone, Copy, Debug)]
 pub struct ConditionRef {
@@ -75,7 +127,7 @@ impl Step {
     pub fn raw_end_condition(&mut self, s: Position, v: Velocity, a: Acceleration) {
         let p_ref = self.add_computed_position(
             s,
-            fraction!(1 / 1),
+            fraction!(1 / 1).into(),
             contributions::position::Collection::empty(),
         );
         self.add_computed_velocity(v, p_ref, contributions::velocity::Collection::empty());
@@ -85,7 +137,7 @@ impl Step {
     pub fn set_start_condition(&mut self, p: &StartCondition) -> ConditionRef {
         let sref = self.add_computed_position(
             p.position(),
-            fraction!(0 / 1),
+            fraction!(0 / 1).into(),
             contributions::position::Collection::empty(),
         );
         ConditionRef {
@@ -222,7 +274,7 @@ impl Step {
     pub(super) fn add_computed_position(
         &mut self,
         s: Position,
-        dt_fraction: Fraction,
+        dt_fraction: DtFraction,
         contributions: contributions::position::Collection,
     ) -> PositionRef {
         let p_ref = PositionRef(self.positions.len());
