@@ -1,24 +1,25 @@
 use super::core::{Duration, Fraction};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct DtFraction(Fraction);
+#[derive(Clone, Copy, Debug)]
+pub struct DtFraction<const NUMERATOR: usize, const DENOMINATOR: usize>;
 
-impl From<Fraction> for DtFraction {
-    fn from(fraction: Fraction) -> Self {
-        Self(fraction)
+impl<const N: usize, const D: usize> From<DtFraction<N, D>> for f32 {
+    fn from(_: DtFraction<N, D>) -> Self {
+        #![allow(clippy::cast_precision_loss)]
+        N as f32 / D as f32
     }
 }
 
-impl From<DtFraction> for Fraction {
-    fn from(dt_fraction: DtFraction) -> Self {
-        dt_fraction.0
+impl<const N: usize, const D: usize> From<DtFraction<N, D>> for Fraction {
+    fn from(_dt_fraction: DtFraction<N, D>) -> Self {
+        Fraction::new(N, D)
     }
 }
 
-impl ::std::ops::Mul<Duration> for DtFraction {
+impl<const N: usize, const D: usize> ::std::ops::Mul<Duration> for DtFraction<N, D> {
     type Output = Duration;
 
     fn mul(self, rhs: Duration) -> Self::Output {
-        f32::from(self.0) * rhs
+        f32::from(self) * rhs
     }
 }

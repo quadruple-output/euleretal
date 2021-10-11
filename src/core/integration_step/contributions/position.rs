@@ -5,16 +5,18 @@ use super::{
 
 pub struct Abstraction<'a> {
     step: &'a Step,
-    variant: &'a Variant,
+    // Abstraction cannot be parameterized, so we move the static fraction to a component
+    variant: Variant<1, 1>,
+    variant_scale: f32,
 }
 
 impl<'a> Abstraction<'a> {
     pub fn sampling_position(&self) -> Position {
         let step = self.step;
         match self.variant {
-            Variant::StartPosition { s_ref } => step[*s_ref].s,
-            Variant::VelocityDt { v_ref, .. } => step[step[*v_ref].sampling_position].s,
-            Variant::AccelerationDtDt { a_ref, .. } => step[step[*a_ref].sampling_position].s,
+            Variant::StartPosition { s_ref } => step[s_ref].s,
+            Variant::VelocityDt { v_ref, .. } => step[step[v_ref].sampling_position].s,
+            Variant::AccelerationDtDt { a_ref, .. } => step[step[a_ref].sampling_position].s,
         }
     }
 
@@ -25,35 +27,40 @@ impl<'a> Abstraction<'a> {
     pub fn vector(&self) -> Option<Move> {
         match self.variant {
             Variant::StartPosition { .. } => None,
-            _ => Some(self.variant.evaluate_for(self.step)),
+            Variant::VelocityDt { .. } => {
+                Some(self.variant.evaluate_for(self.step) * self.variant_scale)
+            }
+            Variant::AccelerationDtDt { .. } => {
+                Some(self.variant.evaluate_for(self.step) * self.variant_scale * self.variant_scale)
+            }
         }
     }
 }
 
 #[derive(Clone, Copy, Debug)]
-pub enum Variant {
+pub enum Variant<const N: usize, const D: usize> {
     StartPosition {
         s_ref: PositionRef,
     },
     VelocityDt {
         factor: f32,
         v_ref: VelocityRef,
-        dt_fraction: DtFraction,
+        dt_fraction: DtFraction<N, D>,
     },
     AccelerationDtDt {
         factor: f32,
         a_ref: AccelerationRef,
-        dt_fraction: DtFraction,
+        dt_fraction: DtFraction<N, D>,
     },
 }
 
-impl From<PositionRef> for Variant {
+impl<const N: usize, const D: usize> From<PositionRef> for Variant<N, D> {
     fn from(s_ref: PositionRef) -> Self {
         Self::StartPosition { s_ref }
     }
 }
 
-impl Variant {
+impl<const N: usize, const D: usize> Variant<N, D> {
     fn kind(&self) -> PhysicalQuantityKind {
         match self {
             Self::StartPosition { .. } => PhysicalQuantityKind::Position,
@@ -64,7 +71,7 @@ impl Variant {
 
     pub(in crate::core::integration_step) fn evaluate_for(&self, step: &Step) -> Move {
         match *self {
-            Self::StartPosition { s_ref: sref } => step[sref].s.into(),
+            Self::StartPosition { s_ref } => step[s_ref].s.into(),
             Self::VelocityDt {
                 factor,
                 v_ref,
@@ -86,19 +93,32 @@ impl Variant {
         }
     }
 
+    pub(in crate::core::integration_step) fn abstraction_scaled_for<'a>(
+        &'a self,
+        step: &'a Step,
+        scale: f32,
+    ) -> Abstraction<'a> {
+        Abstraction {
+            step,
+            variant: self.transmute(),
+            variant_scale: scale,
+        }
+    }
+
     pub(in crate::core::integration_step) fn abstraction_for<'a>(
         &'a self,
         step: &'a Step,
     ) -> Abstraction<'a> {
-        Abstraction {
-            step,
-            variant: self,
-        }
+        self.abstraction_scaled_for(step, DtFraction::<N, D>.into())
+    }
+
+    fn transmute<const A: usize, const B: usize>(self) -> Variant<A, B> {
+        unsafe { ::std::mem::transmute::<Self, Variant<A, B>>(self) }
     }
 }
 
-impl std::ops::Add for Variant {
-    type Output = Collection;
+impl<const N: usize, const D: usize> std::ops::Add for Variant<N, D> {
+    type Output = Collection<N, D>;
 
     fn add(self, rhs: Self) -> Self::Output {
         vec![self, rhs].into()
@@ -106,15 +126,17 @@ impl std::ops::Add for Variant {
 }
 
 #[derive(Default)]
-pub struct Collection(pub(in crate::core::integration_step) Vec<Variant>);
+pub struct Collection<const N: usize, const D: usize>(
+    pub(in crate::core::integration_step) Vec<Variant<N, D>>,
+);
 
-impl From<Vec<Variant>> for Collection {
-    fn from(v: Vec<Variant>) -> Self {
-        Self(v)
+impl<const N: usize, const D: usize> From<Vec<Variant<N, D>>> for Collection<N, D> {
+    fn from(vec: Vec<Variant<N, D>>) -> Self {
+        Self(vec)
     }
 }
 
-impl Collection {
+impl<const N: usize, const D: usize> Collection<N, D> {
     pub(in crate::core::integration_step) const fn empty() -> Self {
         Self(Vec::new())
     }
@@ -123,29 +145,37 @@ impl Collection {
         Self(Vec::with_capacity(capacity))
     }
 
-    pub(in crate::core::integration_step) fn iter(&self) -> impl Iterator<Item = &Variant> {
+    pub(in crate::core::integration_step) fn iter(&self) -> impl Iterator<Item = &Variant<N, D>> {
         self.0.iter()
     }
 
-    pub(in crate::core::integration_step) fn push(&mut self, data: Variant) {
+    pub(in crate::core::integration_step) fn push(&mut self, data: Variant<N, D>) {
         self.0.push(data);
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub(crate) fn transmute<const A: usize, const B: usize>(self) -> Collection<A, B> {
+        unsafe { ::std::mem::transmute::<Self, Collection<A, B>>(self) }
     }
 }
 
-impl<'a> IntoIterator for &'a Collection {
-    type Item = &'a Variant;
+impl<'a, const N: usize, const D: usize> IntoIterator for &'a Collection<N, D> {
+    type Item = &'a Variant<N, D>;
 
-    type IntoIter = std::slice::Iter<'a, Variant>;
+    type IntoIter = std::slice::Iter<'a, Variant<N, D>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter()
     }
 }
 
-impl std::ops::Add<Variant> for Collection {
+impl<const N: usize, const D: usize> std::ops::Add<Variant<N, D>> for Collection<N, D> {
     type Output = Self;
 
-    fn add(self, rhs: Variant) -> Self::Output {
+    fn add(self, rhs: Variant<N, D>) -> Self::Output {
         Self(self.0.into_iter().chain(Some(rhs)).collect())
     }
 }

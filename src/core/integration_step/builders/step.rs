@@ -54,8 +54,8 @@ impl<'a> Step<'a> {
     }
 
     #[allow(clippy::unused_self)]
-    pub fn dt(&self) -> DtFraction {
-        fraction!(1 / 1).into()
+    pub const fn dt(&self) -> DtFraction<1, 1> {
+        DtFraction
     }
 
     #[allow(clippy::unused_self)]
@@ -77,57 +77,35 @@ pub trait Collector<Contribution> {
     fn push(&mut self, _: Contribution) -> Self::Output;
 }
 
-impl<'a> Collector<PositionRef> for Step<'a> {
+impl<'a, const N: usize, const D: usize> Collector<contributions::position::Collection<N, D>>
+    for Step<'a>
+{
     type Output = PositionRef;
 
-    fn push(&mut self, s_ref: PositionRef) -> Self::Output {
-        self.step.add_computed_position(
-            self.step[s_ref].s,
-            self.step[s_ref].dt_fraction,
-            vec![contributions::position::Variant::StartPosition { s_ref }].into(),
-        )
-    }
-}
-
-impl<'a> Collector<contributions::position::Collection> for Step<'a> {
-    type Output = PositionRef;
-
-    fn push(&mut self, contributions: contributions::position::Collection) -> Self::Output {
+    fn push(&mut self, contributions: contributions::position::Collection<N, D>) -> Self::Output {
         let mut s = core::Position::origin();
         for contrib in &contributions {
             s += contrib.evaluate_for(self.step);
         }
-        self.step.add_computed_position(
-            s,
-            *&(fraction!(1 / 1).into()), //todo
-            contributions,
-        )
+        self.step
+            .add_computed_position(s, DtFraction::<N, D>, contributions)
     }
 }
 
-impl<'a> Collector<VelocityRef> for Step<'a> {
+impl<'a, const N: usize, const D: usize> Collector<contributions::velocity::Collection<N, D>>
+    for Step<'a>
+{
     type Output = VelocityRef;
 
-    fn push(&mut self, v_ref: VelocityRef) -> Self::Output {
-        self.step.add_computed_velocity(
-            self.step[v_ref].v,
-            self.step[v_ref].sampling_position,
-            vec![contributions::velocity::Variant::Velocity { v_ref }].into(),
-        )
-    }
-}
-
-impl<'a> Collector<contributions::velocity::Collection> for Step<'a> {
-    type Output = VelocityRef;
-
-    fn push(&mut self, contributions: contributions::velocity::Collection) -> Self::Output {
+    fn push(&mut self, contributions: contributions::velocity::Collection<N, D>) -> Self::Output {
         let mut v = core::Velocity::zeros();
         for contrib in &contributions {
             v += contrib.evaluate_for(self.step);
         }
         self.step.add_computed_velocity(
             v,
-            self.step.last_position_ref(), // just a default
+            self.step.last_position_ref(), // just a default. Can be overwritten.
+            DtFraction::<N, D>,
             contributions,
         )
     }

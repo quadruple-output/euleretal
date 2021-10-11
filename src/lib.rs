@@ -1,4 +1,4 @@
-#![forbid(unsafe_code)]
+//#![forbid(unsafe_code)]
 //#![cfg_attr(not(debug_assertions), deny(warnings))] // Forbid warnings in release builds
 #![warn(clippy::pedantic)]
 #![allow(clippy::non_ascii_literal)]
@@ -6,8 +6,7 @@
 #![allow(clippy::multiple_crate_versions)]
 //#![deny(missing_docs)]
 
-#[macro_use]
-mod core; // modules with macros must be listed first
+mod core;
 mod integrators;
 mod scenarios;
 mod ui;

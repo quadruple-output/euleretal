@@ -1,23 +1,21 @@
 use super::{
-    core::{self, Fraction},
+    core::{self, DtFraction},
     integration_step::{
         contributions,
         step::{AccelerationRef, PositionRef, Step, VelocityRef},
     },
 };
 
-pub struct VelocityDeprecated<'a> {
+pub struct VelocityDeprecated<'a, const N: usize, const D: usize> {
     step: &'a mut Step,
-    dt_fraction: Fraction,
     s_ref: PositionRef,
-    contributions: contributions::velocity::Collection,
+    contributions: contributions::velocity::Collection<N, D>,
 }
 
-impl<'a> VelocityDeprecated<'a> {
-    pub fn new(step: &'a mut Step, dt_fraction: Fraction, s_ref: PositionRef) -> Self {
+impl<'a, const N: usize, const D: usize> VelocityDeprecated<'a, N, D> {
+    pub fn new(step: &'a mut Step, s_ref: PositionRef) -> Self {
         Self {
             step,
-            dt_fraction,
             s_ref,
             // most of the times there will be 2 contributions:
             contributions: contributions::velocity::Collection::with_capacity(2),
@@ -35,7 +33,7 @@ impl<'a> VelocityDeprecated<'a> {
             .push(contributions::velocity::Variant::AccelerationDt {
                 factor,
                 a_ref,
-                dt_fraction: self.dt_fraction.into(),
+                dt_fraction: DtFraction,
             });
         self
     }
@@ -46,6 +44,6 @@ impl<'a> VelocityDeprecated<'a> {
             v += contrib.evaluate_for(self.step);
         }
         self.step
-            .add_computed_velocity(v, self.s_ref, self.contributions)
+            .add_computed_velocity(v, self.s_ref, DtFraction::<N, D>, self.contributions)
     }
 }

@@ -2,8 +2,7 @@ use super::{
     builders,
     core::{
         integration_step::{computed, contributions, StartCondition},
-        integrator, Acceleration, AccelerationField, DtFraction, Duration, Fraction, Position,
-        Velocity,
+        integrator, Acceleration, AccelerationField, DtFraction, Duration, Position, Velocity,
     },
     import::{shape, PointQuery},
 };
@@ -21,10 +20,12 @@ pub struct Step {
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct PositionRef(usize);
 
-impl ::std::ops::Add<contributions::position::Variant> for PositionRef {
-    type Output = contributions::position::Collection;
+impl<const N: usize, const D: usize> ::std::ops::Add<contributions::position::Variant<N, D>>
+    for PositionRef
+{
+    type Output = contributions::position::Collection<N, D>;
 
-    fn add(self, rhs: contributions::position::Variant) -> Self::Output {
+    fn add(self, rhs: contributions::position::Variant<N, D>) -> Self::Output {
         vec![self.into(), rhs].into()
     }
 }
@@ -32,10 +33,10 @@ impl ::std::ops::Add<contributions::position::Variant> for PositionRef {
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct VelocityRef(usize);
 
-impl ::std::ops::Mul<DtFraction> for VelocityRef {
-    type Output = contributions::position::Variant;
+impl<const N: usize, const D: usize> ::std::ops::Mul<DtFraction<N, D>> for VelocityRef {
+    type Output = contributions::position::Variant<N, D>;
 
-    fn mul(self, rhs: DtFraction) -> Self::Output {
+    fn mul(self, rhs: DtFraction<N, D>) -> Self::Output {
         contributions::position::Variant::VelocityDt {
             factor: 1.,
             v_ref: self,
@@ -44,10 +45,12 @@ impl ::std::ops::Mul<DtFraction> for VelocityRef {
     }
 }
 
-impl ::std::ops::Add<contributions::velocity::Variant> for VelocityRef {
-    type Output = contributions::velocity::Collection;
+impl<const N: usize, const D: usize> ::std::ops::Add<contributions::velocity::Variant<N, D>>
+    for VelocityRef
+{
+    type Output = contributions::velocity::Collection<N, D>;
 
-    fn add(self, rhs: contributions::velocity::Variant) -> Self::Output {
+    fn add(self, rhs: contributions::velocity::Variant<N, D>) -> Self::Output {
         vec![self.into(), rhs].into()
     }
 }
@@ -55,10 +58,10 @@ impl ::std::ops::Add<contributions::velocity::Variant> for VelocityRef {
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct AccelerationRef(usize);
 
-impl ::std::ops::Mul<DtFraction> for AccelerationRef {
-    type Output = contributions::velocity::Variant;
+impl<const N: usize, const D: usize> ::std::ops::Mul<DtFraction<N, D>> for AccelerationRef {
+    type Output = contributions::velocity::Variant<N, D>;
 
-    fn mul(self, rhs: DtFraction) -> Self::Output {
+    fn mul(self, rhs: DtFraction<N, D>) -> Self::Output {
         contributions::velocity::Variant::AccelerationDt {
             factor: 1.,
             a_ref: self,
@@ -127,17 +130,22 @@ impl Step {
     pub fn raw_end_condition(&mut self, s: Position, v: Velocity, a: Acceleration) {
         let p_ref = self.add_computed_position(
             s,
-            fraction!(1 / 1).into(),
+            DtFraction::<1, 1>,
             contributions::position::Collection::empty(),
         );
-        self.add_computed_velocity(v, p_ref, contributions::velocity::Collection::empty());
+        self.add_computed_velocity(
+            v,
+            p_ref,
+            DtFraction::<1, 1>,
+            contributions::velocity::Collection::empty(),
+        );
         self.acceleration_at_last_position = Some(self.add_computed_acceleration(a, p_ref));
     }
 
     pub fn set_start_condition(&mut self, p: &StartCondition) -> ConditionRef {
         let sref = self.add_computed_position(
             p.position(),
-            fraction!(0 / 1).into(),
+            DtFraction::<0, 1>,
             contributions::position::Collection::empty(),
         );
         ConditionRef {
@@ -145,6 +153,7 @@ impl Step {
             v: self.add_computed_velocity(
                 p.velocity(),
                 sref,
+                DtFraction::<0, 1>,
                 contributions::velocity::Collection::empty(),
             ),
             a: self.add_computed_acceleration(p.acceleration(), sref),
@@ -167,16 +176,19 @@ impl Step {
         }
     }
 
-    pub fn compute_position(&mut self, dt_fraction: Fraction) -> builders::PositionDeprecated {
-        builders::PositionDeprecated::new(self, dt_fraction)
+    pub fn compute_position<const N: usize, const D: usize>(
+        &mut self,
+        _dt_fraction: DtFraction<N, D>,
+    ) -> builders::PositionDeprecated<N, D> {
+        builders::PositionDeprecated::new(self)
     }
 
-    pub fn compute_velocity(
+    pub fn compute_velocity<const N: usize, const D: usize>(
         &mut self,
-        dt_fraction: Fraction,
+        _dt_fraction: DtFraction<N, D>,
         sref: PositionRef,
-    ) -> builders::VelocityDeprecated {
-        builders::VelocityDeprecated::new(self, dt_fraction, sref)
+    ) -> builders::VelocityDeprecated<N, D> {
+        builders::VelocityDeprecated::new(self, sref)
     }
 
     pub fn compute_acceleration_at(
@@ -232,7 +244,7 @@ impl Step {
         let pos = pos.into();
         self.velocities
             .iter()
-            .filter(|v| !v.contributions.is_empty()) // no predecessor → not 'computed'
+            .filter(|v| v.has_contributions()) // no predecessor → not 'computed'
             .map(|v| (v, self[v.sampling_position].s.distance_squared(pos)))
             .reduce(|(v1, dist1), (v2, dist2)| {
                 if dist1 < dist2 {
@@ -253,7 +265,7 @@ impl Step {
         let pos = pos.into();
         self.positions
             .iter()
-            .filter(|p| !p.contributions.0.is_empty()) // no predecessor → not 'computed'
+            .filter(|p| p.has_contributions()) // no predecessor → not 'computed'
             .map(|p| (p, p.s.distance_squared(pos)))
             .reduce(|(p1, dist1), (p2, dist2)| {
                 if dist1 < dist2 {
@@ -271,34 +283,33 @@ impl Step {
         PositionRef(self.positions.len() - 1)
     }
 
-    pub(super) fn add_computed_position(
+    pub(super) fn add_computed_position<const N: usize, const D: usize>(
         &mut self,
         s: Position,
-        dt_fraction: DtFraction,
-        contributions: contributions::position::Collection,
+        dt_fraction: DtFraction<N, D>,
+        contributions: contributions::position::Collection<N, D>,
     ) -> PositionRef {
         let p_ref = PositionRef(self.positions.len());
-        self.positions.push(computed::Position {
-            s,
-            dt_fraction,
-            contributions,
-        });
+        self.positions
+            .push(computed::Position::new(s, dt_fraction, contributions));
         self.last_computed_position = Some(p_ref);
         p_ref
     }
 
-    pub(super) fn add_computed_velocity(
+    pub(super) fn add_computed_velocity<const N: usize, const D: usize>(
         &mut self,
         v: Velocity,
         sampling_position: PositionRef,
-        contributions: contributions::velocity::Collection,
+        dt_fraction: DtFraction<N, D>,
+        contributions: contributions::velocity::Collection<N, D>,
     ) -> VelocityRef {
         let v_ref = VelocityRef(self.velocities.len());
-        self.velocities.push(computed::Velocity {
+        self.velocities.push(computed::Velocity::new(
             v,
             sampling_position,
+            dt_fraction,
             contributions,
-        });
+        ));
         self.last_computed_velocity = Some(v_ref);
         v_ref
     }

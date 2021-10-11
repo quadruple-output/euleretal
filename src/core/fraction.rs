@@ -1,4 +1,4 @@
-use super::import::Vec3;
+use super::{core::Duration, import::Vec3};
 use ::std::ops::Mul;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -6,10 +6,6 @@ pub struct Fraction {
     numerator: usize,
     denominator: usize,
 }
-
-macro_rules! fraction(
-($numerator:literal / $denominator:literal) => {crate::core::Fraction::new($numerator,$denominator)}
-);
 
 impl Fraction {
     pub fn new(numerator: usize, denominator: usize) -> Self {
@@ -34,6 +30,14 @@ impl From<Fraction> for f32 {
     fn from(f: Fraction) -> Self {
         #![allow(clippy::cast_precision_loss)]
         f.numerator as f32 / f.denominator as f32
+    }
+}
+
+impl Mul<Duration> for Fraction {
+    type Output = Duration;
+
+    fn mul(self, rhs: Duration) -> Self::Output {
+        f32::from(self) * rhs
     }
 }
 

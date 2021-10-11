@@ -1,11 +1,10 @@
 use super::import;
 
-#[macro_use]
-mod fraction; // mods with macros need to go first
 mod acceleration;
 mod acceleration_field;
 mod dt_fraction;
 mod duration;
+mod fraction;
 mod integration;
 pub mod integration_step;
 mod integrator;

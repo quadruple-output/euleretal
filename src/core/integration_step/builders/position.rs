@@ -4,20 +4,18 @@ use super::{
         step::{AccelerationRef, PositionRef, VelocityRef},
         Step,
     },
-    core::{self, Fraction},
+    core::{self, DtFraction},
 };
 
-pub struct PositionDeprecated<'a> {
+pub struct PositionDeprecated<'a, const N: usize, const D: usize> {
     step: &'a mut Step,
-    dt_fraction: Fraction,
-    contributions: contributions::position::Collection,
+    contributions: contributions::position::Collection<N, D>,
 }
 
-impl<'a> PositionDeprecated<'a> {
-    pub fn new(step: &'a mut Step, dt_fraction: Fraction) -> Self {
+impl<'a, const N: usize, const D: usize> PositionDeprecated<'a, N, D> {
+    pub fn new(step: &'a mut Step) -> Self {
         Self {
             step,
-            dt_fraction,
             // most of the times there will be 3 contributions:
             contributions: contributions::position::Collection::with_capacity(3),
         }
@@ -34,7 +32,7 @@ impl<'a> PositionDeprecated<'a> {
             .push(contributions::position::Variant::VelocityDt {
                 factor,
                 v_ref,
-                dt_fraction: self.dt_fraction.into(),
+                dt_fraction: DtFraction,
             });
         self
     }
@@ -44,7 +42,7 @@ impl<'a> PositionDeprecated<'a> {
             .push(contributions::position::Variant::AccelerationDtDt {
                 factor,
                 a_ref,
-                dt_fraction: self.dt_fraction.into(),
+                dt_fraction: DtFraction,
             });
         self
     }
@@ -55,6 +53,6 @@ impl<'a> PositionDeprecated<'a> {
             s += contrib.evaluate_for(self.step);
         }
         self.step
-            .add_computed_position(s, self.dt_fraction.into(), self.contributions)
+            .add_computed_position(s, DtFraction::<N, D>, self.contributions)
     }
 }

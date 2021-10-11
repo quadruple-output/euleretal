@@ -1,4 +1,4 @@
-use super::core::{AccelerationField, Duration, Integrator, StartCondition, Step};
+use super::core::{AccelerationField, DtFraction, Duration, Integrator, StartCondition, Step};
 
 pub struct Euler {}
 
@@ -32,7 +32,7 @@ impl Integrator for Euler {
         let mut step = Step::new_deprecated(self.expected_capacities_for_step(), dt);
         let p0 = step.set_start_condition(current);
         let mid_point_pos = step
-            .compute_position(fraction!(1 / 2))
+            .compute_position(DtFraction::<1, 2>)
             .based_on(p0.s)
             .add_velocity_dt(p0.v, 1.)
             .add_acceleration_dt_dt(p0.a, 1.)
@@ -40,13 +40,13 @@ impl Integrator for Euler {
         let mid_point_acceleration =
             step.compute_acceleration_at(mid_point_pos, acceleration_field);
         let final_pos = step
-            .compute_position(fraction!(1 / 1))
+            .compute_position(DtFraction::<1, 1>)
             .based_on(p0.s)
             .add_velocity_dt(p0.v, 1.)
             .add_acceleration_dt_dt(mid_point_acceleration, 1.)
             .create();
         let _final_velocity = step
-            .compute_velocity(fraction!(1 / 1), final_pos)
+            .compute_velocity(DtFraction::<1, 1>, final_pos)
             .based_on(p0.v)
             .add_acceleration_dt(mid_point_acceleration, 1.)
             .create();
@@ -106,7 +106,7 @@ impl Integrator for SecondOrder {
         let mut step = Step::new_deprecated(self.expected_capacities_for_step(), dt);
         let p0 = step.set_start_condition(current);
         let mid_point_pos = step
-            .compute_position(fraction!(1 / 2))
+            .compute_position(DtFraction::<1, 2>)
             .based_on(p0.s)
             .add_velocity_dt(p0.v, 1.)
             .add_acceleration_dt_dt(p0.a, 0.5)
@@ -114,13 +114,13 @@ impl Integrator for SecondOrder {
         let mid_point_acceleration =
             step.compute_acceleration_at(mid_point_pos, acceleration_field);
         let final_pos = step
-            .compute_position(fraction!(1 / 1))
+            .compute_position(DtFraction::<1, 1>)
             .based_on(p0.s)
             .add_velocity_dt(p0.v, 1.)
             .add_acceleration_dt_dt(mid_point_acceleration, 0.5)
             .create();
         let _final_velocity = step
-            .compute_velocity(fraction!(1 / 1), final_pos)
+            .compute_velocity(DtFraction::<1, 1>, final_pos)
             .based_on(p0.v)
             .add_acceleration_dt(mid_point_acceleration, 1.)
             .create();

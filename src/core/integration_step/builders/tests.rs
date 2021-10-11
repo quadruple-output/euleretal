@@ -71,55 +71,6 @@ fn create_step_from_previous() {
 }
 
 #[test]
-fn trivial_step_with_p1_eq_p0() {
-    let ctx = Setup::default();
-    let mut step = ctx.new_step();
-    let mut builder = ctx.new_builder_for(&mut step);
-
-    let (s0, v0, _a0) = builder.start_values();
-    builder.push(s0);
-    builder.push(v0);
-
-    builder.finalize();
-    {
-        let computed_position = step.last_computed_position();
-        assert_eq!(computed_position.s(), ctx.start_condition.position());
-        assert_eq!(computed_position.dt_fraction(), fraction!(0 / 1).into());
-        let mut position_contribs = computed_position.contributions_iter();
-        let position_contribution = position_contribs.next().unwrap();
-        assert_eq!(
-            position_contribution.sampling_position(),
-            ctx.start_condition.position()
-        );
-        assert!(position_contribs.next().is_none());
-    }
-
-    {
-        let computed_velocity = step.last_computed_velocity();
-        assert_eq!(computed_velocity.v(), ctx.start_condition.velocity());
-        assert_eq!(
-            computed_velocity.sampling_position(),
-            ctx.start_condition.position()
-        );
-        let mut velocity_contribs = computed_velocity.contributions_iter();
-        let velocity_contribution = velocity_contribs.next().unwrap();
-        assert_eq!(
-            velocity_contribution.vector(),
-            ctx.start_condition.velocity()
-        );
-        assert_eq!(
-            velocity_contribution.sampling_position(),
-            ctx.start_condition.position()
-        );
-        assert!(velocity_contribs.next().is_none());
-    }
-    {
-        let next_condition = step.next_condition().unwrap();
-        assert_eq!(next_condition, ctx.start_condition);
-    }
-}
-
-#[test]
 fn simple_step_s_v_dt() {
     let ctx = Setup::default();
     let mut step = ctx.new_step();

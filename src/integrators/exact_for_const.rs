@@ -1,4 +1,4 @@
-use super::core::{AccelerationField, Duration, Integrator, StartCondition, Step};
+use super::core::{AccelerationField, DtFraction, Duration, Integrator, StartCondition, Step};
 
 pub struct ExactForConst {}
 
@@ -32,11 +32,11 @@ impl Integrator for ExactForConst {
 
         let mut step = Step::new_deprecated(self.expected_capacities_for_step(), dt);
         let p0 = step.set_start_condition(current);
-        step.compute_velocity(fraction!(1 / 1), p0.s)
+        step.compute_velocity(DtFraction::<1, 1>, p0.s)
             .based_on(p0.v)
             .add_acceleration_dt(p0.a, 1.)
             .create();
-        step.compute_position(fraction!(1 / 1))
+        step.compute_position(DtFraction::<1, 1>)
             .based_on(p0.s)
             .add_velocity_dt(p0.v, 1.)
             .add_acceleration_dt_dt(p0.a, 0.5)
