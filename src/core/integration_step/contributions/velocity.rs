@@ -59,7 +59,7 @@ impl<const N: usize, const D: usize> Variant<N, D> {
         }
     }
 
-    pub(in crate::core::integration_step) fn evaluate_for(&self, step: &Step) -> Velocity {
+    pub(in super::super) fn evaluate_for(&self, step: &Step) -> Velocity {
         match *self {
             Self::Velocity { v_ref: vref } => step[vref].v,
             Self::AccelerationDt {
@@ -74,7 +74,7 @@ impl<const N: usize, const D: usize> Variant<N, D> {
         }
     }
 
-    pub(in crate::core::integration_step) fn abstraction_scaled_for<'a>(
+    pub(in super::super) fn abstraction_scaled_for<'a>(
         &'a self,
         step: &'a Step,
         scale: f32,
@@ -86,10 +86,7 @@ impl<const N: usize, const D: usize> Variant<N, D> {
         }
     }
 
-    pub(in crate::core::integration_step) fn abstraction_for<'a>(
-        &'a self,
-        step: &'a Step,
-    ) -> Abstraction<'a> {
+    pub(in super::super) fn abstraction_for<'a>(&'a self, step: &'a Step) -> Abstraction<'a> {
         self.abstraction_scaled_for(step, DtFraction::<N, D>.into())
     }
 
@@ -130,9 +127,7 @@ impl<const N: usize, const D: usize> std::ops::Mul<DtFraction<N, D>> for Variant
 }
 
 #[derive(Default)]
-pub struct Collection<const N: usize, const D: usize>(
-    pub(in crate::core::integration_step) Vec<Variant<N, D>>,
-);
+pub struct Collection<const N: usize, const D: usize>(pub(in super::super) Vec<Variant<N, D>>);
 
 impl<const N: usize, const D: usize> From<Vec<Variant<N, D>>> for Collection<N, D> {
     fn from(vec: Vec<Variant<N, D>>) -> Self {
@@ -141,27 +136,27 @@ impl<const N: usize, const D: usize> From<Vec<Variant<N, D>>> for Collection<N, 
 }
 
 impl<const N: usize, const D: usize> Collection<N, D> {
-    pub(in crate::core::integration_step) const fn empty() -> Self {
+    pub(in super::super) const fn empty() -> Self {
         Self(Vec::new())
     }
 
-    pub(in crate::core::integration_step) fn is_empty(&self) -> bool {
+    pub(in super::super) fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
-    pub(in crate::core::integration_step) fn with_capacity(capacity: usize) -> Self {
+    pub(in super::super) fn with_capacity(capacity: usize) -> Self {
         Self(Vec::with_capacity(capacity))
     }
 
-    pub(in crate::core::integration_step) fn iter(&self) -> impl Iterator<Item = &Variant<N, D>> {
+    pub(in super::super) fn iter(&self) -> impl Iterator<Item = &Variant<N, D>> {
         self.0.iter()
     }
 
-    pub(in crate::core::integration_step) fn push(&mut self, data: Variant<N, D>) {
+    pub(in super::super) fn push(&mut self, data: Variant<N, D>) {
         self.0.push(data);
     }
 
-    pub(crate) fn transmute<const A: usize, const B: usize>(self) -> Collection<A, B> {
+    pub fn transmute<const A: usize, const B: usize>(self) -> Collection<A, B> {
         unsafe { ::std::mem::transmute::<Self, Collection<A, B>>(self) }
     }
 }

@@ -41,16 +41,13 @@ impl From<AccelerationRef> for Variant {
 }
 
 impl Variant {
-    pub(in crate::core::integration_step) fn evaluate_for(&self, step: &Step) -> Acceleration {
+    pub(in super::super) fn evaluate_for(&self, step: &Step) -> Acceleration {
         match *self {
             Self::Acceleration { factor, a_ref } => factor * step[a_ref].a,
         }
     }
 
-    pub(in crate::core::integration_step) fn abstraction_for<'a>(
-        &'a self,
-        step: &'a Step,
-    ) -> Abstraction<'a> {
+    pub(in super::super) fn abstraction_for<'a>(&'a self, step: &'a Step) -> Abstraction<'a> {
         Abstraction {
             step,
             variant: self,

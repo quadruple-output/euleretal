@@ -8,8 +8,8 @@ use super::{
 /// [`::std::ops::Index`] for [`IntegrationStep`]. All members are non-public,
 /// however, such that it cannot be used from outside.
 pub struct Velocity {
-    pub(in crate::core::integration_step) v: core::Velocity,
-    pub(in crate::core::integration_step) sampling_position: PositionRef,
+    pub(in super::super) v: core::Velocity,
+    pub(in super::super) sampling_position: PositionRef,
     contributions: contributions::velocity::Collection<1, 1>,
     contributions_scale: f32,
 }
@@ -30,17 +30,14 @@ impl Velocity {
         }
     }
 
-    pub(in crate::core::integration_step) fn abstraction_for<'a>(
-        &'a self,
-        step: &'a Step,
-    ) -> Abstraction<'a> {
+    pub(in super::super) fn abstraction_for<'a>(&'a self, step: &'a Step) -> Abstraction<'a> {
         Abstraction {
             step,
             velocity: self,
         }
     }
 
-    pub(in crate::core::integration_step) fn has_contributions(&self) -> bool {
+    pub(in super::super) fn has_contributions(&self) -> bool {
         !self.contributions.is_empty()
     }
 }

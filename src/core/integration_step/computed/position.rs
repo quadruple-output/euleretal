@@ -8,8 +8,8 @@ use super::{
 /// [`::std::ops::Index`] for [`IntegrationStep`]. All members are non-public,
 /// however, such that it cannot be used from outside.
 pub struct Position {
-    pub(in crate::core::integration_step) s: core::Position,
-    pub(in crate::core::integration_step) dt_fraction: Fraction,
+    pub(in super::super) s: core::Position,
+    pub(in super::super) dt_fraction: Fraction,
     contributions: contributions::position::Collection<1, 1>, //todo: can this be a reference?
 }
 
@@ -26,17 +26,14 @@ impl Position {
         }
     }
 
-    pub(in crate::core::integration_step) fn abstraction_for<'a>(
-        &'a self,
-        step: &'a Step,
-    ) -> Abstraction<'a> {
+    pub(in super::super) fn abstraction_for<'a>(&'a self, step: &'a Step) -> Abstraction<'a> {
         Abstraction {
             step,
             position: self,
         }
     }
 
-    pub(in crate::core::integration_step) fn has_contributions(&self) -> bool {
+    pub(in super::super) fn has_contributions(&self) -> bool {
         !self.contributions.is_empty()
     }
 }
