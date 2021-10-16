@@ -11,12 +11,13 @@ use super::{
     },
     World,
 };
-use ::std::rc::Rc;
+use ::std::{rc::Rc, time::Instant};
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct Euleretal {
     world: World,
+    last_update: Instant,
 }
 
 impl Default for Euleretal {
@@ -82,6 +83,11 @@ impl epi::App for Euleretal {
         CentralPanel::default().show(ctx, |ui| {
             containers::canvas::grid::show(ui, &mut self.world);
         });
+        let micros = self.last_update.elapsed().as_micros();
+        if micros > 50000 {
+            log::debug!("Frame: {}µs", self.last_update.elapsed().as_micros());
+        }
+        self.last_update = Instant::now();
     }
 }
 
@@ -90,6 +96,7 @@ impl Euleretal {
     pub fn new() -> Self {
         Self {
             world: World::default(),
+            last_update: Instant::now(),
         }
     }
 

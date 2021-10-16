@@ -26,6 +26,7 @@ impl Scenario {
     }
 
     pub fn calculate_trajectory(&self, min_dt: Duration) -> Vec<Position> {
+        let start = ::std::time::Instant::now();
         #[allow(clippy::cast_sign_loss)]
         #[allow(clippy::cast_possible_truncation)]
         #[allow(clippy::cast_precision_loss)]
@@ -38,7 +39,12 @@ impl Scenario {
             self.duration,
             num_steps,
         );
-        log::info!("Calculated trajectory with {} segments", trajectory.len(),);
+        log::info!(
+            "{}: trajectory with {} segments: {}µs",
+            self.label(),
+            trajectory.len(),
+            start.elapsed().as_micros()
+        );
         trajectory
     }
 
@@ -63,10 +69,11 @@ impl Scenario {
     }
 
     pub fn calculate_reference_samples(&self, dt: Duration) -> Samples {
+        let start = ::std::time::Instant::now();
         #[allow(clippy::cast_sign_loss)]
         #[allow(clippy::cast_possible_truncation)]
         let num_iterations = (self.duration / dt) as usize;
-        let (trajectory, samples) = calculate_trajectory_and_samples(
+        let (_trajectory, samples) = calculate_trajectory_and_samples(
             &*self.acceleration,
             self.start_position,
             self.start_velocity,
@@ -75,9 +82,10 @@ impl Scenario {
             STEPS_PER_DT,
         );
         log::info!(
-            "Calculated {} reference samples, using trajectory with {} segments",
+            "{}: {} reference samples: {}µs",
+            self.label(),
             samples.len(),
-            trajectory.len(),
+            start.elapsed().as_micros()
         );
         samples
     }

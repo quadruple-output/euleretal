@@ -15,6 +15,7 @@ fn main() {
     SimpleLogger::new()
         .with_level(LevelFilter::Off)
         .with_module_level("euleretal", LevelFilter::Info)
+        .with_timestamps(false)
         .init()
         .unwrap();
 

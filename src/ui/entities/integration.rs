@@ -78,14 +78,17 @@ impl Integration {
         })
     }
 
-    pub fn update(&mut self, scenario: &Scenario) {
+    pub fn update(&mut self, scenario: &Scenario) -> bool {
         if self.core_integration.update(
             scenario,
             &*self.integrator.borrow().integrator,
             self.step_size.borrow().duration,
         ) {
             self.adjust_focussed_sample();
-        };
+            true
+        } else {
+            false
+        }
     }
 
     fn adjust_focussed_sample(&mut self) {

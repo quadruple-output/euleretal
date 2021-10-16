@@ -1,6 +1,9 @@
 use super::{entities::CanvasPainter, misc::Settings};
 
 pub fn render(settings: &Settings, canvas: &mut CanvasPainter) {
+    let mut start = ::std::time::Instant::now();
+    let mut updated = false;
+
     let min_dt = canvas
         .map_integrations(|integration| integration.step_size.borrow().duration)
         .min() // this crate depends on R32 just to be able to use this min() function
@@ -14,8 +17,15 @@ pub fn render(settings: &Settings, canvas: &mut CanvasPainter) {
         if first_time {
             integration.reset();
         }
-        integration.update(&*scenario);
+        updated |= integration.update(&*scenario);
     });
+    if updated {
+        log::info!(
+            "Render Canvas: integrate: {}µs",
+            start.elapsed().as_micros()
+        );
+        start = ::std::time::Instant::now();
+    }
     if first_time {
         canvas.update_bounding_box();
     }
@@ -24,4 +34,7 @@ pub fn render(settings: &Settings, canvas: &mut CanvasPainter) {
     canvas.for_each_integration(|integration| {
         integration.draw_on(canvas, settings);
     });
+    if updated {
+        log::info!("Render Canvas: draw: {}µs", start.elapsed().as_micros());
+    }
 }

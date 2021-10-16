@@ -80,6 +80,7 @@ impl Integration {
         num_steps: usize,
         dt: Duration,
     ) -> Samples {
+        let start = ::std::time::Instant::now();
         let mut samples = Samples::new(num_steps);
         let mut current_condition = (*start_condition).clone();
         for _ in 0..num_steps {
@@ -89,7 +90,9 @@ impl Integration {
             current_condition = next.next_condition().unwrap();
             samples.push_sample(next);
         }
-        samples.finalized()
+        let result = samples.finalized();
+        log::info!("{}: {}µs", integrator.label(), start.elapsed().as_micros());
+        result
     }
 
     /// invariant: `samples()?.len() == reference_samples()?.len()`
