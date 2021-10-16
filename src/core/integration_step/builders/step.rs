@@ -70,6 +70,11 @@ impl<'a> Step<'a> {
     pub fn set_display_position(&mut self, v_ref: VelocityRef, s_ref: PositionRef) {
         self.step[v_ref].sampling_position = s_ref;
     }
+
+    pub fn acceleration_at(&mut self, s: PositionRef) -> AccelerationRef {
+        self.step
+            .add_computed_acceleration(self.acceleration_field.value_at(self.step[s].s), s)
+    }
 }
 
 pub trait Collector<Contribution> {

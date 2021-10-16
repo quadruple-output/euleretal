@@ -20,6 +20,14 @@ impl<const N: usize, const D: usize> ::std::ops::Mul<Duration> for DtFraction<N,
     type Output = Duration;
 
     fn mul(self, rhs: Duration) -> Self::Output {
-        f32::from(self) * rhs
+        #![allow(clippy::cast_precision_loss)]
+        (N as f32 / D as f32) * rhs
+    }
+}
+
+impl<const N: usize, const D: usize> DtFraction<N, D> {
+    #[allow(clippy::unused_self)]
+    pub const fn half(self) -> DtFraction<N, { D * 2 }> {
+        DtFraction
     }
 }

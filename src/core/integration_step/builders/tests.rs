@@ -288,6 +288,7 @@ fn euler_with_intermediate_v() {
         let ((s0, v0, a0), dt) = (builder.start_values(), builder.dt());
         let v1 = builder.push(v0 + a0 * dt);
         builder.push(s0 + v1 * dt);
+        builder.finalize();
     }
 
     // expected values:
@@ -322,4 +323,44 @@ fn euler_with_intermediate_v() {
     assert_eq!(v_contrib_1.vector(), v0);
     assert_eq!(v_contrib_2.sampling_position(), s0);
     assert_eq!(v_contrib_2.vector(), a0 * dt);
+}
+
+#[test]
+fn mid_point_euler() {
+    let ctx = Setup::default();
+    let mut step = ctx.new_step();
+    let mut builder = ctx.new_builder_for(&mut step);
+
+    {
+        /*
+        v₁ = v + a ½dt\n\
+        s₁ = s + v₁ ½dt\n\
+        a₁ = a(s₁)\n\
+        v' = v + a₁ dt\n\
+        s' = s + v' dt\n    \
+           = s + v dt + a₁ dt²
+        */
+
+        let ((s, v, a), dt) = (builder.start_values(), builder.dt());
+        let v_mid = builder.push(v + a * dt.half());
+        let s_mid = builder.push(s + v_mid * dt.half());
+        let a_mid = builder.acceleration_at(s_mid);
+        let v1 = builder.push(v + a_mid * dt);
+        let s1 = builder.push(s + v1 * dt);
+        builder.set_display_position(v1, s1);
+        builder.finalize();
+    }
+
+    let ((s, v, a), dt) = (ctx.start_values(), ctx.dt);
+    let v_mid = v + a * dt * 0.5;
+    let s_mid = s + v_mid * dt * 0.5;
+    let a_mid = ctx.acceleration_field.value_at(s_mid);
+    let v1 = v + a_mid * dt;
+    let s1 = s + v1 * dt;
+
+    let final_position = step.last_computed_position();
+    let final_velocity = step.last_computed_velocity();
+    assert_eq!(final_position.s(), s1);
+    assert_eq!(final_velocity.sampling_position(), s1);
+    assert_eq!(final_velocity.v(), v1);
 }

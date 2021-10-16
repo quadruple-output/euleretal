@@ -5,6 +5,9 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::multiple_crate_versions)]
 //#![deny(missing_docs)]
+#![allow(incomplete_features)] // for the two `const_*` features below
+#![feature(const_evaluatable_checked)] // used by DtFraction
+#![feature(const_generics)] // used by DtFraction
 
 mod core;
 mod integrators;
