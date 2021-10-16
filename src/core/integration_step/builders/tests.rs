@@ -78,7 +78,7 @@ fn simple_step_s_v_dt() {
     // calculate step:
     {
         let ((s0, v0, _a0), dt) = (builder.start_values(), builder.dt());
-        builder.push(s0 + v0 * dt);
+        builder.compute(s0 + v0 * dt);
     }
     builder.finalize();
 
@@ -109,14 +109,14 @@ fn two_simple_steps_in_sequence() {
     let mut builder = ctx.new_builder_for(&mut step1);
     {
         let ((s0, v0, _a0), dt) = (builder.start_values(), builder.dt());
-        builder.push(s0 + v0 * dt);
+        builder.compute(s0 + v0 * dt);
     }
     builder.finalize();
     let mut step2 = builder.next_step();
     let mut builder = builder.next_for(&mut step2);
     {
         let ((s0, v0, _a0), dt) = (builder.start_values(), builder.dt());
-        builder.push(s0 + v0 * dt);
+        builder.compute(s0 + v0 * dt);
     }
     builder.finalize();
 
@@ -148,9 +148,9 @@ fn simple_step_s_a_dt_dt() {
 
     {
         let ((s0, _v0, a0), dt) = (builder.start_values(), builder.dt());
-        builder.push(s0 + a0 * dt * dt);
-        builder.finalize();
+        builder.compute(s0 + a0 * dt * dt);
     }
+    builder.finalize();
 
     let ((s0, _v0, a0), dt) = (ctx.start_values(), ctx.dt);
 
@@ -175,9 +175,9 @@ fn simple_step_s_v_dt_12_a_dt_dt() {
 
     {
         let ((s0, v0, a0), dt) = (builder.start_values(), builder.dt());
-        builder.push(s0 + v0 * dt + 0.5 * a0 * dt * dt);
-        builder.finalize();
+        builder.compute(s0 + v0 * dt + 0.5 * a0 * dt * dt);
     }
+    builder.finalize();
 
     let ((s0, v0, a0), dt) = (ctx.start_values(), ctx.dt);
 
@@ -206,10 +206,10 @@ fn euler() {
     // test:
     {
         let ((s0, v0, a0), dt) = (builder.start_values(), builder.dt());
-        builder.push(v0 + a0 * dt);
-        builder.push(s0 + v0 * dt + a0 * dt * dt);
-        builder.finalize();
+        builder.compute(v0 + a0 * dt);
+        builder.compute(s0 + v0 * dt + a0 * dt * dt);
     }
+    builder.finalize();
 
     // expected values:
     let ((s0, v0, a0), dt) = (ctx.start_values(), ctx.dt);
@@ -257,11 +257,10 @@ fn can_set_display_position_of_velocity() {
     // test:
     {
         let ((s0, v0, a0), dt) = (builder.start_values(), builder.dt());
-        let v1 = builder.push(v0 + a0 * dt);
-        let s1 = builder.push(s0 + v0 * dt + 0.5 * a0 * dt * dt);
-        builder.set_display_position(v1, s1);
-        builder.finalize();
+        builder.compute(v0 + a0 * dt);
+        builder.compute(s0 + v0 * dt + 0.5 * a0 * dt * dt);
     }
+    builder.finalize();
 
     // expected values:
     let ((s0, v0, a0), dt) = (ctx.start_values(), ctx.dt);
@@ -286,10 +285,10 @@ fn euler_with_intermediate_v() {
     // test:
     {
         let ((s0, v0, a0), dt) = (builder.start_values(), builder.dt());
-        let v1 = builder.push(v0 + a0 * dt);
-        builder.push(s0 + v1 * dt);
-        builder.finalize();
+        let v1 = builder.compute(v0 + a0 * dt);
+        builder.compute(s0 + v1 * dt);
     }
+    builder.finalize();
 
     // expected values:
     let ((s0, v0, a0), dt) = (ctx.start_values(), ctx.dt);
@@ -342,14 +341,13 @@ fn mid_point_euler() {
         */
 
         let ((s, v, a), dt) = (builder.start_values(), builder.dt());
-        let v_mid = builder.push(v + a * dt.half());
-        let s_mid = builder.push(s + v_mid * dt.half());
+        let v_mid = builder.compute(v + a * dt.half());
+        let s_mid = builder.compute(s + v_mid * dt.half());
         let a_mid = builder.acceleration_at(s_mid);
-        let v1 = builder.push(v + a_mid * dt);
-        let s1 = builder.push(s + v1 * dt);
-        builder.set_display_position(v1, s1);
-        builder.finalize();
+        let v1 = builder.compute(v + a_mid * dt);
+        builder.compute(s + v1 * dt);
     }
+    builder.finalize();
 
     let ((s, v, a), dt) = (ctx.start_values(), ctx.dt);
     let v_mid = v + a * dt * 0.5;

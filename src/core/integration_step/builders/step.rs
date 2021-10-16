@@ -34,6 +34,7 @@ impl<'a> Step<'a> {
             debug_assert!(!self.finalized);
             self.finalized = true;
         }
+        self.set_display_position(self.step.last_velocity_ref(), self.step.last_position_ref());
         self.step
             .compute_acceleration_at_last_position(self.acceleration_field);
     }
@@ -79,7 +80,7 @@ impl<'a> Step<'a> {
 
 pub trait Collector<Contribution> {
     type Output;
-    fn push(&mut self, _: Contribution) -> Self::Output;
+    fn compute(&mut self, _: Contribution) -> Self::Output;
 }
 
 impl<'a, const N: usize, const D: usize> Collector<contributions::position::Collection<N, D>>
@@ -87,7 +88,10 @@ impl<'a, const N: usize, const D: usize> Collector<contributions::position::Coll
 {
     type Output = PositionRef;
 
-    fn push(&mut self, contributions: contributions::position::Collection<N, D>) -> Self::Output {
+    fn compute(
+        &mut self,
+        contributions: contributions::position::Collection<N, D>,
+    ) -> Self::Output {
         let mut s = core::Position::origin();
         for contrib in &contributions {
             s += contrib.evaluate_for(self.step);
@@ -102,7 +106,10 @@ impl<'a, const N: usize, const D: usize> Collector<contributions::velocity::Coll
 {
     type Output = VelocityRef;
 
-    fn push(&mut self, contributions: contributions::velocity::Collection<N, D>) -> Self::Output {
+    fn compute(
+        &mut self,
+        contributions: contributions::velocity::Collection<N, D>,
+    ) -> Self::Output {
         let mut v = core::Velocity::zeros();
         for contrib in &contributions {
             v += contrib.evaluate_for(self.step);

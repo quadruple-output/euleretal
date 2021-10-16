@@ -283,6 +283,10 @@ impl Step {
         PositionRef(self.positions.len() - 1)
     }
 
+    pub(super) fn last_velocity_ref(&self) -> VelocityRef {
+        VelocityRef(self.velocities.len() - 1)
+    }
+
     pub(super) fn add_computed_position<const N: usize, const D: usize>(
         &mut self,
         s: Position,
