@@ -2,7 +2,7 @@ mod abstraction;
 mod collection;
 mod variant;
 
-use super::{core, step, DtFraction};
+use super::{core, dt_fraction, step};
 
 pub use abstraction::Abstraction;
 pub use collection::Collection;

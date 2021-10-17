@@ -1,5 +1,5 @@
 use super::{
-    core::{Move, PhysicalQuantityKind, Position},
+    core::{Fraction, Move, PhysicalQuantityKind, Position},
     step::Step,
     Variant,
 };
@@ -7,17 +7,12 @@ use super::{
 pub struct Abstraction<'a> {
     step: &'a Step,
     // Abstraction cannot be parameterized, so we move the static fraction to a component
-    variant: Variant<1, 1>,
-    variant_scale: f32,
+    variant: Variant<Fraction>,
 }
 
 impl<'a> Abstraction<'a> {
-    pub fn new(step: &'a Step, variant: Variant<1, 1>, variant_scale: f32) -> Self {
-        Self {
-            step,
-            variant,
-            variant_scale,
-        }
+    pub fn new(step: &'a Step, variant: Variant<Fraction>) -> Self {
+        Self { step, variant }
     }
 
     pub fn sampling_position(&self) -> Position {
@@ -36,11 +31,8 @@ impl<'a> Abstraction<'a> {
     pub fn vector(&self) -> Option<Move> {
         match self.variant {
             Variant::StartPosition { .. } => None,
-            Variant::VelocityDt { .. } => {
-                Some(self.variant.evaluate_for(self.step) * self.variant_scale)
-            }
-            Variant::AccelerationDtDt { .. } => {
-                Some(self.variant.evaluate_for(self.step) * self.variant_scale * self.variant_scale)
+            Variant::VelocityDt { .. } | Variant::AccelerationDtDt { .. } => {
+                Some(self.variant.evaluate_for(self.step))
             }
         }
     }

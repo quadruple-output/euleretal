@@ -20,12 +20,12 @@ pub struct Step {
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct PositionRef(usize);
 
-impl<const N: usize, const D: usize> ::std::ops::Add<contributions::position::Variant<N, D>>
-    for PositionRef
+impl<const N: usize, const D: usize>
+    ::std::ops::Add<contributions::position::Variant<DtFraction<N, D>>> for PositionRef
 {
     type Output = contributions::position::Collection<N, D>;
 
-    fn add(self, rhs: contributions::position::Variant<N, D>) -> Self::Output {
+    fn add(self, rhs: contributions::position::Variant<DtFraction<N, D>>) -> Self::Output {
         vec![self.into(), rhs].into()
     }
 }
@@ -34,7 +34,7 @@ impl<const N: usize, const D: usize> ::std::ops::Add<contributions::position::Va
 pub struct VelocityRef(usize);
 
 impl<const N: usize, const D: usize> ::std::ops::Mul<DtFraction<N, D>> for VelocityRef {
-    type Output = contributions::position::Variant<N, D>;
+    type Output = contributions::position::Variant<DtFraction<N, D>>;
 
     fn mul(self, rhs: DtFraction<N, D>) -> Self::Output {
         contributions::position::Variant::VelocityDt {

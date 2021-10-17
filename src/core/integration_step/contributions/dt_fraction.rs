@@ -1,5 +1,10 @@
 use super::core::{Duration, Fraction};
 
+pub trait FractionSpec: Copy + ::std::ops::Mul<Duration, Output = Duration> {}
+
+impl FractionSpec for Fraction {}
+impl<const N: usize, const D: usize> FractionSpec for DtFraction<N, D> {}
+
 #[derive(Clone, Copy, Debug)]
 pub struct DtFraction<const NUMERATOR: usize, const DENOMINATOR: usize>;
 

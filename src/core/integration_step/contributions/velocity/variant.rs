@@ -64,14 +64,14 @@ impl<const N: usize, const D: usize> std::ops::Add for Variant<N, D> {
 }
 
 impl<const N: usize, const D: usize> std::ops::Mul<DtFraction<N, D>> for Variant<N, D> {
-    type Output = position::Variant<N, D>;
+    type Output = position::Variant<DtFraction<N, D>>;
 
-    fn mul(self, dt_fraction: DtFraction<N, D>) -> Self::Output {
+    fn mul(self, fraction: DtFraction<N, D>) -> Self::Output {
         match self {
             Variant::Velocity { v_ref } => position::Variant::VelocityDt {
                 factor: 1.,
                 v_ref,
-                dt_fraction,
+                dt_fraction: fraction,
             },
             Variant::AccelerationDt {
                 factor,

@@ -55,7 +55,7 @@ impl<'a> Abstraction<'a> {
 
     pub fn contributions_iter(&self) -> impl Iterator<Item = contributions::position::Abstraction> {
         self.position.contributions.iter().map(move |contribution| {
-            contribution.abstraction_scaled_for(self.step, self.position.dt_fraction.into())
+            contribution.abstraction_scaled_for(self.step, self.position.dt_fraction)
         })
     }
 }
