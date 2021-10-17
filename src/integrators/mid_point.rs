@@ -1,6 +1,6 @@
 use super::core::{
     integration_step::builders::{self, Collector},
-    DtFraction, Integrator,
+    Integrator,
 };
 
 pub struct Euler {}
@@ -31,7 +31,7 @@ impl Integrator for Euler {
         s0: builders::Position,
         v0: builders::Velocity,
         a0: builders::Acceleration,
-        dt: DtFraction<1, 1>,
+        dt: builders::DtFraction<1, 1>,
         step: &mut builders::Step,
     ) {
         let dt_mid = dt.half();
@@ -70,7 +70,7 @@ impl Integrator for SecondOrder {
         s0: builders::Position,
         v0: builders::Velocity,
         a0: builders::Acceleration,
-        dt: DtFraction<1, 1>,
+        dt: builders::DtFraction<1, 1>,
         step: &mut builders::Step,
     ) {
         let s_mid = step.compute(s0 + v0 * dt.half() + 0.5 * a0 * dt.half() * dt.half());

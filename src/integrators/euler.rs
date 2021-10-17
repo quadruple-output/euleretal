@@ -1,6 +1,6 @@
 use super::core::{
     integration_step::builders::{self, Collector},
-    DtFraction, Integrator,
+    Integrator,
 };
 
 pub struct Broken {}
@@ -27,7 +27,7 @@ impl Integrator for Broken {
         s: builders::Position,
         v: builders::Velocity,
         a: builders::Acceleration,
-        dt: DtFraction<1, 1>,
+        dt: builders::DtFraction<1, 1>,
         step: &mut builders::Step,
     ) {
         step.compute(v + a * dt);
@@ -91,7 +91,7 @@ impl Integrator for Euler {
         s: builders::Position,
         v: builders::Velocity,
         a: builders::Acceleration,
-        dt: DtFraction<1, 1>,
+        dt: builders::DtFraction<1, 1>,
         step: &mut builders::Step,
     ) {
         let v1 = step.compute(v + a * dt);

@@ -1,6 +1,6 @@
 use super::{
     contributions,
-    core::{self, DtFraction, Fraction},
+    core::{self, Fraction},
     Step,
 };
 
@@ -16,7 +16,7 @@ pub struct Position {
 impl Position {
     pub(in super::super) fn new<const N: usize, const D: usize>(
         s: core::Position,
-        dt_fraction: DtFraction<N, D>,
+        dt_fraction: contributions::DtFraction<N, D>,
         contributions: contributions::position::Collection<N, D>,
     ) -> Self {
         let todo = &"bundle {dt_fraction, contributions} in new type CollectionDyn";

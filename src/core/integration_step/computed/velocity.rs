@@ -1,6 +1,6 @@
 use super::{
     contributions,
-    core::{self, DtFraction, Position},
+    core::{self, Position},
     step::{PositionRef, Step},
 };
 
@@ -18,7 +18,7 @@ impl Velocity {
     pub(in super::super) fn new<const N: usize, const D: usize>(
         v: core::Velocity,
         sampling_position: PositionRef,
-        dt_fraction: DtFraction<N, D>,
+        dt_fraction: contributions::DtFraction<N, D>,
         contributions: contributions::velocity::Collection<N, D>,
     ) -> Self {
         #[allow(clippy::cast_precision_loss)]

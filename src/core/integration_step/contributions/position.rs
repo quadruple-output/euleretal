@@ -1,6 +1,7 @@
 use super::{
-    core::{DtFraction, Move, PhysicalQuantityKind, Position},
+    core::{Move, PhysicalQuantityKind, Position},
     step::{AccelerationRef, PositionRef, Step, VelocityRef},
+    DtFraction,
 };
 
 pub struct Abstraction<'a> {

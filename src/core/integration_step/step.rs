@@ -1,7 +1,8 @@
 use super::{
+    contributions::DtFraction,
     core::{
         integration_step::{computed, contributions, StartCondition},
-        integrator, Acceleration, AccelerationField, DtFraction, Duration, Position, Velocity,
+        integrator, Acceleration, AccelerationField, Duration, Position, Velocity,
     },
     import::{shape, PointQuery},
 };

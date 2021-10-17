@@ -1,9 +1,10 @@
 use super::{
-    core::{self, AccelerationField, DtFraction},
+    core::{self, AccelerationField},
     integration_step::{
         contributions,
         step::{AccelerationRef, PositionRef, VelocityRef},
     },
+    DtFraction,
 };
 
 pub struct Step<'a> {

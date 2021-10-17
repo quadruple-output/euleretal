@@ -1,4 +1,4 @@
-use super::{core::DtFraction, integration_step::builders};
+use super::integration_step::builders;
 use ::std::{any::TypeId, collections::hash_map::DefaultHasher, hash::Hash};
 
 pub trait Integrator: Send + Sync + 'static {
@@ -11,7 +11,7 @@ pub trait Integrator: Send + Sync + 'static {
         s0: builders::Position,
         v0: builders::Velocity,
         a0: builders::Acceleration,
-        dt: DtFraction<1, 1>,
+        dt: builders::DtFraction<1, 1>,
         builder: &mut builders::Step,
     );
 

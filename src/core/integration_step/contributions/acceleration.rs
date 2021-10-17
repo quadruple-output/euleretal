@@ -1,4 +1,4 @@
-use super::{core::DtFraction, step::AccelerationRef, velocity};
+use super::{step::AccelerationRef, velocity, DtFraction};
 
 #[derive(Clone, Copy)]
 pub enum Variant {
