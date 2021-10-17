@@ -33,11 +33,11 @@ impl Default for Setup {
 
 impl Setup {
     fn new_builder_for<'a>(&'a self, step: &'a mut Step) -> StepBuilder<'a> {
-        StepBuilder::new(&self.acceleration_field, &self.start_condition, step)
+        StepBuilder::new(&self.acceleration_field, step)
     }
 
     fn new_step(&self) -> Step {
-        Step::new(self.dt)
+        Step::new(&self.start_condition, self.dt)
     }
 
     fn start_values(&self) -> (Position, Velocity, Acceleration) {
@@ -53,7 +53,7 @@ impl Setup {
 fn step_from_new_builder_has_correct_start_condition() {
     let ctx = Setup::default();
     let mut step = ctx.new_step();
-    let mut builder = ctx.new_builder_for(&mut step);
+    let builder = ctx.new_builder_for(&mut step);
     builder.finalize();
     assert_eq!(step.get_start_condition(), ctx.start_condition);
 }
@@ -61,11 +61,15 @@ fn step_from_new_builder_has_correct_start_condition() {
 #[test]
 fn create_step_from_previous() {
     let ctx = Setup::default();
+
     let mut step0 = ctx.new_step();
-    let mut builder = ctx.new_builder_for(&mut step0);
+    let builder = ctx.new_builder_for(&mut step0);
     builder.finalize();
-    let mut step1 = builder.next_step();
-    builder.next_for(&mut step1).finalize();
+
+    let mut step1 = step0.new_next();
+    let builder = ctx.new_builder_for(&mut step1);
+    builder.finalize();
+
     assert_eq!(step0.dt(), step1.dt());
     assert_eq!(step0.get_start_condition(), step1.get_start_condition());
 }
@@ -96,7 +100,6 @@ fn simple_step_s_v_dt() {
     assert!(contributions.next().is_none());
 
     assert_eq!(first_contribution.sampling_position(), s0);
-    assert_eq!(second_contribution.sampling_position(), s0);
     assert_eq!(second_contribution.vector().unwrap(), v0 * dt);
 }
 
@@ -112,8 +115,8 @@ fn two_simple_steps_in_sequence() {
         builder.compute(s0 + v0 * dt);
     }
     builder.finalize();
-    let mut step2 = builder.next_step();
-    let mut builder = builder.next_for(&mut step2);
+    let mut step2 = step1.new_next();
+    let mut builder = ctx.new_builder_for(&mut step2);
     {
         let ((s0, v0, _a0), dt) = (builder.start_values(), builder.dt());
         builder.compute(s0 + v0 * dt);
@@ -136,7 +139,6 @@ fn two_simple_steps_in_sequence() {
     assert!(contributions.next().is_none());
 
     assert_eq!(first_contribution.sampling_position(), s1);
-    assert_eq!(second_contribution.sampling_position(), s1);
     assert_eq!(second_contribution.vector().unwrap(), v1 * dt);
 }
 
@@ -163,7 +165,6 @@ fn simple_step_s_a_dt_dt() {
     assert!(contributions.next().is_none());
 
     assert_eq!(first_contribution.sampling_position(), s0);
-    assert_eq!(second_contribution.sampling_position(), s0);
     assert_eq!(second_contribution.vector().unwrap(), a0 * dt * dt);
 }
 
@@ -191,7 +192,6 @@ fn simple_step_s_v_dt_12_a_dt_dt() {
     assert!(contributions.next().is_none());
 
     assert_eq!(first_contribution.sampling_position(), s0);
-    assert_eq!(second_contribution.sampling_position(), s0);
     assert_eq!(third_contribution.sampling_position(), s0);
     assert_eq!(second_contribution.vector().unwrap(), v0 * dt);
     assert_eq!(third_contribution.vector().unwrap(), 0.5 * a0 * dt * dt);

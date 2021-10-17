@@ -1,4 +1,7 @@
-use super::core::{AccelerationField, DtFraction, Duration, Integrator, StartCondition, Step};
+use super::core::{
+    integration_step::builders::{self, Collector},
+    DtFraction, Integrator,
+};
 
 pub struct Euler {}
 
@@ -25,54 +28,19 @@ impl Integrator for Euler {
 
     fn integrate_step(
         &self,
-        current: &StartCondition,
-        dt: Duration,
-        acceleration_field: &dyn AccelerationField,
-    ) -> Step {
-        let mut step = Step::new_deprecated(self.expected_capacities_for_step(), dt);
-        let p0 = step.set_start_condition(current);
-        let mid_point_pos = step
-            .compute_position(DtFraction::<1, 2>)
-            .based_on(p0.s)
-            .add_velocity_dt(p0.v, 1.)
-            .add_acceleration_dt_dt(p0.a, 1.)
-            .create();
-        let mid_point_acceleration =
-            step.compute_acceleration_at(mid_point_pos, acceleration_field);
-        let final_pos = step
-            .compute_position(DtFraction::<1, 1>)
-            .based_on(p0.s)
-            .add_velocity_dt(p0.v, 1.)
-            .add_acceleration_dt_dt(mid_point_acceleration, 1.)
-            .create();
-        let _final_velocity = step
-            .compute_velocity(DtFraction::<1, 1>, final_pos)
-            .based_on(p0.v)
-            .add_acceleration_dt(mid_point_acceleration, 1.)
-            .create();
-        step
-
-        // let p0 = current.tracker();
-
-        // let dt_mid_point = fraction!(1 / 2) * dt;
-        // let s_mid = p0.s + p0.v * dt_mid_point + 0.5 * p0.a * dt_mid_point * dt_mid_point;
-        // let a_mid = s_mid.compute_acceleration(acceleration_field);
-
-        // let v = p0.v + a_mid * dt;
-        // let s = p0.s + p0.v * dt + a_mid * dt * dt;
-        // s1 | v1;
-    }
-
-    fn expected_accelerations_for_step(&self) -> usize {
-        2
-    }
-
-    fn expected_positions_for_step(&self) -> usize {
-        2
-    }
-
-    fn expected_velocities_for_step(&self) -> usize {
-        1
+        s0: builders::Position,
+        v0: builders::Velocity,
+        a0: builders::Acceleration,
+        dt: DtFraction<1, 1>,
+        step: &mut builders::Step,
+    ) {
+        let dt_mid = dt.half();
+        let v_mid = step.compute(v0 + a0 * dt_mid);
+        let s_mid = step.compute(s0 + v_mid * dt_mid);
+        step.set_display_position(v_mid, s_mid);
+        let a_mid = step.acceleration_at(s_mid);
+        let v1 = step.compute(v0 + a_mid * dt);
+        step.compute(s0 + v1 * dt);
     }
 }
 
@@ -99,53 +67,15 @@ impl Integrator for SecondOrder {
 
     fn integrate_step(
         &self,
-        current: &StartCondition,
-        dt: Duration,
-        acceleration_field: &dyn AccelerationField,
-    ) -> Step {
-        let mut step = Step::new_deprecated(self.expected_capacities_for_step(), dt);
-        let p0 = step.set_start_condition(current);
-        let mid_point_pos = step
-            .compute_position(DtFraction::<1, 2>)
-            .based_on(p0.s)
-            .add_velocity_dt(p0.v, 1.)
-            .add_acceleration_dt_dt(p0.a, 0.5)
-            .create();
-        let mid_point_acceleration =
-            step.compute_acceleration_at(mid_point_pos, acceleration_field);
-        let final_pos = step
-            .compute_position(DtFraction::<1, 1>)
-            .based_on(p0.s)
-            .add_velocity_dt(p0.v, 1.)
-            .add_acceleration_dt_dt(mid_point_acceleration, 0.5)
-            .create();
-        let _final_velocity = step
-            .compute_velocity(DtFraction::<1, 1>, final_pos)
-            .based_on(p0.v)
-            .add_acceleration_dt(mid_point_acceleration, 1.)
-            .create();
-        step
-
-        // let p0 = current.tracker();
-
-        // let dt_mid_point = fraction!(1 / 2) * dt;
-        // let s_mid = p0.s + p0.v * dt_mid_point + 0.5 * p0.a * dt_mid_point * dt_mid_point;
-        // let a_mid = s_mid.compute_acceleration(acceleration_field);
-
-        // let v = p0.v + a_mid * dt;
-        // let s = p0.s + p0.v * dt + 0.5 * a_mid * dt * dt;
-        // s1 | v1;
-    }
-
-    fn expected_accelerations_for_step(&self) -> usize {
-        2
-    }
-
-    fn expected_positions_for_step(&self) -> usize {
-        2
-    }
-
-    fn expected_velocities_for_step(&self) -> usize {
-        1
+        s0: builders::Position,
+        v0: builders::Velocity,
+        a0: builders::Acceleration,
+        dt: DtFraction<1, 1>,
+        step: &mut builders::Step,
+    ) {
+        let s_mid = step.compute(s0 + v0 * dt.half() + 0.5 * a0 * dt.half() * dt.half());
+        let a_mid = step.acceleration_at(s_mid);
+        step.compute(s0 + v0 * dt + 0.5 * a_mid * dt * dt);
+        step.compute(v0 + a_mid * dt);
     }
 }

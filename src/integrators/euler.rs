@@ -1,4 +1,7 @@
-use super::core::{AccelerationField, DtFraction, Duration, Integrator, StartCondition, Step};
+use super::core::{
+    integration_step::builders::{self, Collector},
+    DtFraction, Integrator,
+};
 
 pub struct Broken {}
 
@@ -21,41 +24,21 @@ impl Integrator for Broken {
 
     fn integrate_step(
         &self,
-        current: &StartCondition,
-        dt: Duration,
-        _acceleration_field: &dyn AccelerationField,
-    ) -> Step {
-        let mut step = Step::new_deprecated(self.expected_capacities_for_step(), dt);
-        let p0 = step.set_start_condition(current);
-        step.compute_position(DtFraction::<1, 1>)
-            .based_on(p0.s)
-            .add_velocity_dt(p0.v, 1.)
-            //.add_acceleration_dt_dt(p0.a, 1.)
-            .create();
-        step.compute_velocity(DtFraction::<1, 1>, p0.s)
-            .based_on(p0.v)
-            .add_acceleration_dt(p0.a, 1.)
-            .create();
-        step
-    }
-
-    fn expected_accelerations_for_step(&self) -> usize {
-        1
-    }
-
-    fn expected_positions_for_step(&self) -> usize {
-        1
-    }
-
-    fn expected_velocities_for_step(&self) -> usize {
-        1
+        s: builders::Position,
+        v: builders::Velocity,
+        a: builders::Acceleration,
+        dt: DtFraction<1, 1>,
+        step: &mut builders::Step,
+    ) {
+        step.compute(v + a * dt);
+        step.compute(s + v * dt);
     }
 }
 
 #[cfg(test)]
 mod test_broken_euler {
     use super::*;
-    use crate::core::{Acceleration, Position, StartCondition, Velocity};
+    use crate::core::{Acceleration, Position, StartCondition, Step, Velocity};
 
     #[test]
     fn first_test() {
@@ -67,7 +50,12 @@ mod test_broken_euler {
         let dt = 1.0.into();
         let integrator = Broken::new();
         let field = crate::scenarios::ConstantAcceleration;
-        let step = integrator.integrate_step(&start, dt, &field);
+        let mut step = Step::new(&start, dt);
+        {
+            let mut builder = crate::core::integration_step::builders::Step::new(&field, &mut step);
+            let ((s, v, a), dt) = (builder.start_values(), builder.dt());
+            integrator.integrate_step(s, v, a, dt, &mut builder);
+        }
 
         let (s, v, a) = (start.position(), start.velocity(), start.acceleration());
         let v1 = v + a * dt;
@@ -100,35 +88,13 @@ impl Integrator for Euler {
 
     fn integrate_step(
         &self,
-        current: &StartCondition,
-        dt: Duration,
-        _acceleration_field: &dyn AccelerationField,
-    ) -> Step {
-        let mut step = Step::new_deprecated(self.expected_capacities_for_step(), dt);
-        let p0 = step.set_start_condition(current);
-        let next_position = step
-            .compute_position(DtFraction::<1, 1>)
-            .based_on(p0.s)
-            .add_velocity_dt(p0.v, 1.)
-            .add_acceleration_dt_dt(p0.a, 1.)
-            .create();
-        let _next_velocity = step
-            .compute_velocity(DtFraction::<1, 1>, next_position)
-            .based_on(p0.v)
-            .add_acceleration_dt(p0.a, 1.)
-            .create();
-        step
-    }
-
-    fn expected_accelerations_for_step(&self) -> usize {
-        1
-    }
-
-    fn expected_positions_for_step(&self) -> usize {
-        1
-    }
-
-    fn expected_velocities_for_step(&self) -> usize {
-        1
+        s: builders::Position,
+        v: builders::Velocity,
+        a: builders::Acceleration,
+        dt: DtFraction<1, 1>,
+        step: &mut builders::Step,
+    ) {
+        let v1 = step.compute(v + a * dt);
+        step.compute(s + v1 * dt);
     }
 }

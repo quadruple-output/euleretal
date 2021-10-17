@@ -1,4 +1,7 @@
-use super::{AccelerationField, Duration, Integrator, Position, Samples, Scenario, StartCondition};
+use super::{
+    integration_step, AccelerationField, Duration, Integrator, Position, Samples, Scenario,
+    StartCondition,
+};
 use ::std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
@@ -81,16 +84,22 @@ impl Integration {
         dt: Duration,
     ) -> Samples {
         let start = ::std::time::Instant::now();
-        let mut samples = Samples::new(num_steps);
-        let mut current_condition = (*start_condition).clone();
-        for _ in 0..num_steps {
-            let mut next = integrator.integrate_step(&current_condition, dt, acceleration_field);
-            next.compute_acceleration_at_last_position(acceleration_field);
 
-            current_condition = next.next_condition().unwrap();
-            samples.push_sample(next);
+        let mut samples = Samples::new(num_steps);
+
+        let mut step = integration_step::Step::new(start_condition, dt);
+        let mut builder = integration_step::builders::Step::new(acceleration_field, &mut step);
+        for _ in 0..num_steps {
+            let ((s, v, a), dt) = (builder.start_values(), builder.dt());
+            integrator.integrate_step(s, v, a, dt, &mut builder);
+            builder.finalize();
+            let next_step = step.new_next();
+            samples.push_sample(step);
+            step = next_step;
+            builder = integration_step::builders::Step::new(acceleration_field, &mut step);
         }
         let result = samples.finalized();
+
         log::info!("{}: {}µs", integrator.label(), start.elapsed().as_micros());
         result
     }

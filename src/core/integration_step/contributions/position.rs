@@ -105,10 +105,6 @@ impl<const N: usize, const D: usize> Variant<N, D> {
         }
     }
 
-    pub(in super::super) fn abstraction_for<'a>(&'a self, step: &'a Step) -> Abstraction<'a> {
-        self.abstraction_scaled_for(step, DtFraction::<N, D>.into())
-    }
-
     fn transmute<const A: usize, const B: usize>(self) -> Variant<A, B> {
         unsafe { ::std::mem::transmute::<Self, Variant<A, B>>(self) }
     }
@@ -136,16 +132,8 @@ impl<const N: usize, const D: usize> Collection<N, D> {
         Self(Vec::new())
     }
 
-    pub(in super::super) fn with_capacity(capacity: usize) -> Self {
-        Self(Vec::with_capacity(capacity))
-    }
-
     pub(in super::super) fn iter(&self) -> impl Iterator<Item = &Variant<N, D>> {
         self.0.iter()
-    }
-
-    pub(in super::super) fn push(&mut self, data: Variant<N, D>) {
-        self.0.push(data);
     }
 
     pub fn is_empty(&self) -> bool {

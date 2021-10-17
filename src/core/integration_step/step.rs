@@ -1,5 +1,4 @@
 use super::{
-    builders,
     core::{
         integration_step::{computed, contributions, StartCondition},
         integrator, Acceleration, AccelerationField, DtFraction, Duration, Position, Velocity,
@@ -101,8 +100,8 @@ impl Step {
         }
     }
 
-    pub fn new(dt: Duration) -> Self {
-        Self {
+    pub fn new(start_condition: &StartCondition, dt: Duration) -> Self {
+        let mut result = Self {
             dt,
             positions: Vec::new(),
             velocities: Vec::new(),
@@ -110,7 +109,9 @@ impl Step {
             last_computed_position: None,
             last_computed_velocity: None,
             acceleration_at_last_position: None,
-        }
+        };
+        result.set_start_condition(start_condition);
+        result
     }
 
     pub fn new_next(&self) -> Self {
@@ -174,29 +175,6 @@ impl Step {
         } else {
             None
         }
-    }
-
-    pub fn compute_position<const N: usize, const D: usize>(
-        &mut self,
-        _dt_fraction: DtFraction<N, D>,
-    ) -> builders::PositionDeprecated<N, D> {
-        builders::PositionDeprecated::new(self)
-    }
-
-    pub fn compute_velocity<const N: usize, const D: usize>(
-        &mut self,
-        _dt_fraction: DtFraction<N, D>,
-        sref: PositionRef,
-    ) -> builders::VelocityDeprecated<N, D> {
-        builders::VelocityDeprecated::new(self, sref)
-    }
-
-    pub fn compute_acceleration_at(
-        &mut self,
-        sref: PositionRef,
-        a: &dyn AccelerationField,
-    ) -> AccelerationRef {
-        self.add_computed_acceleration(a.value_at(self[sref].s), sref)
     }
 
     pub fn compute_acceleration_at_last_position(&mut self, a: &dyn AccelerationField) {

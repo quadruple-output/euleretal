@@ -19,6 +19,7 @@ impl Position {
         dt_fraction: DtFraction<N, D>,
         contributions: contributions::position::Collection<N, D>,
     ) -> Self {
+        let todo = &"bundle {dt_fraction, contributions} in new type CollectionDyn";
         Self {
             s,
             dt_fraction: dt_fraction.into(),

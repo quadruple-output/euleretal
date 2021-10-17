@@ -1,33 +1,4 @@
-use super::{
-    core::{Acceleration, DtFraction, PhysicalQuantityKind, Position},
-    step::{AccelerationRef, Step},
-    velocity,
-};
-
-pub struct Abstraction<'a> {
-    step: &'a Step,
-    variant: &'a Variant,
-}
-
-// todo: this could be a trait, generic over the output type of vector()
-impl<'a> Abstraction<'a> {
-    pub fn sampling_position(&self) -> Position {
-        let step = self.step;
-        match self.variant {
-            Variant::Acceleration { factor: _, a_ref } => step[step[*a_ref].sampling_position].s,
-        }
-    }
-
-    pub fn kind(&self) -> PhysicalQuantityKind {
-        match self.variant {
-            Variant::Acceleration { .. } => PhysicalQuantityKind::Acceleration,
-        }
-    }
-
-    pub fn vector(&self) -> Acceleration {
-        self.variant.evaluate_for(self.step)
-    }
-}
+use super::{core::DtFraction, step::AccelerationRef, velocity};
 
 #[derive(Clone, Copy)]
 pub enum Variant {
@@ -37,21 +8,6 @@ pub enum Variant {
 impl From<AccelerationRef> for Variant {
     fn from(a_ref: AccelerationRef) -> Self {
         Self::Acceleration { factor: 1., a_ref }
-    }
-}
-
-impl Variant {
-    pub(in super::super) fn evaluate_for(&self, step: &Step) -> Acceleration {
-        match *self {
-            Self::Acceleration { factor, a_ref } => factor * step[a_ref].a,
-        }
-    }
-
-    pub(in super::super) fn abstraction_for<'a>(&'a self, step: &'a Step) -> Abstraction<'a> {
-        Abstraction {
-            step,
-            variant: self,
-        }
     }
 }
 

@@ -45,9 +45,7 @@
 - Save/load state in/from file.
 
 ## Clean Code
-- Remove methods like `expected_accelerations_for_step` and determine
-  "expected" values for next step from previous one.
-- write unit tests for specific Integrators
+- write more unit tests for specific Integrators
 
 ## Performance
 - use a different allocator for everything related to `Step`s.  While

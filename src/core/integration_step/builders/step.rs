@@ -1,5 +1,5 @@
 use super::{
-    core::{self, AccelerationField, DtFraction, StartCondition},
+    core::{self, AccelerationField, DtFraction},
     integration_step::{
         contributions,
         step::{AccelerationRef, PositionRef, VelocityRef},
@@ -9,49 +9,21 @@ use super::{
 pub struct Step<'a> {
     acceleration_field: &'a dyn AccelerationField,
     step: &'a mut core::Step,
-    #[cfg(debug_assertions)]
-    finalized: bool,
 }
 
 impl<'a> Step<'a> {
-    pub fn new<'b>(
-        acceleration_field: &'a dyn AccelerationField,
-        start_condition: &'b StartCondition,
-        step: &'a mut core::Step,
-    ) -> Self {
-        step.set_start_condition(start_condition);
+    pub fn new(acceleration_field: &'a dyn AccelerationField, step: &'a mut core::Step) -> Self {
         Self {
             acceleration_field,
             step,
-            #[cfg(debug_assertions)]
-            finalized: false,
         }
     }
 
-    pub fn finalize(&mut self) {
-        #[cfg(debug_assertions)]
-        {
-            debug_assert!(!self.finalized);
-            self.finalized = true;
-        }
+    /// consumes `self`, and therefore cannot be called twice on the same instance.
+    pub fn finalize(mut self) {
         self.set_display_position(self.step.last_velocity_ref(), self.step.last_position_ref());
         self.step
             .compute_acceleration_at_last_position(self.acceleration_field);
-    }
-
-    pub fn next_step(&self) -> core::Step {
-        self.step.new_next()
-    }
-
-    pub fn next_for(self, step: &'a mut core::Step) -> Self {
-        #[cfg(debug_assertions)]
-        debug_assert!(self.finalized);
-        Self {
-            acceleration_field: self.acceleration_field,
-            step,
-            #[cfg(debug_assertions)]
-            finalized: false,
-        }
     }
 
     #[allow(clippy::unused_self)]
@@ -72,9 +44,9 @@ impl<'a> Step<'a> {
         self.step[v_ref].sampling_position = s_ref;
     }
 
-    pub fn acceleration_at(&mut self, s: PositionRef) -> AccelerationRef {
+    pub fn acceleration_at(&mut self, s_ref: PositionRef) -> AccelerationRef {
         self.step
-            .add_computed_acceleration(self.acceleration_field.value_at(self.step[s].s), s)
+            .add_computed_acceleration(self.acceleration_field.value_at(self.step[s_ref].s), s_ref)
     }
 }
 
