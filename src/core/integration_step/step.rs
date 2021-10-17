@@ -266,15 +266,16 @@ impl Step {
         VelocityRef(self.velocities.len() - 1)
     }
 
+    /// parameter DtFraction<N,D> improves readability at calling positions
     pub(super) fn add_computed_position<const N: usize, const D: usize>(
         &mut self,
         s: Position,
-        dt_fraction: DtFraction<N, D>,
+        _dt_fraction: DtFraction<N, D>,
         contributions: contributions::position::Collection<N, D>,
     ) -> PositionRef {
         let p_ref = PositionRef(self.positions.len());
         self.positions
-            .push(computed::Position::new(s, dt_fraction, contributions));
+            .push(computed::Position::new(s, contributions));
         self.last_computed_position = Some(p_ref);
         p_ref
     }

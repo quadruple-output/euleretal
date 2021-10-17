@@ -9,21 +9,17 @@ use super::{
 /// however, such that it cannot be used from outside.
 pub struct Position {
     pub(in super::super) s: core::Position,
-    pub(in super::super) dt_fraction: Fraction,
-    contributions: contributions::position::Collection<1, 1>, //todo: can this be a reference?
+    contributions: contributions::position::collection::Generic,
 }
 
 impl Position {
     pub(in super::super) fn new<const N: usize, const D: usize>(
         s: core::Position,
-        dt_fraction: contributions::DtFraction<N, D>,
         contributions: contributions::position::Collection<N, D>,
     ) -> Self {
-        let todo = &"bundle {dt_fraction, contributions} in new type CollectionDyn";
         Self {
             s,
-            dt_fraction: dt_fraction.into(),
-            contributions: contributions.transmute(),
+            contributions: contributions.generalize(),
         }
     }
 
@@ -36,6 +32,10 @@ impl Position {
 
     pub(in super::super) fn has_contributions(&self) -> bool {
         !self.contributions.is_empty()
+    }
+
+    pub(in super::super) fn dt_fraction(&self) -> Fraction {
+        self.contributions.dt_fraction()
     }
 }
 
@@ -50,13 +50,11 @@ impl<'a> Abstraction<'a> {
     }
 
     pub fn dt_fraction(&self) -> Fraction {
-        self.position.dt_fraction
+        self.position.dt_fraction()
     }
 
     pub fn contributions_iter(&self) -> impl Iterator<Item = contributions::position::Abstraction> {
-        self.position.contributions.iter().map(move |contribution| {
-            contribution.abstraction_scaled_for(self.step, self.position.dt_fraction)
-        })
+        self.position.contributions.abstraction_iter_for(self.step)
     }
 }
 
