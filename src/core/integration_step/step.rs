@@ -45,12 +45,12 @@ impl<const N: usize, const D: usize> ::std::ops::Mul<DtFraction<N, D>> for Veloc
     }
 }
 
-impl<const N: usize, const D: usize> ::std::ops::Add<contributions::velocity::Variant<N, D>>
-    for VelocityRef
+impl<const N: usize, const D: usize>
+    ::std::ops::Add<contributions::velocity::Variant<DtFraction<N, D>>> for VelocityRef
 {
     type Output = contributions::velocity::Collection<N, D>;
 
-    fn add(self, rhs: contributions::velocity::Variant<N, D>) -> Self::Output {
+    fn add(self, rhs: contributions::velocity::Variant<DtFraction<N, D>>) -> Self::Output {
         vec![self.into(), rhs].into()
     }
 }
@@ -59,7 +59,7 @@ impl<const N: usize, const D: usize> ::std::ops::Add<contributions::velocity::Va
 pub struct AccelerationRef(usize);
 
 impl<const N: usize, const D: usize> ::std::ops::Mul<DtFraction<N, D>> for AccelerationRef {
-    type Output = contributions::velocity::Variant<N, D>;
+    type Output = contributions::velocity::Variant<DtFraction<N, D>>;
 
     fn mul(self, rhs: DtFraction<N, D>) -> Self::Output {
         contributions::velocity::Variant::AccelerationDt {
@@ -280,20 +280,17 @@ impl Step {
         p_ref
     }
 
+    /// parameter DtFraction<N,D> improves readability at calling positions
     pub(super) fn add_computed_velocity<const N: usize, const D: usize>(
         &mut self,
         v: Velocity,
         sampling_position: PositionRef,
-        dt_fraction: DtFraction<N, D>,
+        _dt_fraction: DtFraction<N, D>,
         contributions: contributions::velocity::Collection<N, D>,
     ) -> VelocityRef {
         let v_ref = VelocityRef(self.velocities.len());
-        self.velocities.push(computed::Velocity::new(
-            v,
-            sampling_position,
-            dt_fraction,
-            contributions,
-        ));
+        self.velocities
+            .push(computed::Velocity::new(v, sampling_position, contributions));
         self.last_computed_velocity = Some(v_ref);
         v_ref
     }

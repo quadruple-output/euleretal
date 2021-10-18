@@ -12,7 +12,7 @@ impl From<AccelerationRef> for Variant {
 }
 
 impl<const N: usize, const D: usize> std::ops::Mul<DtFraction<N, D>> for Variant {
-    type Output = velocity::Variant<N, D>;
+    type Output = velocity::Variant<DtFraction<N, D>>;
 
     fn mul(self, dt_fraction: DtFraction<N, D>) -> Self::Output {
         match self {

@@ -67,35 +67,30 @@ impl<F: FractionSpec> Variant<F> {
         step: &'a Step,
         fraction: Fraction,
     ) -> Abstraction<'a> {
-        match *self {
-            Variant::StartPosition { s_ref } => {
-                Abstraction::new(step, Variant::StartPosition { s_ref })
-            }
-            Variant::VelocityDt {
-                factor,
-                v_ref,
-                dt_fraction: _,
-            } => Abstraction::new(
-                step,
+        Abstraction::new(
+            step,
+            match *self {
+                Variant::StartPosition { s_ref } => Variant::StartPosition { s_ref },
                 Variant::VelocityDt {
+                    factor,
+                    v_ref,
+                    dt_fraction: _,
+                } => Variant::VelocityDt {
                     factor,
                     v_ref,
                     dt_fraction: fraction,
                 },
-            ),
-            Variant::AccelerationDtDt {
-                factor,
-                a_ref,
-                dt_fraction: _,
-            } => Abstraction::new(
-                step,
                 Variant::AccelerationDtDt {
+                    factor,
+                    a_ref,
+                    dt_fraction: _,
+                } => Variant::AccelerationDtDt {
                     factor,
                     a_ref,
                     dt_fraction: fraction,
                 },
-            ),
-        }
+            },
+        )
     }
 }
 

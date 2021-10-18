@@ -1,22 +1,17 @@
 use super::{
-    core::{PhysicalQuantityKind, Position, Velocity},
+    core::{Fraction, PhysicalQuantityKind, Position, Velocity},
     step::Step,
     Variant,
 };
 
 pub struct Abstraction<'a> {
     step: &'a Step,
-    variant: Variant<1, 1>,
-    variant_scale: f32,
+    variant: Variant<Fraction>,
 }
 
 impl<'a> Abstraction<'a> {
-    pub fn new(step: &'a Step, variant: Variant<1, 1>, variant_scale: f32) -> Self {
-        Self {
-            step,
-            variant,
-            variant_scale,
-        }
+    pub fn new(step: &'a Step, variant: Variant<Fraction>) -> Self {
+        Self { step, variant }
     }
 
     pub fn sampling_position(&self) -> Position {
@@ -32,11 +27,6 @@ impl<'a> Abstraction<'a> {
     }
 
     pub fn vector(&self) -> Velocity {
-        match self.variant {
-            Variant::Velocity { .. } => self.variant.evaluate_for(self.step),
-            Variant::AccelerationDt { .. } => {
-                self.variant.evaluate_for(self.step) * self.variant_scale
-            }
-        }
+        self.variant.evaluate_for(self.step)
     }
 }
