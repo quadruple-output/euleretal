@@ -610,10 +610,30 @@ name = "euleretal"
 version = "0.1.0"
 dependencies = [
  "eframe",
+ "euleretal-content",
+ "euleretal-core",
+ "log",
+ "nalgebra",
+ "ordered-float",
+ "serde",
+ "simple_logger",
+]
+
+[[package]]
+name = "euleretal-content"
+version = "0.1.0"
+dependencies = [
+ "euleretal-core",
+ "log",
+]
+
+[[package]]
+name = "euleretal-core"
+version = "0.1.0"
+dependencies = [
  "log",
  "ordered-float",
  "parry3d",
- "serde",
  "simple_logger",
 ]
 
@@ -1284,9 +1304,9 @@ dependencies = [
 
 [[package]]
 name = "parry3d"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "391f7ac41ebfb3e30712e3dd9fb64b6b394ee0679e5dcd5bcc65c91ad5699b48"
+checksum = "067fa44bf7f7cc4022756ef9796c5f8d67c7a63041df71e6eeb09ad08ab1ece8"
 dependencies = [
  "approx",
  "bitflags",
@@ -1549,9 +1569,9 @@ dependencies = [
 
 [[package]]
 name = "slab"
-version = "0.4.4"
+version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c307a32c1c5c437f38c7fd45d753050587732ba8628319fbdf12a7e289ccc590"
+checksum = "9def91fd1e018fe007022791f865d0ccc9b3a0d5001e01aabb8b40e46000afb5"
 
 [[package]]
 name = "smallvec"

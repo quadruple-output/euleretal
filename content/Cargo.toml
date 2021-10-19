@@ -1,0 +1,26 @@
+# This file was originally based on the egui template.  The latest template version can be
+# found at https://github.com/emilk/egui_template/blob/master/Cargo.toml
+
+[package]
+name = "euleretal-content"
+description = "Content for euleretal: Integrators and Acceleration Fields"
+readme = "../README.md"
+repository = "https://github.com/quadruple-output/euleretal"
+categories = ["game-development", "mathematics", "science", "simulation", "visualization"]
+keywords = ["Euler", "Runge-Kutta"]
+license = "MIT OR Apache-2.0"
+version = "0.1.0"
+authors = ["quadruple-output <57874618+quadruple-output@users.noreply.github.com>"]
+edition = "2018"
+# more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+euleretal-core = { path = "../core" }
+log = "0.4"
+
+[lib]
+# refer to https://doc.rust-lang.org/cargo/reference/cargo-targets.html#configuring-a-target
+crate-type = ["cdylib", "rlib"] # this setting has blindly been taken over from the egui template
+
+[profile.release]
+opt-level = 2 # fast and small wasm
