@@ -28,6 +28,3 @@ crate-type = ["cdylib", "rlib"] # this setting has blindly been taken over from 
 
 [features]
 default = []
-
-[profile.release]
-opt-level = 2 # fast and small wasm

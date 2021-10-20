@@ -21,6 +21,3 @@ log = "0.4"
 [lib]
 # refer to https://doc.rust-lang.org/cargo/reference/cargo-targets.html#configuring-a-target
 crate-type = ["cdylib", "rlib"] # this setting has blindly been taken over from the egui template
-
-[profile.release]
-opt-level = 2 # fast and small wasm
