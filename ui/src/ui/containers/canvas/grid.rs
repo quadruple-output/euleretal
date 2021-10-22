@@ -28,7 +28,7 @@ pub fn show(ui: &mut Ui, world: &mut World) {
 
     match operation {
         CanvasOperation::Create { source_canvas } => {
-            let first_scenario = world.scenarios().next().map(|scenario| Rc::clone(scenario));
+            let first_scenario = world.scenarios().next().map(Rc::clone);
             if let Some(any_scenario) = first_scenario {
                 // new canvas:
                 let mut new_canvas = world

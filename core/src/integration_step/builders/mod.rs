@@ -12,4 +12,4 @@ pub use step::{Collector, Step};
 pub use velocity::Velocity;
 
 // DtFraction is publicly exposed as a builder:
-pub use super::contributions::DtFraction;
+pub use super::contributions::{Contribution, DtFraction};

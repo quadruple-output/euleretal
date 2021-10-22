@@ -3,8 +3,7 @@
 #![allow(clippy::non_ascii_literal)]
 #![allow(clippy::multiple_crate_versions)]
 #![allow(incomplete_features)] // for the two `const_*` features below
-#![feature(const_evaluatable_checked)] // used by DtFraction
-#![feature(const_generics)] // used by DtFraction
+#![feature(generic_const_exprs)] // used by DtFraction
 
 mod import {
     pub use ::parry3d::{query::PointQuery, shape};
@@ -34,7 +33,7 @@ pub use duration::Duration;
 pub use fraction::Fraction;
 pub use import::{Point3, Vec3};
 pub use integration::Integration;
-pub use integration_step::{StartCondition, Step};
+pub use integration_step::{Contribution, StartCondition, Step};
 pub use integrator::Integrator;
 pub use obj::Obj;
 pub use position::Position;
@@ -43,6 +42,8 @@ pub use samples::Samples;
 pub use scenario::Scenario;
 use vector_quantity::VectorQuantity;
 pub use velocity::Velocity;
+
+#[derive(Clone, Copy, PartialEq)]
 pub enum PhysicalQuantityKind {
     Position,
     Velocity,

@@ -1,5 +1,7 @@
 use super::{
-    core::{integration_step::computed, Duration, PhysicalQuantityKind, Position, Step},
+    core::{
+        integration_step::computed, Contribution, Duration, PhysicalQuantityKind, Position, Step,
+    },
     entities::CanvasPainter,
     misc::Settings,
 };
@@ -63,34 +65,48 @@ fn explain_derived_position(
 ) {
     // draw vectors first...
     for contribution in position.contributions_iter() {
-        match contribution.kind() {
-            PhysicalQuantityKind::Position => {}
-            PhysicalQuantityKind::Velocity => {
-                canvas.draw_vector(
-                    contribution.sampling_position(),
-                    contribution.vector().unwrap(),
-                    settings.strokes.contributing_velocity,
-                );
-            }
-            PhysicalQuantityKind::Acceleration => {
-                canvas.draw_vector(
-                    contribution.sampling_position(),
-                    contribution.vector().unwrap(),
-                    settings.strokes.contributing_acceleration,
-                );
+        // contributions of kind `_::Position` do not return a vector
+        if let Some(vector) = contribution.vector() {
+            canvas.draw_vector(
+                contribution.sampling_position(),
+                vector,
+                settings.strokes.for_contribution(contribution.kind()),
+            );
+        }
+    }
+    // in case there was no contributing acceleration, draw second-level contributions to
+    // velocities:
+    /*
+    if !position
+        .contributions_iter()
+        .any(|contrib| contrib.kind() == PhysicalQuantityKind::Acceleration)
+    {
+        for velocity_contrib in position
+            .contributions_iter()
+            .filter(|contrib| contrib.kind() == PhysicalQuantityKind::Velocity)
+        {
+            for contrib_second_order in velocity_contrib.contributions_iter() {
+                if contrib_second_order.kind() == PhysicalQuantityKind::Acceleration {
+                    canvas.draw_vector(
+                        contrib_second_order.sampling_position(),
+                        contrib_second_order.vector().unwrap(),
+                        settings
+                            .strokes
+                            .for_contribution(contrib_second_order.kind()),
+                    );
+                }
             }
         }
     }
-    // ...then contributing positions...
+     */
+
+    // ...then contributing positions on top...
     for contribution in position.contributions_iter() {
-        match contribution.kind() {
-            PhysicalQuantityKind::Position => {
-                canvas.draw_sample_point(
-                    contribution.sampling_position(),
-                    &settings.point_formats.start_position,
-                );
-            }
-            PhysicalQuantityKind::Velocity | PhysicalQuantityKind::Acceleration => {}
+        if contribution.vector().is_none() {
+            canvas.draw_sample_point(
+                contribution.sampling_position(),
+                &settings.point_formats.start_position,
+            );
         }
     }
     // ...and finally the derived position itself:
@@ -103,18 +119,23 @@ fn explain_derived_velocity(
     canvas: &CanvasPainter,
     settings: &Settings,
 ) {
+    let scale = f32::from(scale);
     for contribution in velocity.contributions_iter() {
-        canvas.draw_vector(
-            contribution.sampling_position(),
-            contribution.vector() * scale,
-            match contribution.kind() {
-                PhysicalQuantityKind::Position => {
-                    panic!("A position is not expected to contribute to a velocity")
-                }
-                PhysicalQuantityKind::Velocity => settings.strokes.start_velocity,
-                PhysicalQuantityKind::Acceleration => settings.strokes.contributing_acceleration,
-            },
-        );
+        if let Some(vector) = contribution.vector() {
+            canvas.draw_vector(
+                contribution.sampling_position(),
+                vector * scale,
+                match contribution.kind() {
+                    PhysicalQuantityKind::Position => {
+                        panic!("A position is not expected to contribute to a velocity")
+                    }
+                    PhysicalQuantityKind::Velocity => settings.strokes.start_velocity,
+                    PhysicalQuantityKind::Acceleration => {
+                        settings.strokes.contributing_acceleration
+                    }
+                },
+            );
+        }
     }
     canvas.draw_vector(
         velocity.sampling_position(),

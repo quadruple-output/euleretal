@@ -5,7 +5,7 @@ mod variant;
 use super::{
     dt_fraction,
     step::{self, Step},
-    DtFraction,
+    Contribution, DtFraction,
 };
 
 pub use abstraction::Abstraction;

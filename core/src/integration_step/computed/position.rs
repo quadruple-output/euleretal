@@ -55,7 +55,10 @@ impl<'a> Abstraction<'a> {
         self.position.dt_fraction()
     }
 
-    pub fn contributions_iter(&self) -> impl Iterator<Item = contributions::position::Abstraction> {
+    /// note that the return value may live longer than self
+    pub fn contributions_iter<'b>(
+        &'b self,
+    ) -> impl Iterator<Item = contributions::position::Abstraction<'a>> {
         self.position.contributions.abstraction_iter_for(self.step)
     }
 }

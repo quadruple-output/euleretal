@@ -1,3 +1,5 @@
+use super::core::PhysicalQuantityKind;
+
 use super::ui_import::{egui::Painter, Color32, Pos2, Rgba, Stroke, Vec2};
 use ::std::fmt;
 
@@ -105,6 +107,18 @@ impl Default for Strokes {
             contributing_acceleration: Stroke::new(1., col_accel),
             derived_velocity: PointFormats::default().derived_position.stroke,
             reference_velocity: PointFormats::default().reference_position.stroke,
+        }
+    }
+}
+
+impl Strokes {
+    /// # Panics
+    /// Panics if kind is `_::Position`
+    pub fn for_contribution(&self, kind: PhysicalQuantityKind) -> Stroke {
+        match kind {
+            PhysicalQuantityKind::Position => panic!(),
+            PhysicalQuantityKind::Velocity => self.contributing_velocity,
+            PhysicalQuantityKind::Acceleration => self.contributing_acceleration,
         }
     }
 }

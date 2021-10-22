@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use super::integration_step::StartCondition;
-use super::{integration_step::builders::step::Collector, Step as StepBuilder};
+use super::{integration_step::builders::step::Collector, Contribution, Step as StepBuilder};
 use crate::{Acceleration, AccelerationField, Duration, Position, Step, Velocity};
 // not used in super, so we use an absolute path (only for tests!):
 
@@ -110,7 +110,7 @@ fn simple_step_s_v_dt() {
     assert!(contributions.next().is_none());
 
     assert_eq!(first_contribution.sampling_position(), s0);
-    assert_eq!(second_contribution.vector().unwrap(), v0 * dt);
+    assert_eq!(second_contribution.vector().unwrap(), (v0 * dt).into());
 }
 
 #[test]
@@ -149,7 +149,7 @@ fn two_simple_steps_in_sequence() {
     assert!(contributions.next().is_none());
 
     assert_eq!(first_contribution.sampling_position(), s1);
-    assert_eq!(second_contribution.vector().unwrap(), v1 * dt);
+    assert_eq!(second_contribution.vector().unwrap(), (v1 * dt).into());
 }
 
 #[test]
@@ -175,7 +175,7 @@ fn simple_step_s_a_dt_dt() {
     assert!(contributions.next().is_none());
 
     assert_eq!(first_contribution.sampling_position(), s0);
-    assert_eq!(second_contribution.vector().unwrap(), a0 * dt * dt);
+    assert_eq!(second_contribution.vector().unwrap(), (a0 * dt * dt).into());
 }
 
 #[test]
@@ -203,8 +203,11 @@ fn simple_step_s_v_dt_12_a_dt_dt() {
 
     assert_eq!(first_contribution.sampling_position(), s0);
     assert_eq!(third_contribution.sampling_position(), s0);
-    assert_eq!(second_contribution.vector().unwrap(), v0 * dt);
-    assert_eq!(third_contribution.vector().unwrap(), 0.5 * a0 * dt * dt);
+    assert_eq!(second_contribution.vector().unwrap(), (v0 * dt).into());
+    assert_eq!(
+        third_contribution.vector().unwrap(),
+        (0.5 * a0 * dt * dt).into()
+    );
 }
 
 #[test]
@@ -243,9 +246,9 @@ fn euler() {
 
     assert_eq!(s_contrib_1.sampling_position(), s0);
     assert_eq!(s_contrib_2.sampling_position(), s0);
-    assert_eq!(s_contrib_2.vector().unwrap(), v0 * dt);
+    assert_eq!(s_contrib_2.vector().unwrap(), (v0 * dt).into());
     assert_eq!(s_contrib_3.sampling_position(), s0);
-    assert_eq!(s_contrib_3.vector().unwrap(), a0 * dt * dt);
+    assert_eq!(s_contrib_3.vector().unwrap(), (a0 * dt * dt).into());
 
     let mut v_contribs = final_velocity.contributions_iter();
     let v_contrib_1 = v_contribs.next().unwrap();
@@ -253,9 +256,9 @@ fn euler() {
     assert!(v_contribs.next().is_none());
 
     assert_eq!(v_contrib_1.sampling_position(), s0);
-    assert_eq!(v_contrib_1.vector(), v0);
+    assert_eq!(v_contrib_1.vector().unwrap(), v0.into());
     assert_eq!(v_contrib_2.sampling_position(), s0);
-    assert_eq!(v_contrib_2.vector(), a0 * dt);
+    assert_eq!(v_contrib_2.vector().unwrap(), (a0 * dt).into());
 }
 
 #[test]
@@ -321,7 +324,7 @@ fn euler_with_intermediate_v() {
 
     assert_eq!(s_contrib_1.sampling_position(), s0);
     //assert_eq!(s_contrib_2.sampling_position(), s0);
-    assert_eq!(s_contrib_2.vector().unwrap(), v1 * dt);
+    assert_eq!(s_contrib_2.vector().unwrap(), (v1 * dt).into());
 
     let mut v_contribs = final_velocity.contributions_iter();
     let v_contrib_1 = v_contribs.next().unwrap();
@@ -329,9 +332,9 @@ fn euler_with_intermediate_v() {
     assert!(v_contribs.next().is_none());
 
     assert_eq!(v_contrib_1.sampling_position(), s0);
-    assert_eq!(v_contrib_1.vector(), v0);
+    assert_eq!(v_contrib_1.vector().unwrap(), v0.into());
     assert_eq!(v_contrib_2.sampling_position(), s0);
-    assert_eq!(v_contrib_2.vector(), a0 * dt);
+    assert_eq!(v_contrib_2.vector().unwrap(), (a0 * dt).into());
 }
 
 #[test]

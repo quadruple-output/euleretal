@@ -31,7 +31,7 @@ impl Integrator for Euler {
         let dt_mid = dt.half();
         let v_mid = step.compute(v0 + a0 * dt_mid);
         let s_mid = step.compute(s0 + v_mid * dt_mid);
-        step.set_display_position(v_mid, s_mid);
+        //step.set_display_position(v_mid, s_mid);
         let a_mid = step.acceleration_at(s_mid);
         let v1 = step.compute(v0 + a_mid * dt);
         step.compute(s0 + v1 * dt);

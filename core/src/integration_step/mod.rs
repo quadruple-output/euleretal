@@ -4,6 +4,7 @@ mod contributions;
 mod start_condition;
 mod step;
 
+pub use contributions::Contribution;
 pub use start_condition::StartCondition;
 pub use step::Step;
 

@@ -261,7 +261,7 @@ fn show_integrator_selector(
         world
             .integrators()
             .find(|candidate| candidate.as_ptr() == selected_integrator_ptr)
-            .map(|found| Rc::clone(found))
+            .map(Rc::clone)
     }
 }
 
@@ -291,6 +291,6 @@ fn show_step_size_selector(
         world
             .step_sizes()
             .find(|candidate| selected_step_size_ptr == candidate.as_ptr())
-            .map(|found| Rc::clone(found))
+            .map(Rc::clone)
     }
 }

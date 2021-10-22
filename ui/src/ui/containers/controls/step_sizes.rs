@@ -55,7 +55,7 @@ fn show_step_size_table(ui: &mut Ui, world: &World) -> Operation {
 
     egui::Grid::new("integrator grid")
         .striped(false)
-        .show(ui, |mut ui| {
+        .show(ui, |ui| {
             // table header:
             if ui.small_button(constants::BUTTON_GLYPH_ADD).clicked() {
                 operation = Operation::Create;
@@ -85,7 +85,7 @@ fn show_step_size_table(ui: &mut Ui, world: &World) -> Operation {
                 };
                 // edit color:
                 let mut color = step_size.borrow().color;
-                if color_edit_button_hsva(&mut ui, &mut color, Alpha::BlendOrAdditive).changed() {
+                if color_edit_button_hsva(ui, &mut color, Alpha::BlendOrAdditive).changed() {
                     operation = Operation::SetColor(Rc::clone(step_size), color);
                 }
                 // edit label:

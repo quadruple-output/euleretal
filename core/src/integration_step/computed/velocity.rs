@@ -58,8 +58,9 @@ impl<'a> Abstraction<'a> {
         self.step[self.velocity.sampling_position].s
     }
 
-    pub fn contributions_iter(
-        &'a self,
+    /// note that the return value may live longer than self
+    pub fn contributions_iter<'b>(
+        &'b self,
     ) -> impl Iterator<Item = contributions::velocity::Abstraction<'a>> {
         self.velocity.contributions.abstraction_iter_for(self.step)
     }
