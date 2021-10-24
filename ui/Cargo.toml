@@ -11,7 +11,7 @@ keywords = ["Euler", "Runge-Kutta"]
 license = "MIT OR Apache-2.0"
 version = "0.1.0"
 authors = ["quadruple-output <57874618+quadruple-output@users.noreply.github.com>"]
-edition = "2018"
+edition = "2021"
 # more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
