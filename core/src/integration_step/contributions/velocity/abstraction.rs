@@ -12,7 +12,7 @@ impl<'a> Abstraction<'a> {
     }
 }
 
-impl<'a> Contribution<'a> for Abstraction<'a> {
+impl<'abstr> Contribution for Abstraction<'abstr> {
     fn sampling_position(&self) -> Position {
         let step = self.step;
         match self.variant {
@@ -29,27 +29,29 @@ impl<'a> Contribution<'a> for Abstraction<'a> {
         Some(self.variant.evaluate_for(self.step).into())
     }
 
-    fn contributions_iter(&'a self) -> Box<dyn Iterator<Item = Box<dyn Contribution + 'a>> + 'a> {
+    fn contributions_factor(&self) -> f32 {
         match self.variant {
-            Variant::Velocity { v_ref } => Box::new(
-                self.step[v_ref]
-                    .abstraction_for(self.step)
-                    .contributions_iter()
-                    .map(|contrib| {
-                        /*
-                          Why does it have to be so complicated?
+            Variant::Velocity { .. } => 1.,
+            Variant::AccelerationDt {
+                factor,
+                dt_fraction,
+                ..
+            } => factor * dt_fraction,
+        }
+    }
 
-                          see https://stackoverflow.com/questions/52288980/how-does-the-mechanism-behind-the-creation-of-boxed-traits-work
-
-                          and note:
-                          "Coercions are only applied in coercion site like the return value. [or
-                          else] no unsized coercion is performed by the compiler."
-                          [https://stackoverflow.com/questions/65916882/cant-box-a-struct-that-implements-a-trait-as-a-trait-object]
-                        */
-                        let b: Box<dyn Contribution + 'a> = Box::new(contrib);
-                        b
-                    }),
-            ),
+    fn contributions_iter<'a>(
+        &'a self,
+    ) -> Box<dyn Iterator<Item = Box<dyn Contribution + 'a>> + 'a> {
+        match self.variant {
+            Variant::Velocity { v_ref } => {
+                // todo: tidy up
+                let velocity: &'a crate::integration_step::computed::Velocity = &self.step[v_ref];
+                let abstraction: crate::integration_step::computed::velocity::Abstraction<'a> =
+                    velocity.abstraction_for(self.step);
+                let contributions = abstraction.contributions_iter();
+                Box::new(contributions)
+            }
             Variant::AccelerationDt { .. } => Box::new(::std::iter::empty()),
         }
     }

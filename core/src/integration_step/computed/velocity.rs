@@ -1,5 +1,5 @@
 use super::{
-    contributions,
+    contributions::{self, Contribution},
     step::{PositionRef, Step},
 };
 use crate::Position;
@@ -59,9 +59,10 @@ impl<'a> Abstraction<'a> {
     }
 
     /// note that the return value may live longer than self
-    pub fn contributions_iter<'b>(
-        &'b self,
-    ) -> impl Iterator<Item = contributions::velocity::Abstraction<'a>> {
+    #[must_use]
+    pub fn contributions_iter<'slf>(
+        &'slf self,
+    ) -> Box<dyn Iterator<Item = Box<dyn Contribution + 'a>> + 'a> {
         self.velocity.contributions.abstraction_iter_for(self.step)
     }
 }

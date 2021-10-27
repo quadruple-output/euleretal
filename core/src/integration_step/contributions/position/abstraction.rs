@@ -14,7 +14,7 @@ impl<'a> Abstraction<'a> {
     }
 }
 
-impl<'a> Contribution<'a> for Abstraction<'a> {
+impl<'abst> Contribution for Abstraction<'abst> {
     fn sampling_position(&self) -> Position {
         let step = self.step;
         match self.variant {
@@ -37,7 +37,25 @@ impl<'a> Contribution<'a> for Abstraction<'a> {
         }
     }
 
-    fn contributions_iter(&'a self) -> Box<dyn Iterator<Item = Box<dyn Contribution + 'a>> + 'a> {
+    fn contributions_factor(&self) -> f32 {
+        match self.variant {
+            Variant::StartPosition { .. } => 1.,
+            Variant::VelocityDt {
+                factor,
+                dt_fraction,
+                ..
+            }
+            | Variant::AccelerationDtDt {
+                factor,
+                dt_fraction,
+                ..
+            } => factor * dt_fraction,
+        }
+    }
+
+    fn contributions_iter<'a>(
+        &'a self,
+    ) -> Box<dyn Iterator<Item = Box<dyn Contribution + 'a>> + 'a> {
         match self.variant {
             Variant::StartPosition { s_ref } => {
                 let iter = self.step[s_ref]
@@ -64,8 +82,9 @@ impl<'a> Contribution<'a> for Abstraction<'a> {
                     .abstraction_for(self.step)
                     .contributions_iter()
                     .map(|contrib| {
-                        let b: Box<dyn Contribution + 'a> = Box::new(contrib);
-                        b
+                        //let b: Box<dyn Contribution + 'a> = Box::new(contrib);
+                        //b
+                        contrib
                     }),
             ),
             Variant::AccelerationDtDt { .. } => {

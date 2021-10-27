@@ -46,7 +46,16 @@ impl Mul<Duration> for Fraction {
 
 impl Mul<Fraction> for Vec3 {
     type Output = Vec3;
+
     fn mul(self, rhs: Fraction) -> Vec3 {
+        self * f32::from(rhs)
+    }
+}
+
+impl Mul<Fraction> for f32 {
+    type Output = f32;
+
+    fn mul(self, rhs: Fraction) -> Self::Output {
         self * f32::from(rhs)
     }
 }

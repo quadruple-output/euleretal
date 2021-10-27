@@ -47,11 +47,11 @@ impl<F: FractionSpec> Variant<F> {
         }
     }
 
-    pub fn abstraction_scaled_for<'a>(
-        &'a self,
-        step: &'a Step,
+    pub fn abstraction_scaled_for<'step>(
+        &self,
+        step: &'step Step,
         fraction: Fraction,
-    ) -> Abstraction<'a> {
+    ) -> Abstraction<'step> {
         Abstraction::new(
             step,
             match *self {

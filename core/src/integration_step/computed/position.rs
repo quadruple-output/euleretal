@@ -36,6 +36,9 @@ impl Position {
 
     pub(in crate::integration_step) fn dt_fraction(&self) -> Fraction {
         self.contributions.dt_fraction()
+        // Todo: This is wrong. We have to distinguish between the "absolute"
+        // dt_fraction (of the computed position) and the "relative"
+        // dt_fraction (of the contributions)
     }
 }
 
@@ -56,8 +59,8 @@ impl<'a> Abstraction<'a> {
     }
 
     /// note that the return value may live longer than self
-    pub fn contributions_iter<'b>(
-        &'b self,
+    pub fn contributions_iter<'slf>(
+        &'slf self,
     ) -> impl Iterator<Item = contributions::position::Abstraction<'a>> {
         self.position.contributions.abstraction_iter_for(self.step)
     }
