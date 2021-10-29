@@ -53,25 +53,19 @@ impl<'abst> Contribution for Abstraction<'abst> {
         }
     }
 
-    fn contributions_iter<'a>(
-        &'a self,
-    ) -> Box<dyn Iterator<Item = Box<dyn Contribution + 'a>> + 'a> {
+    fn contributions_iter(&self) -> Box<dyn Iterator<Item = Box<dyn Contribution + '_>> + '_> {
         match self.variant {
             Variant::StartPosition { s_ref } => {
                 let iter = self.step[s_ref]
                     .abstraction_for(self.step)
                     .contributions_iter()
-                    .map(|contrib| {
-                        let b: Box<dyn Contribution + 'a> = Box::new(contrib);
-                        b
+                    .map(|contribution| {
+                        Box::new(contribution) as Box<dyn Contribution>
                         /*
-                          Why does it have to be so complicated?
-
-                          see https://stackoverflow.com/questions/52288980/how-does-the-mechanism-behind-the-creation-of-boxed-traits-work
-
-                          and note:
-                          "Coercions are only applied in coercion site like the return value. [or
-                          else] no unsized coercion is performed by the compiler."
+                          Why do we need the cast here, but not below?
+                          ⟶ https://stackoverflow.com/questions/52288980/how-does-the-mechanism-behind-the-creation-of-boxed-traits-work
+                          and note: “Coercions are only applied in coercion site like the return
+                          value. [or else] no unsized coercion is performed by the compiler.”
                           [https://stackoverflow.com/questions/65916882/cant-box-a-struct-that-implements-a-trait-as-a-trait-object]
                         */
                     });
@@ -80,12 +74,7 @@ impl<'abst> Contribution for Abstraction<'abst> {
             Variant::VelocityDt { v_ref, .. } => Box::new(
                 self.step[v_ref]
                     .abstraction_for(self.step)
-                    .contributions_iter()
-                    .map(|contrib| {
-                        //let b: Box<dyn Contribution + 'a> = Box::new(contrib);
-                        //b
-                        contrib
-                    }),
+                    .contributions_iter(),
             ),
             Variant::AccelerationDtDt { .. } => {
                 // accelerations do not have any contributions

@@ -9,7 +9,5 @@ pub trait Contribution {
 
     fn contributions_factor(&self) -> f32;
 
-    fn contributions_iter<'a>(
-        &'a self,
-    ) -> Box<dyn Iterator<Item = Box<dyn Contribution + 'a>> + 'a>;
+    fn contributions_iter(&self) -> Box<dyn Iterator<Item = Box<dyn Contribution + '_>> + '_>;
 }

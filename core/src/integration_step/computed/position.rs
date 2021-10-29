@@ -59,8 +59,8 @@ impl<'a> Abstraction<'a> {
     }
 
     /// note that the return value may live longer than self
-    pub fn contributions_iter<'slf>(
-        &'slf self,
+    pub fn contributions_iter(
+        &self,
     ) -> impl Iterator<Item = contributions::position::Abstraction<'a>> {
         self.position.contributions.abstraction_iter_for(self.step)
     }

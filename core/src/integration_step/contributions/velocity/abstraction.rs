@@ -12,7 +12,7 @@ impl<'a> Abstraction<'a> {
     }
 }
 
-impl<'abstr> Contribution for Abstraction<'abstr> {
+impl<'a> Contribution for Abstraction<'a> {
     fn sampling_position(&self) -> Position {
         let step = self.step;
         match self.variant {
@@ -40,18 +40,11 @@ impl<'abstr> Contribution for Abstraction<'abstr> {
         }
     }
 
-    fn contributions_iter<'a>(
-        &'a self,
-    ) -> Box<dyn Iterator<Item = Box<dyn Contribution + 'a>> + 'a> {
+    fn contributions_iter(&self) -> Box<dyn Iterator<Item = Box<dyn Contribution + '_>> + '_> {
         match self.variant {
-            Variant::Velocity { v_ref } => {
-                // todo: tidy up
-                let velocity: &'a crate::integration_step::computed::Velocity = &self.step[v_ref];
-                let abstraction: crate::integration_step::computed::velocity::Abstraction<'a> =
-                    velocity.abstraction_for(self.step);
-                let contributions = abstraction.contributions_iter();
-                Box::new(contributions)
-            }
+            Variant::Velocity { v_ref } => self.step[v_ref]
+                .abstraction_for(self.step)
+                .contributions_iter(),
             Variant::AccelerationDt { .. } => Box::new(::std::iter::empty()),
         }
     }

@@ -1,4 +1,4 @@
-use super::{dt_fraction::DtFraction, step::Step, Abstraction, Contribution, Variant};
+use super::{dt_fraction::DtFraction, step::Step, Contribution, Variant};
 use crate::Fraction;
 
 #[derive(Default)]
@@ -50,32 +50,19 @@ impl Generic {
         self.inner.is_empty()
     }
 
-    pub(in crate::integration_step) fn abstraction_iter_for<'slf, 'stp>(
-        &'slf self,
-        step: &'stp Step,
-    ) -> Box<dyn Iterator<Item = Box<dyn Contribution + 'stp>> + 'slf>
-    where
-        'stp: 'slf,
-    {
-        let f = self.fraction;
-        let iter: std::iter::Cloned<std::slice::Iter<'slf, Variant<DtFraction<1, 1>>>> =
-            self.inner.iter().cloned();
-        Box::new(iter.map(move |variant| {
+    pub(in crate::integration_step) fn abstraction_iter_for<'a>(
+        &'a self,
+        step: &'a Step,
+    ) -> Box<dyn Iterator<Item = Box<dyn Contribution + 'a>> + 'a> {
+        Box::new(self.inner.iter().map(|variant| {
+            Box::new(variant.abstraction_scaled_for(step, self.fraction)) as Box<dyn Contribution>
             /*
-              Why does it have to be so complicated?
-
-              see https://stackoverflow.com/questions/52288980/how-does-the-mechanism-behind-the-creation-of-boxed-traits-work
-
-              and note:
-              "Coercions are only applied in coercion site like the return value. [or
-              else] no unsized coercion is performed by the compiler."
+              Why do we need the cast here, but not in the line above?
+              ⟶ https://stackoverflow.com/questions/52288980/how-does-the-mechanism-behind-the-creation-of-boxed-traits-work
+              and note: “Coercions are only applied in coercion site like the return
+              value. [or else] no unsized coercion is performed by the compiler.”
               [https://stackoverflow.com/questions/65916882/cant-box-a-struct-that-implements-a-trait-as-a-trait-object]
             */
-            //todo: tidy up
-            let abstraction: Abstraction<'stp> = variant.abstraction_scaled_for(step, f);
-            let box_step: Box<Abstraction<'stp>> = Box::new(abstraction);
-            let dyn_box: Box<dyn Contribution + 'stp> = box_step;
-            dyn_box
         }))
     }
 }

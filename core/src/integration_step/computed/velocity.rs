@@ -13,6 +13,11 @@ pub struct Velocity {
     contributions: contributions::velocity::collection::Generic,
 }
 
+pub struct Abstraction<'a> {
+    step: &'a Step,
+    velocity: &'a Velocity,
+}
+
 impl Velocity {
     pub(in crate::integration_step) fn new<const N: usize, const D: usize>(
         v: crate::Velocity,
@@ -42,11 +47,6 @@ impl Velocity {
     }
 }
 
-pub struct Abstraction<'a> {
-    step: &'a Step,
-    velocity: &'a Velocity,
-}
-
 impl<'a> Abstraction<'a> {
     #[must_use]
     pub fn v(&self) -> crate::Velocity {
@@ -58,11 +58,9 @@ impl<'a> Abstraction<'a> {
         self.step[self.velocity.sampling_position].s
     }
 
-    /// note that the return value may live longer than self
+    /// note that the return value may live longer than &self
     #[must_use]
-    pub fn contributions_iter<'slf>(
-        &'slf self,
-    ) -> Box<dyn Iterator<Item = Box<dyn Contribution + 'a>> + 'a> {
+    pub fn contributions_iter(&self) -> Box<dyn Iterator<Item = Box<dyn Contribution + 'a>> + 'a> {
         self.velocity.contributions.abstraction_iter_for(self.step)
     }
 }
