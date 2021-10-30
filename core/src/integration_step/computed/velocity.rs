@@ -1,8 +1,8 @@
 use super::{
     contributions::{self, Contribution},
+    position,
     step::{PositionRef, Step},
 };
-use crate::Position;
 
 /// This type must be public because it is returned by the impl of
 /// [`::std::ops::Index`] for [`IntegrationStep`]. All members are non-public,
@@ -54,8 +54,9 @@ impl<'a> Abstraction<'a> {
     }
 
     #[must_use]
-    pub fn sampling_position(&self) -> Position {
-        self.step[self.velocity.sampling_position].s
+    pub fn sampling_position(&self) -> position::Abstraction<'a> {
+        let computed_position = &self.step[self.velocity.sampling_position];
+        computed_position.abstraction_for(self.step)
     }
 
     /// note that the return value may live longer than &self

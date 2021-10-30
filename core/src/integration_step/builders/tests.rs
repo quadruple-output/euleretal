@@ -286,7 +286,7 @@ fn can_set_display_position_of_velocity() {
 
     let final_velocity = step.last_computed_velocity();
     assert_eq!(final_velocity.v(), v1);
-    assert_eq!(final_velocity.sampling_position(), s1);
+    assert_eq!(final_velocity.sampling_position().s(), s1);
 }
 
 #[test]
@@ -363,6 +363,6 @@ fn mid_point_euler() {
     let final_position = step.last_computed_position();
     let final_velocity = step.last_computed_velocity();
     assert_eq!(final_position.s(), s1);
-    assert_eq!(final_velocity.sampling_position(), s1);
+    assert_eq!(final_velocity.sampling_position().s(), s1);
     assert_eq!(final_velocity.v(), v1);
 }

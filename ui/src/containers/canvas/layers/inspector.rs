@@ -145,7 +145,7 @@ fn explain_derived_velocity(
         }
     }
     canvas.draw_vector(
-        velocity.sampling_position(),
+        velocity.sampling_position().s(),
         velocity.v() * scale,
         settings.strokes.derived_velocity,
     );
