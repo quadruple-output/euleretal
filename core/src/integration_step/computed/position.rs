@@ -4,6 +4,7 @@ use crate::Fraction;
 /// This type must be public because it is returned by the impl of
 /// [`::std::ops::Index`] for [`IntegrationStep`]. All members are non-public,
 /// however, such that it cannot be used from outside.
+#[derive(Clone)]
 pub struct Position {
     pub(in crate::integration_step) s: crate::Position,
     contributions: contributions::position::collection::Generic,

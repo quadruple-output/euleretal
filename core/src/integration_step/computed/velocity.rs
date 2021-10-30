@@ -7,6 +7,7 @@ use super::{
 /// This type must be public because it is returned by the impl of
 /// [`::std::ops::Index`] for [`IntegrationStep`]. All members are non-public,
 /// however, such that it cannot be used from outside.
+#[derive(Clone)]
 pub struct Velocity {
     pub(in crate::integration_step) v: crate::Velocity,
     pub(in crate::integration_step) sampling_position: PositionRef,
@@ -63,5 +64,11 @@ impl<'a> Abstraction<'a> {
     #[must_use]
     pub fn contributions_iter(&self) -> Box<dyn Iterator<Item = Box<dyn Contribution + 'a>> + 'a> {
         self.velocity.contributions.abstraction_iter_for(self.step)
+    }
+}
+
+impl<'a> PartialEq for Abstraction<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        ::std::ptr::eq(self.velocity, other.velocity)
     }
 }

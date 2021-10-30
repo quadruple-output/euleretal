@@ -1,7 +1,5 @@
 use super::{
-    core::{
-        integration_step::computed, Contribution, Duration, PhysicalQuantityKind, Position, Step,
-    },
+    core::{integration_step::computed, Contribution, Duration, PhysicalQuantityKind, Step},
     entities::CanvasPainter,
     misc::{Settings, StrokeExt},
 };
@@ -30,7 +28,19 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
                     || calc_sample.last_computed_velocity(),
                     |pos| calc_sample.closest_computed_velocity(pos),
                 );
-                highlight_reference_velocity(canvas, ref_sample, settings);
+                if velocity_to_explain == calc_sample.last_computed_velocity() {
+                    highlight_reference_velocity(canvas, ref_sample, settings);
+                } else {
+                    highlight_reference_velocity(
+                        canvas,
+                        &canvas.scenario().borrow().calc_intermediate_sample(
+                            &ref_sample.get_start_condition(),
+                            velocity_to_explain.sampling_position().dt_fraction()
+                                * calc_sample.dt(),
+                        ),
+                        settings,
+                    );
+                }
                 explain_derived_velocity(&velocity_to_explain, calc_sample.dt(), canvas, settings);
             } else {
                 let position_to_explain = pointer_position.map_or_else(
@@ -38,20 +48,20 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
                     |pos| calc_sample.closest_computed_position(pos),
                 );
                 // highlight the ref. position that corresponds to `position_to_explain`
-                highlight_reference_position(
-                    canvas,
-                    if position_to_explain == calc_sample.last_computed_position() {
-                        ref_sample.last_s()
-                    } else {
+                if position_to_explain == calc_sample.last_computed_position() {
+                    highlight_reference_position(canvas, ref_sample, settings);
+                } else {
+                    highlight_reference_position(
+                        canvas,
                         // calculate reference sample corresponding to position_to_explain:
-                        let (s, _v) = canvas.scenario().borrow().calc_intermediate_sample(
+                        &canvas.scenario().borrow().calc_intermediate_sample(
                             &ref_sample.get_start_condition(),
                             position_to_explain.dt_fraction() * calc_sample.dt(),
-                        );
-                        s
-                    },
-                    settings,
-                );
+                        ),
+                        settings,
+                    );
+                };
+                // draw contributing vectors
                 explain_derived_position(&position_to_explain, calc_sample.dt(), canvas, settings);
             }
         }
@@ -66,7 +76,7 @@ fn explain_derived_position(
 ) {
     // draw vectors first...
     for contribution in position.contributions_iter() {
-        draw_contibutions_recursively(&contribution, dt, 1, canvas, settings);
+        draw_contributions_recursively(&contribution, dt, 1, canvas, settings);
         // contributions of kind `_::Position` do not return a vector
         if let Some(vector) = contribution.vector() {
             canvas.draw_vector(
@@ -91,7 +101,7 @@ fn explain_derived_position(
 }
 
 //todo: reduce number of parameters by turning this into a member function
-fn draw_contibutions_recursively(
+fn draw_contributions_recursively(
     contribution: &dyn Contribution,
     factor: Duration,
     recursion_count: usize,
@@ -100,7 +110,7 @@ fn draw_contibutions_recursively(
 ) {
     let factor = factor * contribution.contributions_factor();
     for next_level_contribution in contribution.contributions_iter() {
-        draw_contibutions_recursively(
+        draw_contributions_recursively(
             &*next_level_contribution,
             factor,
             recursion_count + 1,
@@ -122,16 +132,18 @@ fn draw_contibutions_recursively(
 
 fn explain_derived_velocity(
     velocity: &computed::velocity::Abstraction,
-    scale: Duration,
+    dt: Duration,
     canvas: &CanvasPainter,
     settings: &Settings,
 ) {
-    let scale = f32::from(scale);
+    let dt = f32::from(dt) * velocity.sampling_position().dt_fraction();
+    //todo: this is an ad-hoc implementation. In future, it may need a recursion as in
+    //      `explain_derived_position()`.
     for contribution in velocity.contributions_iter() {
         if let Some(vector) = contribution.vector() {
             canvas.draw_vector(
                 contribution.sampling_position(),
-                vector * scale,
+                vector * dt,
                 match contribution.kind() {
                     PhysicalQuantityKind::Position => {
                         panic!("A position is not expected to contribute to a velocity")
@@ -146,13 +158,20 @@ fn explain_derived_velocity(
     }
     canvas.draw_vector(
         velocity.sampling_position().s(),
-        velocity.v() * scale,
+        velocity.v() * dt,
         settings.strokes.derived_velocity,
     );
 }
 
-fn highlight_reference_position(canvas: &CanvasPainter, position: Position, settings: &Settings) {
-    canvas.draw_sample_point(position, &settings.point_formats.reference_position);
+fn highlight_reference_position(
+    canvas: &CanvasPainter,
+    reference_sample: &Step,
+    settings: &Settings,
+) {
+    canvas.draw_sample_point(
+        reference_sample.last_computed_position().s(),
+        &settings.point_formats.reference_position,
+    );
 }
 
 fn highlight_reference_velocity(canvas: &CanvasPainter, ref_sample: &Step, settings: &Settings) {

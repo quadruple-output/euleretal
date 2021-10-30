@@ -28,7 +28,8 @@
   collapsed.
 - Add setting for `Inspector` to not scale velocities by dt (may be useful when
   comparing integrations with different step sizes).
-- Add option to (continuously) synchronize the view point of all canvases.
+- Add option to (continuously) synchronize the view point and scale of all
+  canvases.
 - Add button to move an integration from one canvas to another (possibly new
   one).
 - Group Integrators by number of samples from acceletation field they require.

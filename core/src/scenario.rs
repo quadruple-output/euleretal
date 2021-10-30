@@ -48,11 +48,7 @@ impl Scenario {
     }
 
     #[must_use]
-    pub fn calc_intermediate_sample(
-        &self,
-        start_condition: &StartCondition,
-        dt: Duration,
-    ) -> (Position, Velocity) {
+    pub fn calc_intermediate_sample(&self, start_condition: &StartCondition, dt: Duration) -> Step {
         let (_, samples) = calculate_trajectory_and_samples(
             &*self.acceleration,
             start_condition.position(),
@@ -61,11 +57,7 @@ impl Scenario {
             dt,
             STEPS_PER_DT,
         );
-        let sample = samples.at(0);
-        (
-            sample.last_computed_position().s(),
-            sample.last_computed_velocity().v(),
-        )
+        samples.at(0).clone()
     }
 
     #[must_use]

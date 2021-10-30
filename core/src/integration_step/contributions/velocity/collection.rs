@@ -6,6 +6,7 @@ pub struct Collection<const N: usize, const D: usize>(
     pub(in super::super) Vec<Variant<DtFraction<N, D>>>,
 );
 
+#[derive(Clone)]
 pub struct Generic {
     fraction: Fraction,
     inner: Vec<Variant<DtFraction<1, 1>>>,

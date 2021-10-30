@@ -6,6 +6,7 @@ use super::{
 };
 use crate::{Acceleration, AccelerationField, Duration, Position, Velocity};
 
+#[derive(Clone)]
 pub struct Step {
     dt: Duration,
     positions: Vec<computed::Position>,
