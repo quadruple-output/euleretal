@@ -6,7 +6,11 @@
 #![allow(clippy::multiple_crate_versions)]
 //#![deny(missing_docs)]
 
-mod ui;
+mod app;
+mod containers;
+mod entities;
+mod misc;
+mod world;
 
 mod import {
     pub type Point3 = ::euleretal_core::Point3;
@@ -28,7 +32,8 @@ mod ui_import {
 
 use ::euleretal_content::{integrators, scenarios};
 use ::euleretal_core as core;
-pub use ui::Euleretal;
+pub use app::Euleretal;
+use world::World;
 
 // ----------------------------------------------------------------------------
 // When compiling for web:
