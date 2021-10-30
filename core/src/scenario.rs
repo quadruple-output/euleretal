@@ -105,14 +105,21 @@ fn calculate_trajectory_and_samples(
     let mut samples = Samples::new(iterations);
 
     let mut step = Step::new(&StartCondition::new(s0, v0, a0), dt);
-    for step_count in 1..=iterations {
-        let t1 = (step_count as f32) * dt;
+    let steps_per_dt_float = steps_per_dt as f32;
+    let div_by_steps_per_dt = 1_f32 / steps_per_dt_float;
+    let div_by_6 = 1_f32 / 6_f32;
+    let mut t1 = Duration::default();
+    for _ in 0..iterations {
+        t1 += dt;
         // let mut new_step = Step::new_deprecated(step_capacities, dt);
         // new_step.set_start_condition(&StartCondition::new(s0, v0, a0));
         let mut ti0 = t0;
-        for intermediate_step_count in 1..=steps_per_dt {
-            let ti1 = t0 * ((steps_per_dt - intermediate_step_count) as f32 / steps_per_dt as f32)
-                + t1 * (intermediate_step_count as f32 / steps_per_dt as f32);
+        let mut intermediate_step_count = 0_f32;
+        for _ in 0..steps_per_dt {
+            intermediate_step_count += 1_f32;
+            let ti1 = (t0 * (steps_per_dt_float - intermediate_step_count)
+                + t1 * intermediate_step_count)
+                * div_by_steps_per_dt;
             let h = ti1 - ti0;
 
             a0 = acceleration.value_at(s0);
@@ -121,7 +128,7 @@ fn calculate_trajectory_and_samples(
             let s1_tmp = s0 + v0 * h + 0.5 * a0 * h * h; // Exact for uniform acceleration
             let a1 = acceleration.value_at(s1_tmp);
             let v1 = v0 + 0.5 * (a0 + a1) * h;
-            let s1 = s0 + v0 * h + (2. * a0 + a1) / 6. * h * h;
+            let s1 = s0 + v0 * h + (2. * a0 + a1) * div_by_6 * h * h;
 
             ti0 = ti1;
             s0 = s1;

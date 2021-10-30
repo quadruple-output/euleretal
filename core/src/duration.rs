@@ -1,7 +1,7 @@
 use super::import::OrderedF32;
 use ::std::{
     fmt::Display,
-    ops::{Add, Div, Mul, Sub},
+    ops::{Add, AddAssign, Div, Mul, Sub},
 };
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Ord, Eq, Hash)]
@@ -19,7 +19,7 @@ impl From<Duration> for f32 {
     }
 }
 
-impl Add<Duration> for Duration {
+impl Add for Duration {
     type Output = Self;
 
     fn add(self, rhs: Duration) -> Self::Output {
@@ -27,7 +27,13 @@ impl Add<Duration> for Duration {
     }
 }
 
-impl Sub<Duration> for Duration {
+impl AddAssign for Duration {
+    fn add_assign(&mut self, rhs: Self) {
+        self.0 += rhs.0;
+    }
+}
+
+impl Sub for Duration {
     type Output = Self;
 
     fn sub(self, rhs: Duration) -> Self::Output {
@@ -51,7 +57,7 @@ impl Mul<Duration> for f32 {
     }
 }
 
-impl Div<Duration> for Duration {
+impl Div for Duration {
     type Output = f32;
 
     fn div(self, rhs: Duration) -> Self::Output {
