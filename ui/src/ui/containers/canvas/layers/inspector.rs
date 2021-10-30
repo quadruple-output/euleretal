@@ -3,7 +3,7 @@ use super::{
         integration_step::computed, Contribution, Duration, PhysicalQuantityKind, Position, Step,
     },
     entities::CanvasPainter,
-    misc::Settings,
+    misc::{Settings, StrokeExt},
 };
 
 pub fn render(settings: &Settings, canvas: &CanvasPainter) {
@@ -52,7 +52,7 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
                     },
                     settings,
                 );
-                explain_derived_position(&position_to_explain, canvas, settings);
+                explain_derived_position(&position_to_explain, calc_sample.dt(), canvas, settings);
             }
         }
     });
@@ -60,11 +60,13 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
 
 fn explain_derived_position(
     position: &computed::position::Abstraction,
+    dt: Duration,
     canvas: &CanvasPainter,
     settings: &Settings,
 ) {
     // draw vectors first...
     for contribution in position.contributions_iter() {
+        draw_contibutions_recursively(&contribution, dt, 1, canvas, settings);
         // contributions of kind `_::Position` do not return a vector
         if let Some(vector) = contribution.vector() {
             canvas.draw_vector(
@@ -74,31 +76,6 @@ fn explain_derived_position(
             );
         }
     }
-    // in case there was no contributing acceleration, draw second-level contributions to
-    // velocities:
-    /*
-    if !position
-        .contributions_iter()
-        .any(|contrib| contrib.kind() == PhysicalQuantityKind::Acceleration)
-    {
-        for velocity_contrib in position
-            .contributions_iter()
-            .filter(|contrib| contrib.kind() == PhysicalQuantityKind::Velocity)
-        {
-            for contrib_second_order in velocity_contrib.contributions_iter() {
-                if contrib_second_order.kind() == PhysicalQuantityKind::Acceleration {
-                    canvas.draw_vector(
-                        contrib_second_order.sampling_position(),
-                        contrib_second_order.vector().unwrap(),
-                        settings
-                            .strokes
-                            .for_contribution(contrib_second_order.kind()),
-                    );
-                }
-            }
-        }
-    }
-     */
 
     // ...then contributing positions on top...
     for contribution in position.contributions_iter() {
@@ -111,6 +88,36 @@ fn explain_derived_position(
     }
     // ...and finally the derived position itself:
     canvas.draw_sample_point(position.s(), &settings.point_formats.derived_position);
+}
+
+//todo: reduce number of parameters by turning this into a member function
+fn draw_contibutions_recursively(
+    contribution: &dyn Contribution,
+    factor: Duration,
+    recursion_count: usize,
+    canvas: &CanvasPainter,
+    settings: &Settings,
+) {
+    let factor = factor * contribution.contributions_factor();
+    for next_level_contribution in contribution.contributions_iter() {
+        draw_contibutions_recursively(
+            &*next_level_contribution,
+            factor,
+            recursion_count + 1,
+            canvas,
+            settings,
+        );
+        if let Some(vector) = next_level_contribution.vector() {
+            canvas.draw_vector(
+                next_level_contribution.sampling_position(),
+                vector * f32::from(factor),
+                settings
+                    .strokes
+                    .for_contribution(next_level_contribution.kind())
+                    .modified_for_level(recursion_count),
+            );
+        }
+    }
 }
 
 fn explain_derived_velocity(
