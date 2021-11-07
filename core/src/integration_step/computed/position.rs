@@ -1,5 +1,8 @@
-use super::{contributions, Step};
-use crate::Fraction;
+use super::{
+    contributions::{self, Contribution},
+    Step,
+};
+use crate::{Fraction, PhysicalQuantityKind, Vec3};
 
 /// This type must be public because it is returned by the impl of
 /// [`::std::ops::Index`] for [`IntegrationStep`]. All members are non-public,
@@ -70,5 +73,32 @@ impl<'a> Abstraction<'a> {
 impl<'a> PartialEq for Abstraction<'a> {
     fn eq(&self, other: &Self) -> bool {
         ::std::ptr::eq(self.position, other.position)
+    }
+}
+
+impl<'a> Contribution for Abstraction<'a> {
+    fn sampling_position(&self) -> crate::Position {
+        self.position.s
+    }
+
+    fn kind(&self) -> PhysicalQuantityKind {
+        PhysicalQuantityKind::Position
+    }
+
+    fn vector(&self) -> Option<Vec3> {
+        None
+    }
+
+    fn contributions_factor(&self) -> f32 {
+        // multiplying with dt here (but not in contributions::position::Abstraction) is a bit of
+        // magic. This is the starting point of the recursion, so we inject dt here.
+        (self.position.dt_fraction() * self.step.dt()).into()
+    }
+
+    fn contributions_iter(&self) -> Box<dyn Iterator<Item = Box<dyn Contribution + '_>> + '_> {
+        Box::new(
+            self.contributions_iter()
+                .map(|contribution| Box::new(contribution) as Box<dyn Contribution>),
+        )
     }
 }

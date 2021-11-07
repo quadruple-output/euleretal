@@ -10,4 +10,8 @@ pub trait Contribution {
     fn contributions_factor(&self) -> f32;
 
     fn contributions_iter(&self) -> Box<dyn Iterator<Item = Box<dyn Contribution + '_>> + '_>;
+
+    fn has_contributions(&self) -> bool {
+        self.contributions_iter().next().is_some()
+    }
 }

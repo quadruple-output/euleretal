@@ -62,7 +62,7 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
                     );
                 };
                 // draw contributing vectors
-                explain_derived_position(&position_to_explain, calc_sample.dt(), canvas, settings);
+                explain_derived_position(&position_to_explain, canvas, settings);
             }
         }
     });
@@ -70,22 +70,11 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
 
 fn explain_derived_position(
     position: &computed::position::Abstraction,
-    dt: Duration,
     canvas: &CanvasPainter,
     settings: &Settings,
 ) {
     // draw vectors first...
-    for contribution in position.contributions_iter() {
-        draw_contributions_recursively(&contribution, dt, 1, canvas, settings);
-        // contributions of kind `_::Position` do not return a vector
-        if let Some(vector) = contribution.vector() {
-            canvas.draw_vector(
-                contribution.sampling_position(),
-                vector,
-                settings.strokes.for_contribution(contribution.kind()),
-            );
-        }
-    }
+    draw_contributions_recursively(position, 1., 0, canvas, settings);
 
     // ...then contributing positions on top...
     for contribution in position.contributions_iter() {
@@ -103,24 +92,24 @@ fn explain_derived_position(
 //todo: reduce number of parameters by turning this into a member function
 fn draw_contributions_recursively(
     contribution: &dyn Contribution,
-    factor: Duration,
+    factor: f32,
     recursion_count: usize,
     canvas: &CanvasPainter,
     settings: &Settings,
 ) {
-    let factor = factor * contribution.contributions_factor();
     for next_level_contribution in contribution.contributions_iter() {
-        draw_contributions_recursively(
-            &*next_level_contribution,
-            factor,
-            recursion_count + 1,
-            canvas,
-            settings,
-        );
-        if let Some(vector) = next_level_contribution.vector() {
+        if next_level_contribution.has_contributions() {
+            draw_contributions_recursively(
+                &*next_level_contribution,
+                factor * contribution.contributions_factor(),
+                recursion_count, // + 1, ⟵ would make sense only if we drew the vector below
+                canvas,
+                settings,
+            );
+        } else if let Some(vector) = next_level_contribution.vector() {
             canvas.draw_vector(
                 next_level_contribution.sampling_position(),
-                vector * f32::from(factor),
+                vector * factor,
                 settings
                     .strokes
                     .for_contribution(next_level_contribution.kind())
