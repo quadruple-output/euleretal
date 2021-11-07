@@ -3,8 +3,11 @@ use super::core::{
     Integrator,
 };
 
+#[derive(Debug)]
+#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct ExactForConst;
 
+#[cfg_attr(feature = "persistence", typetag::serde)]
 impl Integrator for ExactForConst {
     fn label(&self) -> String {
         "Exact for const. acceleration".to_string()

@@ -1,11 +1,23 @@
 use super::{AccelerationField, Duration, Position, Samples, StartCondition, Step, Velocity};
 use ::std::{collections::hash_map::DefaultHasher, hash::Hash};
 
+#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct Scenario {
     pub acceleration: Box<dyn AccelerationField>,
     pub start_position: Position,
     pub start_velocity: Velocity,
     pub duration: Duration,
+}
+
+impl ::std::fmt::Debug for Scenario {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Scenario")
+            //.field("acceleration", &self.acceleration)
+            .field("start_position", &self.start_position)
+            .field("start_velocity", &self.start_velocity)
+            .field("duration", &self.duration)
+            .finish()
+    }
 }
 
 const STEPS_PER_DT: usize = 40;

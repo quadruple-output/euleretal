@@ -13,11 +13,9 @@ use super::{
 };
 use ::std::{rc::Rc, time::Instant};
 
-/// We derive Deserialize/Serialize so we can persist app state on shutdown.
-#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct Euleretal {
     world: World,
-    last_update: Instant,
+    last_update: Option<Instant>,
 }
 
 impl Default for Euleretal {
@@ -33,16 +31,10 @@ impl epi::App for Euleretal {
         "euleretal"
     }
 
-    /// Called by the framework to load old app state (if any).
-    #[cfg(feature = "persistence")]
-    fn load(&mut self, storage: &dyn epi::Storage) {
-        *self = epi::get_value(storage, epi::APP_KEY).unwrap_or_default()
-    }
-
-    /// Called by the frame work to save state before shutdown.
     #[cfg(feature = "persistence")]
     fn save(&mut self, storage: &mut dyn epi::Storage) {
-        epi::set_value(storage, epi::APP_KEY, self);
+        println!("saving app state");
+        epi::set_value(storage, epi::APP_KEY, &self.world);
     }
 
     fn setup(
@@ -51,19 +43,22 @@ impl epi::App for Euleretal {
         _frame: &mut epi::Frame<'_>,
         _storage: Option<&dyn epi::Storage>,
     ) {
-        let mut style = (*ctx.style()).clone();
-
-        /* -=- Change Color Scheme to B/W -=- *\
-        style.visuals.widgets.noninteractive.bg_fill = Color32::WHITE;
-        style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(1., Color32::BLACK);
-        */
-        style.visuals.widgets.noninteractive.bg_fill = Color32::BLACK;
-        style.visuals.widgets.noninteractive.fg_stroke =
-            //Stroke::new(1., Rgba::from_rgb(1., 191. / 255., 0.)); // amber
-            Stroke::new(1., Rgba::from_rgb(1., 126. / 255., 0.)); // SAE/ECE amber
-        style.spacing.tooltip_width = 100.; // minimum distance of tooltip from right border (default:400)
-        style.interaction.show_tooltips_only_when_still = false;
-        ctx.set_style(style);
+        #[allow(clippy::used_underscore_binding)]
+        #[cfg(feature = "persistence")]
+        if let Some(storage) = _storage {
+            println!("loading app state");
+            let option = storage.get_string(epi::APP_KEY);
+            if let Some(string) = option {
+                let result = ::ron::from_str::<World>(&string);
+                dbg!(result);
+            }
+            if let Some(saved_world) = epi::get_value(storage, epi::APP_KEY) {
+                self.world = saved_world;
+                return;
+            }
+            println!("…not found");
+        }
+        Self::init_display_style(ctx);
     }
 
     fn max_size_points(&self) -> Vec2 {
@@ -83,11 +78,43 @@ impl epi::App for Euleretal {
         CentralPanel::default().show(ctx, |ui| {
             containers::canvas::grid::show(ui, &mut self.world);
         });
-        let micros = self.last_update.elapsed().as_micros();
-        if micros > 50000 {
-            log::debug!("Frame: {}µs", self.last_update.elapsed().as_micros());
+        if let Some(last_update) = self.last_update {
+            let micros = last_update.elapsed().as_micros();
+            if micros > 50000 {
+                log::debug!("Frame: {}µs", last_update.elapsed().as_micros());
+            }
         }
-        self.last_update = Instant::now();
+        self.last_update = Some(Instant::now());
+        if ctx.input().key_pressed(egui::Key::Q) {
+            _frame.quit();
+        }
+    }
+
+    fn warm_up_enabled(&self) -> bool {
+        false
+    }
+
+    fn on_exit(&mut self) {
+        println!("exiting");
+    }
+
+    fn auto_save_interval(&self) -> std::time::Duration {
+        std::time::Duration::from_secs(30)
+    }
+
+    fn clear_color(&self) -> egui::Rgba {
+        // NOTE: a bright gray makes the shadows of the windows look weird.
+        // We use a bit of transparency so that if the user switches on the
+        // `transparent()` option they get immediate results.
+        egui::Color32::from_rgba_unmultiplied(12, 12, 12, 180).into()
+    }
+
+    fn persist_native_window(&self) -> bool {
+        true
+    }
+
+    fn persist_egui_memory(&self) -> bool {
+        true
     }
 }
 
@@ -96,7 +123,7 @@ impl Euleretal {
     pub fn new() -> Self {
         Self {
             world: World::default(),
-            last_update: Instant::now(),
+            last_update: None,
         }
     }
 
@@ -104,7 +131,7 @@ impl Euleretal {
         let step_size = Rc::clone(self.world.add_step_size(StepSize {
             user_label: UserLabel("default".to_string()),
             duration: 0.11.into(),
-            color: Hsva::from(Color32::YELLOW),
+            color: Color32::YELLOW,
         }));
 
         let _exact_for_const = self.world.add_integrator(Integrator {
@@ -151,5 +178,21 @@ impl Euleretal {
         canvas_center_mass
             .borrow_mut()
             .add_integration(Integration::new(mid_point_euler, step_size));
+    }
+
+    fn init_display_style(ctx: &egui::CtxRef) {
+        let mut style = (*ctx.style()).clone();
+
+        /* -=- Change Color Scheme to B/W -=- *\
+        style.visuals.widgets.noninteractive.bg_fill = Color32::WHITE;
+        style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(1., Color32::BLACK);
+        */
+        style.visuals.widgets.noninteractive.bg_fill = Color32::BLACK;
+        style.visuals.widgets.noninteractive.fg_stroke =
+            //Stroke::new(1., Rgba::from_rgb(1., 191. / 255., 0.)); // amber
+            Stroke::new(1., Rgba::from_rgb(1., 126. / 255., 0.)); // SAE/ECE amber
+        style.spacing.tooltip_width = 100.; // minimum distance of tooltip from right border (default:400)
+        style.interaction.show_tooltips_only_when_still = false;
+        ctx.set_style(style);
     }
 }

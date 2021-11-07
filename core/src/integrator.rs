@@ -1,7 +1,8 @@
 use super::integration_step::builders;
-use ::std::{any::TypeId, collections::hash_map::DefaultHasher, hash::Hash};
+use ::std::{any::TypeId, collections::hash_map::DefaultHasher, fmt::Debug, hash::Hash};
 
-pub trait Integrator: Send + Sync + 'static {
+#[cfg_attr(feature = "persistence", typetag::serde(tag = "type"))]
+pub trait Integrator: Debug + Send + Sync + 'static {
     fn label(&self) -> String;
 
     fn description(&self) -> String;

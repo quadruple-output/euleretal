@@ -5,17 +5,20 @@ use ::std::{
 };
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Ord, Eq, Hash)]
-pub struct Duration(OrderedF32);
+#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
+pub struct Duration {
+    inner: OrderedF32,
+}
 
 impl From<f32> for Duration {
     fn from(n: f32) -> Self {
-        Self(n.into())
+        Self { inner: n.into() }
     }
 }
 
 impl From<Duration> for f32 {
     fn from(d: Duration) -> Self {
-        d.0.into()
+        d.inner.into()
     }
 }
 
@@ -23,13 +26,15 @@ impl Add for Duration {
     type Output = Self;
 
     fn add(self, rhs: Duration) -> Self::Output {
-        Duration(self.0 + rhs.0)
+        Duration {
+            inner: self.inner + rhs.inner,
+        }
     }
 }
 
 impl AddAssign for Duration {
     fn add_assign(&mut self, rhs: Self) {
-        self.0 += rhs.0;
+        self.inner += rhs.inner;
     }
 }
 
@@ -37,7 +42,9 @@ impl Sub for Duration {
     type Output = Self;
 
     fn sub(self, rhs: Duration) -> Self::Output {
-        Duration(self.0 - rhs.0)
+        Duration {
+            inner: self.inner - rhs.inner,
+        }
     }
 }
 
@@ -45,7 +52,9 @@ impl Mul<f32> for Duration {
     type Output = Self;
 
     fn mul(self, rhs: f32) -> Self::Output {
-        Self(self.0 * rhs)
+        Self {
+            inner: self.inner * rhs,
+        }
     }
 }
 
@@ -61,7 +70,7 @@ impl Div for Duration {
     type Output = f32;
 
     fn div(self, rhs: Duration) -> Self::Output {
-        self.0.into_inner() / rhs.0.into_inner()
+        self.inner.into_inner() / rhs.inner.into_inner()
     }
 }
 
@@ -69,12 +78,14 @@ impl Div<f32> for Duration {
     type Output = Self;
 
     fn div(self, rhs: f32) -> Self::Output {
-        Self(self.0 / rhs)
+        Self {
+            inner: self.inner / rhs,
+        }
     }
 }
 
 impl Display for Duration {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt(f)
+        self.inner.fmt(f)
     }
 }

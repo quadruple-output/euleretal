@@ -3,8 +3,11 @@ use super::core::{
     Integrator,
 };
 
+#[derive(Debug)]
+#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct Euler;
 
+#[cfg_attr(feature = "persistence", typetag::serde)]
 impl Integrator for Euler {
     fn label(&self) -> String {
         "Midpoint (explicit, Euler)".to_string()
@@ -38,8 +41,11 @@ impl Integrator for Euler {
     }
 }
 
+#[derive(Debug)]
+#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct SecondOrder;
 
+#[cfg_attr(feature = "persistence", typetag::serde)]
 impl Integrator for SecondOrder {
     fn label(&self) -> String {
         "Midpoint (explicit, SecondOrder)".to_string()

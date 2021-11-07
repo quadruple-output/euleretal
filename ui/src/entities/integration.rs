@@ -1,16 +1,29 @@
 use super::{
     core::{self, Obj, Position, Scenario, Step},
     misc::{BoundingBox, Settings},
-    ui_import::{Color32, Hsva, Stroke},
+    ui_import::{Color32, Stroke},
     Integrator, StepSize,
 };
 use ::std::rc::Rc;
 
+#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct Integration {
+    #[cfg_attr(feature = "persistence", serde(skip))]
     pub core_integration: self::core::Integration,
     pub integrator: Obj<Integrator>,
     pub step_size: Obj<StepSize>,
     current_sample_index: Option<usize>,
+}
+
+impl ::std::fmt::Debug for Integration {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Integration")
+            //.field("core_integration", &self.core_integration)
+            .field("integrator", &self.integrator)
+            .field("step_size", &self.step_size)
+            .field("current_sample_index", &self.current_sample_index)
+            .finish()
+    }
 }
 
 impl Clone for Integration {
@@ -43,7 +56,7 @@ impl Integration {
         self.reset();
     }
 
-    pub fn get_step_color(&self) -> Hsva {
+    pub fn get_step_color(&self) -> Color32 {
         self.step_size.borrow().color
     }
 
@@ -109,7 +122,7 @@ impl Integration {
     }
 
     pub fn draw_on(&self, canvas: &super::CanvasPainter, settings: &Settings) {
-        let sample_color = Color32::from(self.step_size.borrow().color);
+        let sample_color = self.step_size.borrow().color;
         let stroke = self.integrator.borrow().stroke;
         if let Some(samples) = self.core_integration.samples() {
             canvas.draw_sample_trajectory(samples, stroke);

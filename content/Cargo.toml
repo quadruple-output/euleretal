@@ -18,6 +18,18 @@ edition = "2021"
 euleretal-core = { path = "../core" }
 log = "0.4"
 
+[dependencies.serde]
+version = "1"
+optional = true
+
+[dependencies.typetag]
+version = "0.1"
+optional = true
+
 [lib]
 # refer to https://doc.rust-lang.org/cargo/reference/cargo-targets.html#configuring-a-target
 crate-type = ["cdylib", "rlib"] # this setting has blindly been taken over from the egui template
+
+[features]
+default = []
+persistence = ["typetag", "serde"]

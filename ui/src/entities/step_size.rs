@@ -1,9 +1,11 @@
 use super::{core::Duration, misc::UserLabel, ui_import::egui};
 
+#[derive(Debug)]
+#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct StepSize {
     pub user_label: UserLabel,
     pub duration: Duration,
-    pub color: egui::color::Hsva,
+    pub color: egui::color::Color32,
 }
 
 impl std::fmt::Display for StepSize {

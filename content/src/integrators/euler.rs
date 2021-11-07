@@ -3,8 +3,11 @@ use super::core::{
     Integrator,
 };
 
+#[derive(Debug)]
+#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct Broken;
 
+#[cfg_attr(feature = "persistence", typetag::serde)]
 impl Integrator for Broken {
     fn label(&self) -> String {
         "Broken Euler".to_string()
@@ -60,8 +63,11 @@ mod test_broken_euler {
     }
 }
 
+#[derive(Debug)]
+#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct Euler;
 
+#[cfg_attr(feature = "persistence", typetag::serde)]
 impl Integrator for Euler {
     fn label(&self) -> String {
         "Euler".to_string()

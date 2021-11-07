@@ -16,9 +16,14 @@ pub struct Integration {
     ref_sample_validity: u64,
 }
 
+impl Default for Integration {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Integration {
     #[must_use]
-    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {
             samples: None,

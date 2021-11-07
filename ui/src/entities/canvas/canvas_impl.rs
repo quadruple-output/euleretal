@@ -8,6 +8,7 @@ use super::{
 };
 use ::std::{cell::RefCell, rc::Rc};
 
+#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct Canvas {
     scenario: Obj<Scenario>,
     pub(super) integrations: Vec<Obj<Integration>>,
@@ -15,8 +16,27 @@ pub struct Canvas {
     pub(super) focus: Point3,
     scale: Vec3,
     area_center: Pos2,
+    #[cfg_attr(feature = "persistence", serde(skip))]
     pub(super) trajectory_buffer: Option<TrajectoryBuffer>,
     pub ui_integrations_window_is_open: bool,
+}
+
+impl ::std::fmt::Debug for Canvas {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Canvas")
+            .field("scenario", &self.scenario)
+            .field("integrations", &self.integrations)
+            .field("visible_units", &self.visible_units)
+            .field("focus", &self.focus)
+            .field("scale", &self.scale)
+            .field("area_center", &self.area_center)
+            //.field("trajectory_buffer", &self.trajectory_buffer)
+            .field(
+                "ui_integrations_window_is_open",
+                &self.ui_integrations_window_is_open,
+            )
+            .finish()
+    }
 }
 
 pub trait ObjExtras {

@@ -195,7 +195,7 @@ fn show_integrations_pop_up(
                             integration.borrow().get_stroke(),
                             Some((
                                 &world.settings.point_formats.derived_position,
-                                integration.borrow().get_step_color().into(),
+                                integration.borrow().get_step_color(),
                             )),
                         );
                         // wrappind the combobox in a horizontal ui help aligning the grid

@@ -16,11 +16,21 @@ edition = "2021"
 
 [dependencies]
 parry3d = "0.7" # geometric and collision detection libraries, including `nalgebra`
-#nalgebra = "0.29"
-ordered-float = "2" # Total ordering (and more) for floating-point types
-#fraction = { version = "0.9", default-features = false }
 log = "0.4"
 simple_logger = "1"
+
+[dependencies.ordered-float]
+# Total ordering (and more) for floating-point types
+version = "2"
+
+[dependencies.serde] # serialization/deserialization framework
+version = "1"
+features = ["derive"]
+optional = true 
+
+[dependencies.typetag] # Serde serializable and deserializable trait objects
+version = "0.1"
+optional = true
 
 [lib]
 # refer to https://doc.rust-lang.org/cargo/reference/cargo-targets.html#configuring-a-target
@@ -28,3 +38,4 @@ crate-type = ["cdylib", "rlib"] # this setting has blindly been taken over from 
 
 [features]
 default = []
+persistence = ["ordered-float/serde", "parry3d/serde-serialize", "serde", "typetag"]

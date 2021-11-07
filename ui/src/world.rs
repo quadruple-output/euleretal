@@ -6,7 +6,8 @@ use super::{
     misc::Settings,
 };
 
-#[derive(Default)]
+#[derive(Debug, Default)]
+#[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
 pub struct World {
     canvases: Vec<Obj<Canvas>>,
     scenarios: Vec<Obj<Scenario>>,

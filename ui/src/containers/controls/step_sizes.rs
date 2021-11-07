@@ -9,7 +9,7 @@ use super::{
             color_picker::{color_edit_button_hsva, Alpha},
             Slider, TextEdit,
         },
-        Hsva, Ui,
+        Color32, Hsva, Ui,
     },
     World,
 };
@@ -20,7 +20,7 @@ enum Operation {
     Create,
     Delete(Obj<StepSize>),
     SetDuration(Obj<StepSize>, Duration),
-    SetColor(Obj<StepSize>, Hsva),
+    SetColor(Obj<StepSize>, Color32),
     SetLabel(Obj<StepSize>, String),
 }
 
@@ -31,7 +31,7 @@ pub fn show(ui: &mut Ui, world: &mut World) {
             world.add_step_size(StepSize {
                 user_label: UserLabel("".into()),
                 duration: 0.5.into(),
-                color: Hsva::default(),
+                color: Color32::default(),
             });
         }
         Operation::Delete(step_size) => {
@@ -84,9 +84,9 @@ fn show_step_size_table(ui: &mut Ui, world: &World) -> Operation {
                     operation = Operation::SetDuration(Rc::clone(step_size), dt.into());
                 };
                 // edit color:
-                let mut color = step_size.borrow().color;
+                let mut color: Hsva = step_size.borrow().color.into();
                 if color_edit_button_hsva(ui, &mut color, Alpha::BlendOrAdditive).changed() {
-                    operation = Operation::SetColor(Rc::clone(step_size), color);
+                    operation = Operation::SetColor(Rc::clone(step_size), color.into());
                 }
                 // edit label:
                 let mut label = step_size.borrow().user_label.clone();
