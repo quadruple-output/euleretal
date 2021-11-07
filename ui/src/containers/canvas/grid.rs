@@ -8,7 +8,7 @@ use super::{
 };
 
 pub fn show(ui: &mut Ui, world: &mut World) {
-    let panel_size = ui.available_size_before_wrap_finite();
+    let panel_size = ui.available_size_before_wrap();
     let canvas_count = world.canvases().count();
     #[allow(clippy::cast_precision_loss)]
     let view_size = Vec2::new(panel_size.x, panel_size.y / canvas_count as f32);
