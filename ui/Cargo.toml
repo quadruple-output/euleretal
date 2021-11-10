@@ -22,7 +22,7 @@ nalgebra = "0.29"
 #fraction = { version = "0.9", default-features = false }
 log = "0.4"
 simple_logger = "1"
-ron = "0.7" # todo: remove
+ron = "0.7"
 
 [dependencies.eframe] # gives us egui, epi and web+native backends
 version = "0.15"

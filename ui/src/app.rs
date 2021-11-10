@@ -33,8 +33,10 @@ impl epi::App for Euleretal {
 
     #[cfg(feature = "persistence")]
     fn save(&mut self, storage: &mut dyn epi::Storage) {
-        println!("saving app state");
-        epi::set_value(storage, epi::APP_KEY, &self.world);
+        log::info!("Saving app state");
+        // We don't want no silly newline escape characters in the save file.
+        // epi::set_value(storage, epi::APP_KEY, &self.world);
+        storage.set_string(epi::APP_KEY, ::ron::ser::to_string(&self.world).unwrap());
     }
 
     fn setup(
@@ -43,20 +45,21 @@ impl epi::App for Euleretal {
         _frame: &mut epi::Frame<'_>,
         _storage: Option<&dyn epi::Storage>,
     ) {
-        #[allow(clippy::used_underscore_binding)]
         #[cfg(feature = "persistence")]
+        #[allow(clippy::used_underscore_binding)]
         if let Some(storage) = _storage {
-            println!("loading app state");
-            let option = storage.get_string(epi::APP_KEY);
-            if let Some(string) = option {
-                let result = ::ron::from_str::<World>(&string);
-                dbg!(result);
+            // ** shorter, but without error diagnostics:
+            // if let Some(saved_world) = epi::get_value(storage, epi::APP_KEY) { self.world = saved_world; return; }
+            if let Some(string) = storage.get_string(epi::APP_KEY) {
+                match ::ron::from_str(&string) {
+                    Ok(world) => {
+                        self.world = world;
+                        log::info!("Restored previous app state");
+                        return;
+                    }
+                    Err(err) => log::error!("Cannot restore previous app state: {}", err),
+                }
             }
-            if let Some(saved_world) = epi::get_value(storage, epi::APP_KEY) {
-                self.world = saved_world;
-                return;
-            }
-            println!("…not found");
         }
         Self::init_display_style(ctx);
     }
@@ -95,11 +98,11 @@ impl epi::App for Euleretal {
     }
 
     fn on_exit(&mut self) {
-        println!("exiting");
+        log::info!("exiting");
     }
 
     fn auto_save_interval(&self) -> std::time::Duration {
-        std::time::Duration::from_secs(30)
+        std::time::Duration::from_secs(10)
     }
 
     fn clear_color(&self) -> egui::Rgba {
