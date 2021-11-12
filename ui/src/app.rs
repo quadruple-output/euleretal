@@ -15,7 +15,7 @@ use ::std::{rc::Rc, time::Instant};
 
 pub struct Euleretal {
     world: World,
-    last_update: Option<Instant>,
+    last_update_instant: Option<Instant>,
 }
 
 impl Default for Euleretal {
@@ -28,7 +28,18 @@ impl Default for Euleretal {
 
 impl epi::App for Euleretal {
     fn name(&self) -> &str {
-        "euleretal"
+        "Euler et al."
+    }
+
+    fn setup(
+        &mut self,
+        ctx: &egui::CtxRef,
+        _frame: &mut epi::Frame<'_>,
+        storage: Option<&dyn epi::Storage>,
+    ) {
+        if self.try_load_app_state(storage).is_err() {
+            Self::init_display_style(ctx);
+        }
     }
 
     #[cfg(feature = "persistence")]
@@ -39,66 +50,22 @@ impl epi::App for Euleretal {
         storage.set_string(epi::APP_KEY, ::ron::ser::to_string(&self.world).unwrap());
     }
 
-    fn setup(
-        &mut self,
-        ctx: &egui::CtxRef,
-        _frame: &mut epi::Frame<'_>,
-        _storage: Option<&dyn epi::Storage>,
-    ) {
-        #[cfg(feature = "persistence")]
-        #[allow(clippy::used_underscore_binding)]
-        if let Some(storage) = _storage {
-            // ** shorter, but without error diagnostics:
-            // if let Some(saved_world) = epi::get_value(storage, epi::APP_KEY) { self.world = saved_world; return; }
-            if let Some(string) = storage.get_string(epi::APP_KEY) {
-                match ::ron::from_str(&string) {
-                    Ok(world) => {
-                        self.world = world;
-                        log::info!("Restored previous app state");
-                        return;
-                    }
-                    Err(err) => log::error!("Cannot restore previous app state: {}", err),
-                }
-            }
-        }
-        Self::init_display_style(ctx);
+    fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
+        SidePanel::left("side_panel").show(ctx, |ui| {
+            containers::controls::show(ui, &mut self.world);
+            containers::settings::show(ui, &mut self.world.settings);
+        });
+        CentralPanel::default().show(ctx, |ui| {
+            containers::canvas::grid::show(ui, &mut self.world);
+        });
+        self.log_frame_rate();
+        Self::global_control(ctx, frame); // quits the app on user's request
     }
 
     fn max_size_points(&self) -> Vec2 {
         // Some browsers get slow with huge WebGL canvases, so we limit the size:
         //Vec2::new(1024.0, 2048.0)
         Vec2::new(4096.0, 4096.0)
-    }
-
-    /// Called each time the UI needs repainting, which may be many times per second.
-    /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
-    fn update(&mut self, ctx: &egui::CtxRef, _frame: &mut epi::Frame<'_>) {
-        SidePanel::left("side_panel").show(ctx, |ui| {
-            containers::controls::show(ui, &mut self.world);
-            containers::settings::show(ui, &mut self.world.settings);
-        });
-
-        CentralPanel::default().show(ctx, |ui| {
-            containers::canvas::grid::show(ui, &mut self.world);
-        });
-        if let Some(last_update) = self.last_update {
-            let micros = last_update.elapsed().as_micros();
-            if micros > 50000 {
-                log::debug!("Frame: {}µs", last_update.elapsed().as_micros());
-            }
-        }
-        self.last_update = Some(Instant::now());
-        if ctx.input().key_pressed(egui::Key::Q) {
-            _frame.quit();
-        }
-    }
-
-    fn warm_up_enabled(&self) -> bool {
-        false
-    }
-
-    fn on_exit(&mut self) {
-        log::info!("exiting");
     }
 
     fn auto_save_interval(&self) -> std::time::Duration {
@@ -119,6 +86,14 @@ impl epi::App for Euleretal {
     fn persist_egui_memory(&self) -> bool {
         true
     }
+
+    fn warm_up_enabled(&self) -> bool {
+        false
+    }
+
+    fn on_exit(&mut self) {
+        log::debug!("exiting");
+    }
 }
 
 impl Euleretal {
@@ -126,7 +101,7 @@ impl Euleretal {
     pub fn new() -> Self {
         Self {
             world: World::default(),
-            last_update: None,
+            last_update_instant: None,
         }
     }
 
@@ -197,5 +172,44 @@ impl Euleretal {
         style.spacing.tooltip_width = 100.; // minimum distance of tooltip from right border (default:400)
         style.interaction.show_tooltips_only_when_still = false;
         ctx.set_style(style);
+    }
+
+    fn try_load_app_state(&mut self, _storage: Option<&dyn epi::Storage>) -> Result<(), ()> {
+        #[cfg(feature = "persistence")]
+        #[allow(clippy::used_underscore_binding)]
+        if let Some(storage) = _storage {
+            // ** shorter, but without error diagnostics:
+            // if let Some(saved_world) = epi::get_value(storage, epi::APP_KEY) { self.world = saved_world; return; }
+            if let Some(string) = storage.get_string(epi::APP_KEY) {
+                match ::ron::from_str(&string) {
+                    Ok(world) => {
+                        self.world = world;
+                        log::info!("Restored previous app state");
+                        return Ok(());
+                    }
+                    Err(err) => {
+                        log::error!("Cannot restore previous app state: {}", err);
+                    }
+                }
+            }
+        }
+        Err(())
+    }
+
+    fn log_frame_rate(&mut self) {
+        if let Some(last_update_instant) = self.last_update_instant {
+            let micros = last_update_instant.elapsed().as_micros();
+            if micros > 50000 {
+                log::debug!("Frame: {}µs", last_update_instant.elapsed().as_micros());
+            }
+        }
+        self.last_update_instant = Some(Instant::now());
+    }
+
+    /// interprets hotkeys or other commands not covered locally by UI controls
+    fn global_control(ctx: &egui::CtxRef, frame: &mut epi::Frame) {
+        if ctx.input().key_pressed(egui::Key::Q) {
+            frame.quit();
+        }
     }
 }
