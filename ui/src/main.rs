@@ -13,8 +13,8 @@ fn main() {
     use ::simple_logger::SimpleLogger;
 
     SimpleLogger::new()
-        .with_level(LevelFilter::Off)
-        .with_module_level("euleretal", LevelFilter::Info)
+        .with_level(LevelFilter::Info)
+        .env()
         .with_timestamps(false)
         .init()
         .unwrap();

@@ -20,7 +20,7 @@ pub fn render(settings: &Settings, canvas: &mut CanvasPainter) {
         updated |= integration.update(&*scenario);
     });
     if updated {
-        log::info!(
+        log::debug!(
             "Render Canvas: integrate: {}µs",
             start.elapsed().as_micros()
         );
@@ -35,6 +35,6 @@ pub fn render(settings: &Settings, canvas: &mut CanvasPainter) {
         integration.draw_on(canvas, settings);
     });
     if updated {
-        log::info!("Render Canvas: draw: {}µs", start.elapsed().as_micros());
+        log::debug!("Render Canvas: draw: {}µs", start.elapsed().as_micros());
     }
 }

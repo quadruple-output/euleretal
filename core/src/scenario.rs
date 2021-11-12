@@ -50,7 +50,7 @@ impl Scenario {
             self.duration,
             num_steps,
         );
-        log::info!(
+        log::debug!(
             "{}: trajectory with {} segments: {}µs",
             self.label(),
             trajectory.len(),
@@ -86,7 +86,7 @@ impl Scenario {
             dt,
             STEPS_PER_DT,
         );
-        log::info!(
+        log::debug!(
             "{}: {} reference samples: {}µs",
             self.label(),
             samples.len(),

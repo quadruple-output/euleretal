@@ -15,7 +15,6 @@ use ::std::{rc::Rc, time::Instant};
 
 pub struct Euleretal {
     world: World,
-    last_update_instant: Option<Instant>,
 }
 
 impl Default for Euleretal {
@@ -44,21 +43,22 @@ impl epi::App for Euleretal {
 
     #[cfg(feature = "persistence")]
     fn save(&mut self, storage: &mut dyn epi::Storage) {
-        log::info!("Saving app state");
+        log::debug!("Saving app state");
         // We don't want no silly newline escape characters in the save file.
         // epi::set_value(storage, epi::APP_KEY, &self.world);
         storage.set_string(epi::APP_KEY, ::ron::ser::to_string(&self.world).unwrap());
     }
 
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
-        SidePanel::left("side_panel").show(ctx, |ui| {
-            containers::controls::show(ui, &mut self.world);
-            containers::settings::show(ui, &mut self.world.settings);
+        Self::log_frame_rate(|| {
+            SidePanel::left("side_panel").show(ctx, |ui| {
+                containers::controls::show(ui, &mut self.world);
+                containers::settings::show(ui, &mut self.world.settings);
+            });
+            CentralPanel::default().show(ctx, |ui| {
+                containers::canvas::grid::show(ui, &mut self.world);
+            });
         });
-        CentralPanel::default().show(ctx, |ui| {
-            containers::canvas::grid::show(ui, &mut self.world);
-        });
-        self.log_frame_rate();
         Self::global_control(ctx, frame); // quits the app on user's request
     }
 
@@ -101,7 +101,6 @@ impl Euleretal {
     pub fn new() -> Self {
         Self {
             world: World::default(),
-            last_update_instant: None,
         }
     }
 
@@ -184,7 +183,7 @@ impl Euleretal {
                 match ::ron::from_str(&string) {
                     Ok(world) => {
                         self.world = world;
-                        log::info!("Restored previous app state");
+                        log::debug!("Restored previous app state");
                         return Ok(());
                     }
                     Err(err) => {
@@ -196,14 +195,16 @@ impl Euleretal {
         Err(())
     }
 
-    fn log_frame_rate(&mut self) {
-        if let Some(last_update_instant) = self.last_update_instant {
-            let micros = last_update_instant.elapsed().as_micros();
-            if micros > 50000 {
-                log::debug!("Frame: {}µs", last_update_instant.elapsed().as_micros());
-            }
+    fn log_frame_rate(draw: impl FnOnce()) {
+        let last_update_instant = Instant::now();
+        draw();
+        let micros = last_update_instant.elapsed().as_micros();
+        if micros > 50000 {
+            log::info!(
+                "slow frame: {}µs",
+                last_update_instant.elapsed().as_micros()
+            );
         }
-        self.last_update_instant = Some(Instant::now());
     }
 
     /// interprets hotkeys or other commands not covered locally by UI controls
