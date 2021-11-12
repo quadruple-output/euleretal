@@ -107,7 +107,7 @@ impl Integration {
         }
         let result = samples.finalized();
 
-        log::info!("{}: {}µs", integrator.label(), start.elapsed().as_micros());
+        log::debug!("{}: {}µs", integrator.label(), start.elapsed().as_micros());
         result
     }
 
