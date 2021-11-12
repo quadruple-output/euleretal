@@ -31,3 +31,19 @@ impl Integrator for ExactForConst {
         step.compute(s + v * dt + 0.5 * a * dt * dt);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::integrators::test_util::TestSetup;
+
+    #[test]
+    fn exact_for_const() {
+        let ctx = TestSetup::default();
+        ctx.assert_first_step(&ExactForConst, |s0, v0, a0, _a, dt| {
+            let s1 = s0 + v0 * dt + 0.5 * a0 * dt * dt;
+            let v1 = v0 + a0 * dt;
+            (s1, v1)
+        });
+    }
+}

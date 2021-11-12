@@ -74,3 +74,34 @@ impl Integrator for SecondOrder {
         step.compute(v0 + a_mid * dt);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::integrators::test_util::TestSetup;
+
+    #[test]
+    fn mid_point_euler() {
+        let ctx = TestSetup::default();
+        ctx.assert_first_step(&Euler, |s0, v0, a0, a, dt| {
+            let dt_half = 0.5 * dt;
+            let v_mid = v0 + a0 * dt_half;
+            let a_mid = a.value_at(s0 + v_mid * dt_half);
+            let v1 = v0 + a_mid * dt;
+            let s1 = s0 + v1 * dt;
+            (s1, v1)
+        });
+    }
+
+    #[test]
+    fn mid_point_second_order() {
+        let ctx = TestSetup::default();
+        ctx.assert_first_step(&SecondOrder, |s0, v0, a0, a, dt| {
+            let dt_half = 0.5 * dt;
+            let a_mid = a.value_at(s0 + v0 * dt_half + 0.5 * a0 * dt_half * dt_half);
+            let v1 = v0 + a_mid * dt;
+            let s1 = s0 + v0 * dt + 0.5 * a_mid * dt * dt;
+            (s1, v1)
+        });
+    }
+}

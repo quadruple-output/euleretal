@@ -27,39 +27,8 @@ impl Integrator for Broken {
         dt: builders::DtFraction<1, 1>,
         step: &mut builders::Step,
     ) {
-        step.compute(v + a * dt);
         step.compute(s + v * dt);
-    }
-}
-
-#[cfg(test)]
-mod test_broken_euler {
-    use super::*;
-    use crate::core::{Acceleration, Position, StartCondition, Step, Velocity};
-
-    #[test]
-    fn first_test() {
-        let start = StartCondition::new(
-            Position::origin(),
-            Velocity::new(0., 0., 0.),
-            Acceleration::new(1., 0., 0.),
-        );
-        let dt = 1.0.into();
-        let integrator = Broken;
-        let field = crate::scenarios::ConstantAcceleration;
-        let mut step = Step::new(&start, dt);
-        {
-            let mut builder = crate::core::integration_step::builders::Step::new(&field, &mut step);
-            let ((s, v, a), dt) = (builder.start_values(), builder.dt());
-            integrator.integrate_step(s, v, a, dt, &mut builder);
-        }
-
-        let (s, v, a) = (start.position(), start.velocity(), start.acceleration());
-        let v1 = v + a * dt;
-        let s1 = s + v * dt;
-
-        assert!(step.last_v() == v1);
-        assert!(step.last_s() == s1);
+        step.compute(v + a * dt);
     }
 }
 
@@ -90,5 +59,31 @@ impl Integrator for Euler {
     ) {
         let v1 = step.compute(v + a * dt);
         step.compute(s + v1 * dt);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::integrators::test_util::TestSetup;
+
+    #[test]
+    fn euler() {
+        let ctx = TestSetup::default();
+        ctx.assert_first_step(&Euler, |s0, v0, a0, _a, dt| {
+            let v1 = v0 + a0 * dt;
+            let s1 = s0 + v1 * dt;
+            (s1, v1)
+        });
+    }
+
+    #[test]
+    fn broken_euler() {
+        let ctx = TestSetup::default();
+        ctx.assert_first_step(&Broken, |s0, v0, a0, _a, dt| {
+            let v1 = v0 + a0 * dt;
+            let s1 = s0 + v0 * dt;
+            (s1, v1)
+        });
     }
 }
