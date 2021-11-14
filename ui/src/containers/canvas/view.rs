@@ -3,7 +3,6 @@ use super::{
     core::Obj,
     entities::{Canvas, Integration, Integrator, ObjExtras, StepSize},
     layers,
-    misc::Settings,
     ui_import::{
         egui::{self, Layout},
         Pos2, Ui, Vec2,
@@ -34,19 +33,19 @@ pub enum CanvasOperation<'a> {
     Close { canvas: *const RefCell<Canvas> },
 }
 
-pub fn show_canvas(ui: &mut Ui, canvas: &RefCell<Canvas>, size: Vec2, settings: &Settings) {
+pub fn show_canvas(ui: &mut Ui, canvas: &RefCell<Canvas>, size: Vec2, world: &World) {
     let mut canvas_painter = canvas.allocate_painter(ui, size);
 
     canvas_painter.pan_and_zoom();
-    if settings.layerflags.coordinates {
-        layers::coordinates::render(&settings.strokes, &canvas_painter);
+    if world.settings.layerflags.coordinates {
+        layers::coordinates::render(&world.settings.strokes, &canvas_painter);
     }
-    if settings.layerflags.acceleration_field {
-        layers::acceleration_field::render(settings, &canvas_painter);
+    if world.settings.layerflags.acceleration_field {
+        layers::acceleration_field::render(&canvas_painter, world);
     }
-    layers::integrations::render(settings, &mut canvas_painter);
-    if settings.layerflags.inspector {
-        layers::inspector::render(settings, &canvas_painter);
+    layers::integrations::render(&mut canvas_painter, world);
+    if world.settings.layerflags.inspector {
+        layers::inspector::render(&canvas_painter, world);
     }
 }
 
@@ -81,28 +80,25 @@ pub fn show_header_bar<'a>(
 
 fn show_scenario_selector(ui: &mut Ui, canvas: &RefCell<Canvas>, world: &World) {
     let selector_id = ui.make_persistent_id(format!("scenario_selector_{:?}", canvas.as_ptr()));
-    let canvas_scenario_obj = Rc::clone(canvas.borrow().scenario());
-    let mut selected_scenario_ptr = canvas_scenario_obj.as_ptr();
-    let canvas_scenario = canvas_scenario_obj.borrow();
+    let canvas_scenario_idx = canvas.borrow().scenario_idx();
+    let canvas_scenario = &world.scenarios()[canvas_scenario_idx];
+    let mut selected_scenario_idx = canvas_scenario_idx;
     egui::ComboBox::from_id_source(selector_id)
-        .selected_text(canvas_scenario.label())
+        .selected_text(canvas_scenario.borrow().label())
         .show_ui(ui, |ui| {
-            for selectable_scenario in world.scenarios() {
-                ui.selectable_value(
-                    &mut selected_scenario_ptr,
-                    selectable_scenario.as_ptr(),
-                    selectable_scenario.borrow().label(),
-                );
-            }
+            world
+                .scenarios()
+                .enumerate()
+                .for_each(|(each_idx, each_scenario)| {
+                    ui.selectable_value(
+                        &mut selected_scenario_idx,
+                        each_idx,
+                        each_scenario.borrow().label(),
+                    );
+                });
         });
-    if selected_scenario_ptr != canvas_scenario_obj.as_ptr() {
-        let selected_scenario = world
-            .scenarios()
-            .find(|s| s.as_ptr() == selected_scenario_ptr)
-            .unwrap();
-        canvas
-            .borrow_mut()
-            .set_scenario(Rc::clone(selected_scenario));
+    if selected_scenario_idx != canvas_scenario_idx {
+        canvas.borrow_mut().set_scenario(selected_scenario_idx);
     }
 }
 

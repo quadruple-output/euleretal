@@ -1,5 +1,3 @@
-use ::std::rc::Rc;
-
 use super::{
     entities::Canvas,
     ui_import::{Ui, Vec2},
@@ -23,7 +21,7 @@ pub fn show(ui: &mut Ui, world: &mut World) {
             operation = header_bar.inner;
         }
         let inner_size = Vec2::new(view_size.x, view_size.y - header_bar.response.rect.height());
-        view::show_canvas(ui, canvas, inner_size, &world.settings);
+        view::show_canvas(ui, canvas, inner_size, world);
     });
 
     match operation {
@@ -31,7 +29,7 @@ pub fn show(ui: &mut Ui, world: &mut World) {
             let mut new_canvas;
             {
                 let source_canvas = source_canvas.borrow();
-                new_canvas = Canvas::new(Rc::clone(source_canvas.scenario()));
+                new_canvas = Canvas::new(source_canvas.scenario_idx());
                 // copy canvas integrations:
                 source_canvas.integrations().for_each(|integration| {
                     let integration = integration.borrow();

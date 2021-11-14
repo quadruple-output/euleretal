@@ -1,4 +1,5 @@
 mod bounding_box;
+pub mod entity_store;
 mod my_stroke_ui;
 pub mod settings;
 mod stroke_ext;

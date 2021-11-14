@@ -1,7 +1,7 @@
 use super::{
     core::{Duration, Obj, Scenario},
     import::{Point3, Vec3},
-    misc::BoundingBox,
+    misc::{entity_store, BoundingBox},
     trajectory_buffer::TrajectoryBuffer,
     ui_import::{egui, Pos2, Ui, Vec2},
     Integration, Painter,
@@ -13,7 +13,7 @@ use ::std::{cell::RefCell, rc::Rc};
     derive(::serde::Deserialize, ::serde::Serialize)
 )]
 pub struct Canvas {
-    scenario: Obj<Scenario>,
+    scenario: entity_store::Index<Scenario>,
     pub(super) integrations: Vec<Obj<Integration>>,
     pub(super) visible_units: f32,
     pub(super) focus: Point3,
@@ -54,9 +54,9 @@ impl ObjExtras for RefCell<Canvas> {
 }
 
 impl Canvas {
-    pub fn new(scenario: Obj<Scenario>) -> Self {
+    pub fn new(scenario_idx: entity_store::Index<Scenario>) -> Self {
         Self {
-            scenario,
+            scenario: scenario_idx,
             integrations: Vec::default(),
             visible_units: 1.,
             focus: Point3::origin(),
@@ -67,11 +67,11 @@ impl Canvas {
         }
     }
 
-    pub fn scenario(&self) -> &Obj<Scenario> {
-        &self.scenario
+    pub fn scenario_idx(&self) -> entity_store::Index<Scenario> {
+        self.scenario
     }
 
-    pub fn set_scenario(&mut self, new_scenario: Obj<Scenario>) {
+    pub fn set_scenario(&mut self, new_scenario: entity_store::Index<Scenario>) {
         self.scenario = new_scenario;
         self.trajectory_buffer = None;
     }
@@ -90,11 +90,11 @@ impl Canvas {
             .retain(|candidate| !Rc::ptr_eq(candidate, &integration));
     }
 
-    pub fn update_trajectory(&mut self, min_dt: Duration) {
+    pub fn update_trajectory(&mut self, scenario: &Scenario, min_dt: Duration) {
         if let Some(ref mut buffer) = self.trajectory_buffer {
-            buffer.update_trajectory(&self.scenario.borrow(), min_dt);
+            buffer.update_trajectory(scenario, min_dt);
         } else {
-            self.trajectory_buffer = Some(TrajectoryBuffer::new(&self.scenario.borrow(), min_dt));
+            self.trajectory_buffer = Some(TrajectoryBuffer::new(scenario, min_dt));
         }
     }
 

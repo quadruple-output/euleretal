@@ -1,10 +1,9 @@
-use ::std::{cell::RefCell, rc::Rc, slice::Iter};
-
 use super::{
     core::{Obj, Scenario},
     entities::{Canvas, Integrator, StepSize},
-    misc::Settings,
+    misc::{entity_store, Settings},
 };
+use ::std::{cell::RefCell, rc::Rc, slice::Iter};
 
 #[derive(Debug, Default)]
 #[cfg_attr(
@@ -13,7 +12,7 @@ use super::{
 )]
 pub struct World {
     canvases: Vec<RefCell<Canvas>>,
-    scenarios: Vec<Obj<Scenario>>,
+    scenarios: entity_store::List<Scenario>,
     integrators: Vec<Obj<Integrator>>,
     step_sizes: Vec<Obj<StepSize>>,
     pub settings: Settings,
@@ -24,8 +23,8 @@ impl World {
         self.canvases.iter()
     }
 
-    pub fn scenarios(&self) -> Iter<Obj<Scenario>> {
-        self.scenarios.iter()
+    pub fn scenarios(&self) -> &entity_store::List<Scenario> {
+        &self.scenarios
     }
 
     pub fn integrators(&self) -> Iter<Obj<Integrator>> {
@@ -41,9 +40,8 @@ impl World {
         self.canvases.last().unwrap()
     }
 
-    pub fn add_scenario(&mut self, scenario: Scenario) -> &Obj<Scenario> {
-        self.scenarios.push(Rc::new(RefCell::new(scenario)));
-        self.scenarios.last().unwrap()
+    pub fn add_scenario(&mut self, scenario: Scenario) -> entity_store::Index<Scenario> {
+        self.scenarios.push(scenario)
     }
 
     pub fn add_step_size(&mut self, step_size: StepSize) -> &Obj<StepSize> {

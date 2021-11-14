@@ -13,16 +13,13 @@ pub fn show(ui: &mut Ui, world: &mut World) {
             ui.label("Scenario");
             ui.end_row();
 
-            world.scenarios().for_each(|scenario| {
-                //for (acceleration, mut duration) in
-                //world.query_mut::<(&Box<dyn AccelerationField>, &mut Duration)>()
-                //{
+            for scenario in world.scenarios().iter() {
                 let mut duration_for_edit = scenario.borrow().duration.into();
                 ui.add(Slider::new(&mut duration_for_edit, 0.1..=50.).logarithmic(true));
                 scenario.borrow_mut().duration = duration_for_edit.into();
 
                 ui.label(scenario.borrow().acceleration.label());
                 ui.end_row();
-            });
+            }
         });
 }

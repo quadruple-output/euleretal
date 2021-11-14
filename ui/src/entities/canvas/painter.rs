@@ -1,7 +1,7 @@
 use super::{
-    core::{Duration, Obj, Position, Samples, Scenario},
+    core::{Duration, Position, Samples, Scenario},
     import::{Point3, Vec3},
-    misc::PointFormat,
+    misc::{entity_store, PointFormat},
     ui_import::{egui, Color32, Pos2, Vec2},
     Canvas, Integration,
 };
@@ -60,8 +60,8 @@ impl<'c> Painter<'c> {
             .into_iter()
     }
 
-    pub fn scenario(&self) -> &Obj<Scenario> {
-        self.canvas.scenario()
+    pub fn scenario_idx(&self) -> entity_store::Index<Scenario> {
+        self.canvas.scenario_idx()
     }
 
     pub fn input(&self) -> &egui::InputState {
@@ -223,8 +223,8 @@ impl<'c> Painter<'c> {
         self.canvas.has_trajectory()
     }
 
-    pub fn update_trajectory(&mut self, min_dt: Duration) {
-        self.canvas.update_trajectory(min_dt);
+    pub fn update_trajectory(&mut self, scenario: &Scenario, min_dt: Duration) {
+        self.canvas.update_trajectory(scenario, min_dt);
     }
 
     pub fn draw_trajectory(&self, stroke: egui::Stroke) {

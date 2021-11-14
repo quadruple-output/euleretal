@@ -135,12 +135,12 @@ impl Euleretal {
             stroke: Stroke::new(1., Hsva::from(Color32::RED)),
         }));
 
-        let scenario_center_mass = Rc::clone(self.world.add_scenario(Scenario {
+        let scenario_center_mass = self.world.add_scenario(Scenario {
             acceleration: Box::new(scenarios::CenterMass),
             start_position: Position::new(0., 1., 0.),
             start_velocity: Velocity::new(1., 0., 0.),
             duration: std::f32::consts::TAU.into(),
-        }));
+        });
 
         let _scenario_constant_acceleration = self.world.add_scenario(Scenario {
             acceleration: Box::new(scenarios::ConstantAcceleration),
@@ -186,6 +186,9 @@ impl Euleretal {
                     Ok(world) => {
                         self.world = world;
                         log::debug!("Restored previous app state");
+                        // Note that the app can still dump late if the app
+                        // state file was manipulated with invalid values for
+                        // indexes into the World entity store.
                         return Ok(());
                     }
                     Err(err) => {
