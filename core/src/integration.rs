@@ -90,6 +90,7 @@ impl Integration {
         num_steps: usize,
         dt: Duration,
     ) -> Samples {
+        #[cfg(not(target_arch = "wasm32"))]
         let start = ::std::time::Instant::now();
 
         let mut samples = Samples::new(num_steps);
@@ -107,7 +108,9 @@ impl Integration {
         }
         let result = samples.finalized();
 
+        #[cfg(not(target_arch = "wasm32"))]
         log::debug!("{}: {}µs", integrator.label(), start.elapsed().as_micros());
+
         result
     }
 
