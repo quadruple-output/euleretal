@@ -1,13 +1,12 @@
-use super::core::{
+use crate::{
     integration_step::builders::{self, Collector},
     Integrator,
 };
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct Euler;
 
-#[cfg_attr(feature = "persistence", typetag::serde)]
 impl Integrator for Euler {
     fn label(&self) -> String {
         "Midpoint (explicit, Euler)".to_string()
@@ -39,13 +38,17 @@ impl Integrator for Euler {
         let v1 = step.compute(v0 + a_mid * dt);
         step.compute(s0 + v1 * dt);
     }
+
+    #[cfg(feature = "persistence")]
+    fn to_concrete_type(&self) -> crate::integrators::serde_box_dyn_integrator::IntegratorSerDe {
+        crate::integrators::serde_box_dyn_integrator::IntegratorSerDe::MidPointEuler(*self)
+    }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct SecondOrder;
 
-#[cfg_attr(feature = "persistence", typetag::serde)]
 impl Integrator for SecondOrder {
     fn label(&self) -> String {
         "Midpoint (explicit, SecondOrder)".to_string()
@@ -72,6 +75,11 @@ impl Integrator for SecondOrder {
         let a_mid = step.acceleration_at(s_mid);
         step.compute(s0 + v0 * dt + 0.5 * a_mid * dt * dt);
         step.compute(v0 + a_mid * dt);
+    }
+
+    #[cfg(feature = "persistence")]
+    fn to_concrete_type(&self) -> crate::integrators::serde_box_dyn_integrator::IntegratorSerDe {
+        crate::integrators::serde_box_dyn_integrator::IntegratorSerDe::MidPointSecondOrder(*self)
     }
 }
 

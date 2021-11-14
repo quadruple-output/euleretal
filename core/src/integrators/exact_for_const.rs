@@ -1,13 +1,12 @@
-use super::core::{
+use crate::{
     integration_step::builders::{self, Collector},
     Integrator,
 };
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct ExactForConst;
 
-#[cfg_attr(feature = "persistence", typetag::serde)]
 impl Integrator for ExactForConst {
     fn label(&self) -> String {
         "Exact for const. acceleration".to_string()
@@ -29,6 +28,11 @@ impl Integrator for ExactForConst {
     ) {
         step.compute(v + a * dt);
         step.compute(s + v * dt + 0.5 * a * dt * dt);
+    }
+
+    #[cfg(feature = "persistence")]
+    fn to_concrete_type(&self) -> crate::integrators::serde_box_dyn_integrator::IntegratorSerDe {
+        crate::integrators::serde_box_dyn_integrator::IntegratorSerDe::ExactForConst(*self)
     }
 }
 

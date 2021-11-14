@@ -30,7 +30,6 @@ mod ui_import {
     };
 }
 
-use ::euleretal_content::{integrators, scenarios};
 use ::euleretal_core as core;
 pub use app::Euleretal;
 use world::World;

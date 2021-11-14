@@ -16,7 +16,6 @@ edition = "2021"
 
 [dependencies]
 euleretal-core = { path = "../core" }
-euleretal-content = { path = "../content" }
 ordered-float = "2" # Total ordering (and more) for floating-point types
 nalgebra = "0.29"
 #fraction = { version = "0.9", default-features = false }
@@ -41,4 +40,4 @@ crate-type = ["cdylib", "rlib"] # this setting has blindly been taken over from 
 
 [features]
 default = []
-persistence = ["eframe/persistence", "serde"] # enable if you want to persist app state on shutdown
+persistence = ["euleretal-core/persistence", "eframe/persistence", "serde"] # enable if you want to persist app state on shutdown

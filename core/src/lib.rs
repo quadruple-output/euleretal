@@ -19,11 +19,13 @@ mod fraction;
 mod integration;
 pub mod integration_step;
 mod integrator;
+pub mod integrators;
 mod r#move;
 mod obj;
 mod position;
 pub mod samples;
 mod scenario;
+pub mod scenarios;
 mod vector_quantity;
 mod velocity;
 

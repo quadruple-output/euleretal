@@ -1,7 +1,6 @@
 use super::integration_step::builders;
 use ::std::{any::TypeId, collections::hash_map::DefaultHasher, fmt::Debug, hash::Hash};
 
-#[cfg_attr(feature = "persistence", typetag::serde(tag = "type"))]
 pub trait Integrator: Debug + Send + Sync + 'static {
     fn label(&self) -> String;
 
@@ -19,4 +18,7 @@ pub trait Integrator: Debug + Send + Sync + 'static {
     fn hash(&self, state: &mut DefaultHasher) {
         TypeId::of::<Self>().hash(state);
     }
+
+    #[cfg(feature = "persistence")]
+    fn to_concrete_type(&self) -> super::integrators::serde_box_dyn_integrator::IntegratorSerDe;
 }

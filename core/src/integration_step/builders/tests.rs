@@ -9,7 +9,6 @@ use crate::{Acceleration, AccelerationField, Duration, Position, Step, Velocity}
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct CenterMass;
 
-#[cfg_attr(feature = "persistence", typetag::serde)]
 impl AccelerationField for CenterMass {
     fn value_at(&self, pos: Position) -> Acceleration {
         let distance_squared_recip = pos.as_vector().norm_squared().recip();
@@ -18,6 +17,13 @@ impl AccelerationField for CenterMass {
 
     fn label(&self) -> String {
         "Gravity".to_string()
+    }
+
+    #[cfg(feature = "persistence")]
+    fn to_concrete_type(
+        &self,
+    ) -> crate::scenarios::serde_box_dyn_acceleration_field::AccelerationFieldSerDe {
+        unimplemented!() // not required for unit test helpers
     }
 }
 

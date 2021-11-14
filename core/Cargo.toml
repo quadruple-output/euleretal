@@ -28,14 +28,10 @@ version = "1"
 features = ["derive"]
 optional = true 
 
-[dependencies.typetag] # Serde serializable and deserializable trait objects
-version = "0.1"
-optional = true
-
 [lib]
 # refer to https://doc.rust-lang.org/cargo/reference/cargo-targets.html#configuring-a-target
 crate-type = ["cdylib", "rlib"] # this setting has blindly been taken over from the egui template
 
 [features]
 default = []
-persistence = ["ordered-float/serde", "parry3d/serde-serialize", "serde", "typetag"]
+persistence = ["ordered-float/serde", "parry3d/serde-serialize", "serde"]

@@ -1,10 +1,8 @@
 use super::{
     containers,
-    core::{Position, Scenario, Velocity},
+    core::{integrators, scenarios, Position, Scenario, Velocity},
     entities::{Canvas, Integration, Integrator, StepSize},
-    integrators,
     misc::UserLabel,
-    scenarios,
     ui_import::{
         egui::{self, CentralPanel, SidePanel},
         epi, Color32, Hsva, Rgba, Stroke, Vec2,
@@ -27,7 +25,7 @@ impl Default for Euleretal {
 
 impl epi::App for Euleretal {
     fn name(&self) -> &str {
-        "Euler et al."
+        "Euler et al." // also used as dir name for save location, so do not change without reason
     }
 
     fn setup(
@@ -36,6 +34,7 @@ impl epi::App for Euleretal {
         _frame: &mut epi::Frame<'_>,
         storage: Option<&dyn epi::Storage>,
     ) {
+        // does not work (as of eframe 0.15): frame.set_window_title("Euler et al.");
         if self.try_load_app_state(storage).is_err() {
             Self::init_display_style(ctx);
         }

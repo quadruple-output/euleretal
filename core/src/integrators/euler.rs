@@ -1,13 +1,12 @@
-use super::core::{
+use crate::{
     integration_step::builders::{self, Collector},
     Integrator,
 };
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct Broken;
 
-#[cfg_attr(feature = "persistence", typetag::serde)]
 impl Integrator for Broken {
     fn label(&self) -> String {
         "Broken Euler".to_string()
@@ -30,13 +29,17 @@ impl Integrator for Broken {
         step.compute(s + v * dt);
         step.compute(v + a * dt);
     }
+
+    #[cfg(feature = "persistence")]
+    fn to_concrete_type(&self) -> crate::integrators::serde_box_dyn_integrator::IntegratorSerDe {
+        crate::integrators::serde_box_dyn_integrator::IntegratorSerDe::BrokenEuler(*self)
+    }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 pub struct Euler;
 
-#[cfg_attr(feature = "persistence", typetag::serde)]
 impl Integrator for Euler {
     fn label(&self) -> String {
         "Euler".to_string()
@@ -59,6 +62,11 @@ impl Integrator for Euler {
     ) {
         let v1 = step.compute(v + a * dt);
         step.compute(s + v1 * dt);
+    }
+
+    #[cfg(feature = "persistence")]
+    fn to_concrete_type(&self) -> crate::integrators::serde_box_dyn_integrator::IntegratorSerDe {
+        crate::integrators::serde_box_dyn_integrator::IntegratorSerDe::Euler(*self)
     }
 }
 
