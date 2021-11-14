@@ -1,14 +1,11 @@
 use super::{
-    core::{Duration, Obj, Position, Samples, Scenario},
+    core::{Duration, Position, Samples, Scenario},
     import::{Point3, Vec3},
-    misc::PointFormat,
+    misc::{entity_store, PointFormat},
     ui_import::{egui, Color32, Pos2, Vec2},
     Canvas, Integration,
 };
-use ::std::{
-    cell::{Ref, RefMut},
-    rc::Rc,
-};
+use ::std::cell::{Ref, RefCell, RefMut};
 
 pub struct Painter<'c> {
     canvas: RefMut<'c, Canvas>,
@@ -17,7 +14,11 @@ pub struct Painter<'c> {
 }
 
 impl<'c> Painter<'c> {
-    pub fn new(canvas: &'c Obj<Canvas>, response: egui::Response, painter: egui::Painter) -> Self {
+    pub fn new(
+        canvas: &'c RefCell<Canvas>,
+        response: egui::Response,
+        painter: egui::Painter,
+    ) -> Self {
         // borrowing here makes further borrowing unnecessary, until the new Self gets dropped
         let mut canvas = canvas.borrow_mut();
         // this initialization is required before first rendering:
@@ -59,8 +60,8 @@ impl<'c> Painter<'c> {
             .into_iter()
     }
 
-    pub fn scenario(&self) -> Obj<Scenario> {
-        Rc::clone(self.canvas.scenario())
+    pub fn scenario_idx(&self) -> entity_store::Index<Scenario> {
+        self.canvas.scenario_idx()
     }
 
     pub fn input(&self) -> &egui::InputState {
@@ -222,8 +223,8 @@ impl<'c> Painter<'c> {
         self.canvas.has_trajectory()
     }
 
-    pub fn update_trajectory(&mut self, min_dt: Duration) {
-        self.canvas.update_trajectory(min_dt);
+    pub fn update_trajectory(&mut self, scenario: &Scenario, min_dt: Duration) {
+        self.canvas.update_trajectory(scenario, min_dt);
     }
 
     pub fn draw_trajectory(&self, stroke: egui::Stroke) {

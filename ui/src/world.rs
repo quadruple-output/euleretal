@@ -1,28 +1,30 @@
-use ::std::{cell::RefCell, rc::Rc, slice::Iter};
-
 use super::{
     core::{Obj, Scenario},
     entities::{Canvas, Integrator, StepSize},
-    misc::Settings,
+    misc::{entity_store, Settings},
 };
+use ::std::{cell::RefCell, rc::Rc, slice::Iter};
 
 #[derive(Debug, Default)]
-#[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(
+    feature = "persistence",
+    derive(::serde::Serialize, ::serde::Deserialize)
+)]
 pub struct World {
-    canvases: Vec<Obj<Canvas>>,
-    scenarios: Vec<Obj<Scenario>>,
+    canvases: Vec<RefCell<Canvas>>,
+    scenarios: entity_store::List<Scenario>,
     integrators: Vec<Obj<Integrator>>,
     step_sizes: Vec<Obj<StepSize>>,
     pub settings: Settings,
 }
 
 impl World {
-    pub fn canvases(&self) -> Iter<Obj<Canvas>> {
+    pub fn canvases(&self) -> Iter<RefCell<Canvas>> {
         self.canvases.iter()
     }
 
-    pub fn scenarios(&self) -> Iter<Obj<Scenario>> {
-        self.scenarios.iter()
+    pub fn scenarios(&self) -> &entity_store::List<Scenario> {
+        &self.scenarios
     }
 
     pub fn integrators(&self) -> Iter<Obj<Integrator>> {
@@ -33,14 +35,13 @@ impl World {
         self.step_sizes.iter()
     }
 
-    pub fn add_canvas(&mut self, canvas: Canvas) -> &Obj<Canvas> {
-        self.canvases.push(Rc::new(RefCell::new(canvas)));
+    pub fn add_canvas(&mut self, canvas: Canvas) -> &RefCell<Canvas> {
+        self.canvases.push(RefCell::new(canvas));
         self.canvases.last().unwrap()
     }
 
-    pub fn add_scenario(&mut self, scenario: Scenario) -> &Obj<Scenario> {
-        self.scenarios.push(Rc::new(RefCell::new(scenario)));
-        self.scenarios.last().unwrap()
+    pub fn add_scenario(&mut self, scenario: Scenario) -> entity_store::Index<Scenario> {
+        self.scenarios.push(scenario)
     }
 
     pub fn add_step_size(&mut self, step_size: StepSize) -> &Obj<StepSize> {
@@ -55,9 +56,9 @@ impl World {
     }
 
     #[allow(clippy::needless_pass_by_value)]
-    pub fn remove_canvas(&mut self, canvas: Obj<Canvas>) {
+    pub fn remove_canvas(&mut self, canvas: *const RefCell<Canvas>) {
         self.canvases
-            .retain(|candidate| !Rc::ptr_eq(&canvas, candidate));
+            .retain(|candidate| !::std::ptr::eq(canvas, candidate));
     }
 
     #[allow(clippy::needless_pass_by_value)]

@@ -2,9 +2,10 @@ use super::{
     core::{integration_step::computed, Contribution, Duration, PhysicalQuantityKind, Step},
     entities::CanvasPainter,
     misc::{Settings, StrokeExt},
+    World,
 };
 
-pub fn render(settings: &Settings, canvas: &CanvasPainter) {
+pub fn render(canvas: &CanvasPainter, world: &World) {
     let mut pointer_position = None;
     canvas.on_hover(|pointer_pos| {
         pointer_position = Some(pointer_pos);
@@ -20,7 +21,7 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
         if let Some((ref_sample, calc_sample)) = integration.focussed_sample() {
             // Draw all sample points. Highlighted points will be re-painted below.
             for position in calc_sample.positions_iter() {
-                canvas.draw_sample_point(position, &settings.point_formats.other_position);
+                canvas.draw_sample_point(position, &world.settings.point_formats.other_position);
             }
 
             if show_velocity {
@@ -29,19 +30,25 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
                     |pos| calc_sample.closest_computed_velocity(pos),
                 );
                 if velocity_to_explain == calc_sample.last_computed_velocity() {
-                    highlight_reference_velocity(canvas, ref_sample, settings);
+                    highlight_reference_velocity(canvas, ref_sample, &world.settings);
                 } else {
+                    let scenario = world.scenarios()[canvas.scenario_idx()].borrow();
                     highlight_reference_velocity(
                         canvas,
-                        &canvas.scenario().borrow().calc_intermediate_sample(
+                        &scenario.calc_intermediate_sample(
                             &ref_sample.get_start_condition(),
                             velocity_to_explain.sampling_position().dt_fraction()
                                 * calc_sample.dt(),
                         ),
-                        settings,
+                        &world.settings,
                     );
                 }
-                explain_derived_velocity(&velocity_to_explain, calc_sample.dt(), canvas, settings);
+                explain_derived_velocity(
+                    &velocity_to_explain,
+                    calc_sample.dt(),
+                    canvas,
+                    &world.settings,
+                );
             } else {
                 let position_to_explain = pointer_position.map_or_else(
                     || calc_sample.last_computed_position(),
@@ -49,20 +56,21 @@ pub fn render(settings: &Settings, canvas: &CanvasPainter) {
                 );
                 // highlight the ref. position that corresponds to `position_to_explain`
                 if position_to_explain == calc_sample.last_computed_position() {
-                    highlight_reference_position(canvas, ref_sample, settings);
+                    highlight_reference_position(canvas, ref_sample, &world.settings);
                 } else {
+                    let scenario = world.scenarios()[canvas.scenario_idx()].borrow();
                     highlight_reference_position(
                         canvas,
                         // calculate reference sample corresponding to position_to_explain:
-                        &canvas.scenario().borrow().calc_intermediate_sample(
+                        &scenario.calc_intermediate_sample(
                             &ref_sample.get_start_condition(),
                             position_to_explain.dt_fraction() * calc_sample.dt(),
                         ),
-                        settings,
+                        &world.settings,
                     );
                 };
                 // draw contributing vectors
-                explain_derived_position(&position_to_explain, canvas, settings);
+                explain_derived_position(&position_to_explain, canvas, &world.settings);
             }
         }
     });

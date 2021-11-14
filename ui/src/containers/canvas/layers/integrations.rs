@@ -1,6 +1,6 @@
-use super::{entities::CanvasPainter, misc::Settings};
+use super::{entities::CanvasPainter, World};
 
-pub fn render(settings: &Settings, canvas: &mut CanvasPainter) {
+pub fn render(canvas: &mut CanvasPainter, world: &World) {
     let mut start = ::std::time::Instant::now();
     let mut updated = false;
 
@@ -10,15 +10,16 @@ pub fn render(settings: &Settings, canvas: &mut CanvasPainter) {
         .unwrap_or_else(|| 0.1.into());
 
     let first_time = !canvas.has_trajectory();
-    canvas.update_trajectory(min_dt);
-    let scenario_obj = canvas.scenario(); // need explicit `let` to extend lifetime of the owned value
-    let scenario = scenario_obj.borrow();
-    canvas.for_each_integration_mut(|mut integration| {
-        if first_time {
-            integration.reset();
-        }
-        updated |= integration.update(&*scenario);
-    });
+    let scenario = world.scenarios()[canvas.scenario_idx()].borrow();
+    canvas.update_trajectory(&scenario, min_dt);
+    {
+        canvas.for_each_integration_mut(|mut integration| {
+            if first_time {
+                integration.reset();
+            }
+            updated |= integration.update(&scenario);
+        });
+    }
     if updated {
         log::debug!(
             "Render Canvas: integrate: {}µs",
@@ -30,9 +31,9 @@ pub fn render(settings: &Settings, canvas: &mut CanvasPainter) {
         canvas.update_bounding_box();
     }
 
-    canvas.draw_trajectory(settings.strokes.trajectory);
+    canvas.draw_trajectory(world.settings.strokes.trajectory);
     canvas.for_each_integration(|integration| {
-        integration.draw_on(canvas, settings);
+        integration.draw_on(canvas, &world.settings);
     });
     if updated {
         log::debug!("Render Canvas: draw: {}µs", start.elapsed().as_micros());

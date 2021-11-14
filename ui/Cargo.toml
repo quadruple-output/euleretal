@@ -21,7 +21,6 @@ nalgebra = "0.29"
 #fraction = { version = "0.9", default-features = false }
 log = "0.4"
 simple_logger = "1"
-ron = "0.7"
 
 [dependencies.eframe] # gives us egui, epi and web+native backends
 version = "0.15"
@@ -34,10 +33,14 @@ version = "1"
 features = ["derive"]
 optional = true 
 
+[dependencies.ron]
+version = "0.7"
+optional = true
+
 [lib]
 # refer to https://doc.rust-lang.org/cargo/reference/cargo-targets.html#configuring-a-target
 crate-type = ["cdylib", "rlib"] # this setting has blindly been taken over from the egui template
 
 [features]
 default = []
-persistence = ["euleretal-core/persistence", "eframe/persistence", "serde"] # enable if you want to persist app state on shutdown
+persistence = ["euleretal-core/persistence", "eframe/persistence", "ron", "serde"] # enable if you want to persist app state on shutdown

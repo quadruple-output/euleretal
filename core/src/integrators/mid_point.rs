@@ -4,7 +4,10 @@ use crate::{
 };
 
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(
+    feature = "persistence",
+    derive(::serde::Deserialize, ::serde::Serialize)
+)]
 pub struct Euler;
 
 impl Integrator for Euler {
@@ -46,7 +49,10 @@ impl Integrator for Euler {
 }
 
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(
+    feature = "persistence",
+    derive(::serde::Deserialize, ::serde::Serialize)
+)]
 pub struct SecondOrder;
 
 impl Integrator for SecondOrder {

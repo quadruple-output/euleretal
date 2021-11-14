@@ -135,12 +135,12 @@ impl Euleretal {
             stroke: Stroke::new(1., Hsva::from(Color32::RED)),
         }));
 
-        let scenario_center_mass = Rc::clone(self.world.add_scenario(Scenario {
+        let scenario_center_mass = self.world.add_scenario(Scenario {
             acceleration: Box::new(scenarios::CenterMass),
             start_position: Position::new(0., 1., 0.),
             start_velocity: Velocity::new(1., 0., 0.),
             duration: std::f32::consts::TAU.into(),
-        }));
+        });
 
         let _scenario_constant_acceleration = self.world.add_scenario(Scenario {
             acceleration: Box::new(scenarios::ConstantAcceleration),
@@ -172,10 +172,13 @@ impl Euleretal {
         ctx.set_style(style);
     }
 
-    fn try_load_app_state(&mut self, _storage: Option<&dyn epi::Storage>) -> Result<(), ()> {
+    #[cfg_attr(
+        not(feature = "persistence"),
+        allow(clippy::unused_self, unused_variables)
+    )]
+    fn try_load_app_state(&mut self, storage: Option<&dyn epi::Storage>) -> Result<(), ()> {
         #[cfg(feature = "persistence")]
-        #[allow(clippy::used_underscore_binding)]
-        if let Some(storage) = _storage {
+        if let Some(storage) = storage {
             // ** shorter, but without error diagnostics:
             // if let Some(saved_world) = epi::get_value(storage, epi::APP_KEY) { self.world = saved_world; return; }
             if let Some(string) = storage.get_string(epi::APP_KEY) {
@@ -183,6 +186,9 @@ impl Euleretal {
                     Ok(world) => {
                         self.world = world;
                         log::debug!("Restored previous app state");
+                        // Note that the app can still dump late if the app
+                        // state file was manipulated with invalid values for
+                        // indexes into the World entity store.
                         return Ok(());
                     }
                     Err(err) => {

@@ -4,7 +4,10 @@ use crate::{
 };
 
 #[derive(Clone, Copy)]
-#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(
+    feature = "persistence",
+    derive(::serde::Deserialize, ::serde::Serialize)
+)]
 pub struct CenterMass;
 
 impl AccelerationField for CenterMass {
