@@ -11,14 +11,15 @@ pub fn render(settings: &Settings, canvas: &mut CanvasPainter) {
 
     let first_time = !canvas.has_trajectory();
     canvas.update_trajectory(min_dt);
-    let scenario_obj = canvas.scenario(); // need explicit `let` to extend lifetime of the owned value
-    let scenario = scenario_obj.borrow();
-    canvas.for_each_integration_mut(|mut integration| {
-        if first_time {
-            integration.reset();
-        }
-        updated |= integration.update(&*scenario);
-    });
+    {
+        let scenario = canvas.scenario().borrow();
+        canvas.for_each_integration_mut(|mut integration| {
+            if first_time {
+                integration.reset();
+            }
+            updated |= integration.update(&*scenario);
+        });
+    }
     if updated {
         log::debug!(
             "Render Canvas: integrate: {}µs",

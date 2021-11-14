@@ -5,10 +5,7 @@ use super::{
     ui_import::{egui, Color32, Pos2, Vec2},
     Canvas, Integration,
 };
-use ::std::{
-    cell::{Ref, RefCell, RefMut},
-    rc::Rc,
-};
+use ::std::cell::{Ref, RefCell, RefMut};
 
 pub struct Painter<'c> {
     canvas: RefMut<'c, Canvas>,
@@ -63,8 +60,8 @@ impl<'c> Painter<'c> {
             .into_iter()
     }
 
-    pub fn scenario(&self) -> Obj<Scenario> {
-        Rc::clone(self.canvas.scenario())
+    pub fn scenario(&self) -> &Obj<Scenario> {
+        self.canvas.scenario()
     }
 
     pub fn input(&self) -> &egui::InputState {
