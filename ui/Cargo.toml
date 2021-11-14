@@ -21,6 +21,7 @@ nalgebra = "0.29"
 #fraction = { version = "0.9", default-features = false }
 log = "0.4"
 simple_logger = "1"
+console_error_panic_hook = "0.1"
 
 [dependencies.eframe] # gives us egui, epi and web+native backends
 version = "0.15"

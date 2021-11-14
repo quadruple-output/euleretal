@@ -46,7 +46,9 @@ impl Scenario {
 
     #[must_use]
     pub fn calculate_trajectory(&self, min_dt: Duration) -> Vec<Position> {
+        #[cfg(not(target_arch = "wasm32"))]
         let start = ::std::time::Instant::now();
+
         #[allow(clippy::cast_sign_loss)]
         #[allow(clippy::cast_possible_truncation)]
         #[allow(clippy::cast_precision_loss)]
@@ -59,6 +61,7 @@ impl Scenario {
             self.duration,
             num_steps,
         );
+        #[cfg(not(target_arch = "wasm32"))]
         log::debug!(
             "{}: trajectory with {} segments: {}µs",
             self.label(),
@@ -83,7 +86,9 @@ impl Scenario {
 
     #[must_use]
     pub fn calculate_reference_samples(&self, dt: Duration) -> Samples {
+        #[cfg(not(target_arch = "wasm32"))]
         let start = ::std::time::Instant::now();
+
         #[allow(clippy::cast_sign_loss)]
         #[allow(clippy::cast_possible_truncation)]
         let num_iterations = (self.duration / dt) as usize;
@@ -95,6 +100,7 @@ impl Scenario {
             dt,
             STEPS_PER_DT,
         );
+        #[cfg(not(target_arch = "wasm32"))]
         log::debug!(
             "{}: {} reference samples: {}µs",
             self.label(),

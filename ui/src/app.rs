@@ -9,7 +9,9 @@ use super::{
     },
     World,
 };
-use ::std::{rc::Rc, time::Instant};
+use ::std::rc::Rc;
+#[cfg(not(target_arch = "wasm32"))]
+use ::std::time::Instant;
 
 pub struct Euleretal {
     world: World,
@@ -201,14 +203,20 @@ impl Euleretal {
     }
 
     fn log_frame_rate(draw: impl FnOnce()) {
+        #[cfg(not(target_arch = "wasm32"))]
         let last_update_instant = Instant::now();
+
         draw();
-        let micros = last_update_instant.elapsed().as_micros();
-        if micros > 50000 {
-            log::info!(
-                "slow frame: {}µs",
-                last_update_instant.elapsed().as_micros()
-            );
+
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let micros = last_update_instant.elapsed().as_micros();
+            if micros > 50000 {
+                log::info!(
+                    "slow frame: {}µs",
+                    last_update_instant.elapsed().as_micros()
+                );
+            }
         }
     }
 

@@ -1,7 +1,9 @@
 use super::{entities::CanvasPainter, World};
 
 pub fn render(canvas: &mut CanvasPainter, world: &World) {
+    #[cfg(not(target_arch = "wasm32"))]
     let mut start = ::std::time::Instant::now();
+
     let mut updated = false;
 
     let min_dt = canvas
@@ -20,6 +22,8 @@ pub fn render(canvas: &mut CanvasPainter, world: &World) {
             updated |= integration.update(&scenario);
         });
     }
+
+    #[cfg(not(target_arch = "wasm32"))]
     if updated {
         log::debug!(
             "Render Canvas: integrate: {}µs",
@@ -27,14 +31,16 @@ pub fn render(canvas: &mut CanvasPainter, world: &World) {
         );
         start = ::std::time::Instant::now();
     }
+
     if first_time {
         canvas.update_bounding_box();
     }
-
     canvas.draw_trajectory(world.settings.strokes.trajectory);
     canvas.for_each_integration(|integration| {
         integration.draw_on(canvas, &world.settings);
     });
+
+    #[cfg(not(target_arch = "wasm32"))]
     if updated {
         log::debug!("Render Canvas: draw: {}µs", start.elapsed().as_micros());
     }
