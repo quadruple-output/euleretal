@@ -46,7 +46,7 @@ pub trait ObjExtras {
     fn allocate_painter(&self, ui: &mut Ui, size: Vec2) -> Painter;
 }
 
-impl ObjExtras for Obj<Canvas> {
+impl ObjExtras for RefCell<Canvas> {
     fn allocate_painter(&self, ui: &mut Ui, size: Vec2) -> Painter {
         let (response, painter) = ui.allocate_painter(size, egui::Sense::click_and_drag());
         Painter::new(self, response, painter)

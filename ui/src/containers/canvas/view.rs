@@ -10,7 +10,7 @@ use super::{
     },
     World,
 };
-use ::std::rc::Rc;
+use ::std::{cell::RefCell, rc::Rc};
 
 enum IntegrationOperation {
     Noop,
@@ -28,13 +28,13 @@ enum IntegrationOperation {
     },
 }
 
-pub enum CanvasOperation {
+pub enum CanvasOperation<'a> {
     Noop,
-    Create { source_canvas: Obj<Canvas> },
-    Close { canvas: Obj<Canvas> },
+    Create { source_canvas: &'a RefCell<Canvas> },
+    Close { canvas: *const RefCell<Canvas> },
 }
 
-pub fn show_canvas(ui: &mut Ui, canvas: &Obj<Canvas>, size: Vec2, settings: &Settings) {
+pub fn show_canvas(ui: &mut Ui, canvas: &RefCell<Canvas>, size: Vec2, settings: &Settings) {
     let mut canvas_painter = canvas.allocate_painter(ui, size);
 
     canvas_painter.pan_and_zoom();
@@ -51,13 +51,13 @@ pub fn show_canvas(ui: &mut Ui, canvas: &Obj<Canvas>, size: Vec2, settings: &Set
 }
 
 /// returns the `CanvasOperation` as `inner`
-pub fn show_header_bar(
+pub fn show_header_bar<'a>(
     ui: &mut Ui,
-    canvas: &Obj<Canvas>,
+    canvas: &'a RefCell<Canvas>,
     world: &World,
     can_close: bool,
     can_create: bool,
-) -> egui::InnerResponse<CanvasOperation> {
+) -> egui::InnerResponse<CanvasOperation<'a>> {
     ui.horizontal(|ui| {
         ui.with_layout(Layout::left_to_right(), |ui| {
             show_scenario_selector(ui, canvas, world);
@@ -66,13 +66,11 @@ pub fn show_header_bar(
         ui.with_layout(Layout::right_to_left(), |ui| {
             let mut operation = CanvasOperation::Noop;
             if can_close && ui.small_button(constants::BUTTON_GLYPH_DELETE).clicked() {
-                operation = CanvasOperation::Close {
-                    canvas: Rc::clone(canvas),
-                };
+                operation = CanvasOperation::Close { canvas };
             }
             if can_create && ui.small_button(constants::BUTTON_GLYPH_ADD).clicked() {
                 operation = CanvasOperation::Create {
-                    source_canvas: Rc::clone(canvas),
+                    source_canvas: canvas,
                 };
             }
             operation
@@ -81,7 +79,7 @@ pub fn show_header_bar(
     })
 }
 
-fn show_scenario_selector(ui: &mut Ui, canvas: &Obj<Canvas>, world: &World) {
+fn show_scenario_selector(ui: &mut Ui, canvas: &RefCell<Canvas>, world: &World) {
     let selector_id = ui.make_persistent_id(format!("scenario_selector_{:?}", canvas.as_ptr()));
     let canvas_scenario_obj = Rc::clone(canvas.borrow().scenario());
     let mut selected_scenario_ptr = canvas_scenario_obj.as_ptr();
@@ -108,7 +106,7 @@ fn show_scenario_selector(ui: &mut Ui, canvas: &Obj<Canvas>, world: &World) {
     }
 }
 
-fn show_integration_selector(ui: &mut Ui, canvas: &Obj<Canvas>, world: &World) {
+fn show_integration_selector(ui: &mut Ui, canvas: &RefCell<Canvas>, world: &World) {
     let mut window_is_open = canvas.borrow().ui_integrations_window_is_open;
     let button_response = ui.add(egui::Button::new("Integrations"));
     if button_response.clicked() {
@@ -155,7 +153,7 @@ fn show_integrations_pop_up(
     id: egui::Id,
     open: &mut bool,
     default_pos: Pos2,
-    canvas: &Obj<Canvas>,
+    canvas: &RefCell<Canvas>,
     world: &World,
 ) -> IntegrationOperation {
     let mut operation = IntegrationOperation::Noop;

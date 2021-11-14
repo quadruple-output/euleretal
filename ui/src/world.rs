@@ -12,7 +12,7 @@ use super::{
     derive(::serde::Serialize, ::serde::Deserialize)
 )]
 pub struct World {
-    canvases: Vec<Obj<Canvas>>,
+    canvases: Vec<RefCell<Canvas>>,
     scenarios: Vec<Obj<Scenario>>,
     integrators: Vec<Obj<Integrator>>,
     step_sizes: Vec<Obj<StepSize>>,
@@ -20,7 +20,7 @@ pub struct World {
 }
 
 impl World {
-    pub fn canvases(&self) -> Iter<Obj<Canvas>> {
+    pub fn canvases(&self) -> Iter<RefCell<Canvas>> {
         self.canvases.iter()
     }
 
@@ -36,8 +36,8 @@ impl World {
         self.step_sizes.iter()
     }
 
-    pub fn add_canvas(&mut self, canvas: Canvas) -> &Obj<Canvas> {
-        self.canvases.push(Rc::new(RefCell::new(canvas)));
+    pub fn add_canvas(&mut self, canvas: Canvas) -> &RefCell<Canvas> {
+        self.canvases.push(RefCell::new(canvas));
         self.canvases.last().unwrap()
     }
 
@@ -58,9 +58,9 @@ impl World {
     }
 
     #[allow(clippy::needless_pass_by_value)]
-    pub fn remove_canvas(&mut self, canvas: Obj<Canvas>) {
+    pub fn remove_canvas(&mut self, canvas: *const RefCell<Canvas>) {
         self.canvases
-            .retain(|candidate| !Rc::ptr_eq(&canvas, candidate));
+            .retain(|candidate| !::std::ptr::eq(canvas, candidate));
     }
 
     #[allow(clippy::needless_pass_by_value)]

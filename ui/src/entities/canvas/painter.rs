@@ -6,7 +6,7 @@ use super::{
     Canvas, Integration,
 };
 use ::std::{
-    cell::{Ref, RefMut},
+    cell::{Ref, RefCell, RefMut},
     rc::Rc,
 };
 
@@ -17,7 +17,11 @@ pub struct Painter<'c> {
 }
 
 impl<'c> Painter<'c> {
-    pub fn new(canvas: &'c Obj<Canvas>, response: egui::Response, painter: egui::Painter) -> Self {
+    pub fn new(
+        canvas: &'c RefCell<Canvas>,
+        response: egui::Response,
+        painter: egui::Painter,
+    ) -> Self {
         // borrowing here makes further borrowing unnecessary, until the new Self gets dropped
         let mut canvas = canvas.borrow_mut();
         // this initialization is required before first rendering:

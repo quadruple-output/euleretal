@@ -28,21 +28,17 @@ pub fn show(ui: &mut Ui, world: &mut World) {
 
     match operation {
         CanvasOperation::Create { source_canvas } => {
-            let first_scenario = world.scenarios().next().map(Rc::clone);
-            if let Some(any_scenario) = first_scenario {
-                // new canvas:
-                let mut new_canvas = world
-                    .add_canvas(Canvas::new(Rc::clone(&any_scenario)))
-                    .borrow_mut();
+            let mut new_canvas;
+            {
+                let source_canvas = source_canvas.borrow();
+                new_canvas = Canvas::new(Rc::clone(source_canvas.scenario()));
                 // copy canvas integrations:
-                source_canvas
-                    .borrow()
-                    .integrations()
-                    .for_each(|integration| {
-                        let integration = integration.borrow();
-                        new_canvas.add_integration(integration.clone());
-                    });
+                source_canvas.integrations().for_each(|integration| {
+                    let integration = integration.borrow();
+                    new_canvas.add_integration(integration.clone());
+                });
             }
+            world.add_canvas(new_canvas);
         }
 
         CanvasOperation::Close { canvas } => {
