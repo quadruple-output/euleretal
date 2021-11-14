@@ -1,6 +1,9 @@
 # Euleretal TODO list
 
 ## UI Bugs
+- When the app state is restored from a previous run, changing colors of an
+  Integrator has no effect on an existing integration.  Root cause is that
+  deserialization multiplies reference-counted instances.
 - "Integrations" Pop-Up should be restricted to be placed inside its parent
   canvas.
 - Drop-Downs (Combo boxes) in "Integrations" Pop-Up are sometimes clipped away.
@@ -8,7 +11,6 @@
 
 ## UI features
 - For position contributions of `½a dt^2`, draw a curved trajectory.
-- Different colors or shapes for reference points and calculated points.
 - Layer 'Acceleration Field' should draw scaled vectors at each sampling point
   of a Step (transparent color, so they can be distinguished from
   contributions).
@@ -27,7 +29,8 @@
   collapsed.
 - Add setting for `Inspector` to not scale velocities by dt (may be useful when
   comparing integrations with different step sizes).
-- Add option to (continuously) synchronize the view point of all canvases.
+- Add option to (continuously) synchronize the view point and scale of all
+  canvases.
 - Add button to move an integration from one canvas to another (possibly new
   one).
 - Group Integrators by number of samples from acceletation field they require.
@@ -44,5 +47,9 @@
 - Save/load state in/from file.
 
 ## Clean Code
-- Remove methods like `expected_accelerations_for_step` and determine
-  "expected" values for next step from previous one.
+- write more unit tests for specific Integrators
+
+## Performance
+- use a different allocator for everything related to `Step`s.  While
+  integrating, free-ing is not required.  When Integration result gets
+  discarded, all allocated mem can be freed at once.

@@ -1,0 +1,43 @@
+# This file was originally based on the egui template.  The latest template version can be
+# found at https://github.com/emilk/egui_template/blob/master/Cargo.toml
+
+[package]
+name = "euleretal"
+description = "Interactive visualization of discrete integration functions for physical acceleration of rigid bodies"
+readme = "../README.md"
+repository = "https://github.com/quadruple-output/euleretal"
+categories = ["game-development", "mathematics", "science", "simulation", "visualization"]
+keywords = ["Euler", "Runge-Kutta"]
+license = "MIT OR Apache-2.0"
+version = "0.1.0"
+authors = ["quadruple-output <57874618+quadruple-output@users.noreply.github.com>"]
+edition = "2021"
+# more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+euleretal-core = { path = "../core" }
+ordered-float = "2" # Total ordering (and more) for floating-point types
+nalgebra = "0.29"
+#fraction = { version = "0.9", default-features = false }
+log = "0.4"
+simple_logger = "1"
+ron = "0.7"
+
+[dependencies.eframe] # gives us egui, epi and web+native backends
+version = "0.15"
+default-features = false
+#features = ["default_fonts", "egui_glow"] # for now (eframe 0.15), glow is not the default
+features = ["default_fonts", "egui_glium"] # for now (eframe 0.15), glow does not call `App::on_exit()`
+
+[dependencies.serde] # serialization/deserialization framework
+version = "1"
+features = ["derive"]
+optional = true 
+
+[lib]
+# refer to https://doc.rust-lang.org/cargo/reference/cargo-targets.html#configuring-a-target
+crate-type = ["cdylib", "rlib"] # this setting has blindly been taken over from the egui template
+
+[features]
+default = []
+persistence = ["euleretal-core/persistence", "eframe/persistence", "serde"] # enable if you want to persist app state on shutdown
