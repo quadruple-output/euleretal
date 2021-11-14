@@ -5,7 +5,10 @@ use ::std::{
 };
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Ord, Eq, Hash)]
-#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(
+    feature = "persistence",
+    derive(::serde::Deserialize, ::serde::Serialize)
+)]
 pub struct Duration {
     inner: OrderedF32,
 }

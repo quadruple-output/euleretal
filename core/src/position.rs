@@ -4,7 +4,10 @@ use super::{
 };
 
 #[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(
+    feature = "persistence",
+    derive(::serde::Deserialize, ::serde::Serialize)
+)]
 pub struct Position(Point3);
 
 impl From<Point3> for Position {

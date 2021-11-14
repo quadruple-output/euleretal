@@ -7,7 +7,10 @@ use super::{
 };
 
 #[derive(Debug, Default)]
-#[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(
+    feature = "persistence",
+    derive(::serde::Serialize, ::serde::Deserialize)
+)]
 pub struct World {
     canvases: Vec<Obj<Canvas>>,
     scenarios: Vec<Obj<Scenario>>,

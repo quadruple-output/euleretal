@@ -8,7 +8,10 @@ use super::{
 };
 use ::std::{cell::RefCell, rc::Rc};
 
-#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(
+    feature = "persistence",
+    derive(::serde::Deserialize, ::serde::Serialize)
+)]
 pub struct Canvas {
     scenario: Obj<Scenario>,
     pub(super) integrations: Vec<Obj<Integration>>,

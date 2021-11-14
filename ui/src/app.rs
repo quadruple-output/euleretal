@@ -172,10 +172,13 @@ impl Euleretal {
         ctx.set_style(style);
     }
 
-    fn try_load_app_state(&mut self, _storage: Option<&dyn epi::Storage>) -> Result<(), ()> {
+    #[cfg_attr(
+        not(feature = "persistence"),
+        allow(clippy::unused_self, unused_variables)
+    )]
+    fn try_load_app_state(&mut self, storage: Option<&dyn epi::Storage>) -> Result<(), ()> {
         #[cfg(feature = "persistence")]
-        #[allow(clippy::used_underscore_binding)]
-        if let Some(storage) = _storage {
+        if let Some(storage) = storage {
             // ** shorter, but without error diagnostics:
             // if let Some(saved_world) = epi::get_value(storage, epi::APP_KEY) { self.world = saved_world; return; }
             if let Some(string) = storage.get_string(epi::APP_KEY) {
