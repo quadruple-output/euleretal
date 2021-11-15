@@ -4,10 +4,18 @@ use ::std::{
     ops::{Add, AddAssign, Div, Mul, Sub},
 };
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd, Ord, Eq, Hash)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Deserialize, ::serde::Serialize)
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    PartialEq,
+    PartialOrd,
+    Ord,
+    Eq,
+    Hash,
+    ::serde::Deserialize,
+    ::serde::Serialize,
 )]
 pub struct Duration {
     inner: OrderedF32,

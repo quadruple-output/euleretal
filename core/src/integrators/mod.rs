@@ -4,7 +4,6 @@ pub mod mid_point;
 #[cfg(test)]
 mod test_util;
 
-#[cfg(feature = "persistence")]
 /// Use this mod in `#[serde(with="<path_to_this_mod>")]` if you need to serialize an attribute of
 /// type `Box<dyn Integrator>`
 pub mod serde_box_dyn_integrator {

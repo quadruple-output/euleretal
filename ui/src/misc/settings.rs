@@ -3,11 +3,7 @@ use super::core::PhysicalQuantityKind;
 use super::ui_import::{egui::Painter, Color32, Pos2, Rgba, Stroke, Vec2};
 use ::std::fmt;
 
-#[derive(Debug)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Serialize, ::serde::Deserialize)
-)]
+#[derive(Debug, ::serde::Serialize, ::serde::Deserialize)]
 pub struct Settings {
     pub layerflags: LayerFlags,
     pub strokes: Strokes,
@@ -15,22 +11,14 @@ pub struct Settings {
     pub format_precision: usize,
 }
 
-#[derive(Debug)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Serialize, ::serde::Deserialize)
-)]
+#[derive(Debug, ::serde::Serialize, ::serde::Deserialize)]
 pub struct LayerFlags {
     pub coordinates: bool,
     pub acceleration_field: bool,
     pub inspector: bool,
 }
 
-#[derive(Debug)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Serialize, ::serde::Deserialize)
-)]
+#[derive(Debug, ::serde::Serialize, ::serde::Deserialize)]
 pub struct Strokes {
     pub trajectory: Stroke,
     pub acceleration: Stroke,
@@ -47,11 +35,7 @@ pub struct Strokes {
     pub reference_velocity: Stroke,
 }
 
-#[derive(Debug)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Serialize, ::serde::Deserialize)
-)]
+#[derive(Debug, ::serde::Serialize, ::serde::Deserialize)]
 pub struct PointFormats {
     /// to be used for positions that are the basis for a derived position
     pub start_position: PointFormat,
@@ -60,11 +44,7 @@ pub struct PointFormats {
     pub other_position: PointFormat,
 }
 
-#[derive(Clone, Debug)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Serialize, ::serde::Deserialize)
-)]
+#[derive(Clone, Debug, ::serde::Serialize, ::serde::Deserialize)]
 pub struct PointFormat {
     pub shape: PointShape,
     // size of the shape in screen dimensions
@@ -73,11 +53,7 @@ pub struct PointFormat {
     pub stroke: Stroke,
 }
 
-#[derive(Clone, Debug)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Serialize, ::serde::Deserialize)
-)]
+#[derive(Clone, Debug, ::serde::Serialize, ::serde::Deserialize)]
 pub enum PointShape {
     Dot,
     CrossHair,

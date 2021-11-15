@@ -3,11 +3,7 @@ use crate::{
     Integrator,
 };
 
-#[derive(Clone, Copy, Debug)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Deserialize, ::serde::Serialize)
-)]
+#[derive(Clone, Copy, Debug, ::serde::Deserialize, ::serde::Serialize)]
 pub struct ExactForConst;
 
 impl Integrator for ExactForConst {
@@ -33,7 +29,6 @@ impl Integrator for ExactForConst {
         step.compute(s + v * dt + 0.5 * a * dt * dt);
     }
 
-    #[cfg(feature = "persistence")]
     fn to_concrete_type(&self) -> crate::integrators::serde_box_dyn_integrator::IntegratorSerDe {
         crate::integrators::serde_box_dyn_integrator::IntegratorSerDe::ExactForConst(*self)
     }

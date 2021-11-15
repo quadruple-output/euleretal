@@ -5,11 +5,7 @@ use super::{
 };
 use ::std::{cell::RefCell, rc::Rc, slice::Iter};
 
-#[derive(Debug, Default)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Serialize, ::serde::Deserialize)
-)]
+#[derive(Debug, Default, ::serde::Serialize, ::serde::Deserialize)]
 pub struct World {
     canvases: Vec<RefCell<Canvas>>,
     scenarios: entity_store::List<Scenario>,

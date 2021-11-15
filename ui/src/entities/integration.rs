@@ -6,12 +6,9 @@ use super::{
 };
 use ::std::rc::Rc;
 
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Deserialize, ::serde::Serialize)
-)]
+#[derive(::serde::Deserialize, ::serde::Serialize)]
 pub struct Integration {
-    #[cfg_attr(feature = "persistence", serde(skip))]
+    #[serde(skip)]
     pub core_integration: self::core::Integration,
     pub integrator: Obj<Integrator>,
     pub step_size: Obj<StepSize>,

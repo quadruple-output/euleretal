@@ -8,10 +8,7 @@ use super::{
 };
 use ::std::{cell::RefCell, rc::Rc};
 
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Deserialize, ::serde::Serialize)
-)]
+#[derive(::serde::Deserialize, ::serde::Serialize)]
 pub struct Canvas {
     scenario: entity_store::Index<Scenario>,
     pub(super) integrations: Vec<Obj<Integration>>,
@@ -19,7 +16,7 @@ pub struct Canvas {
     pub(super) focus: Point3,
     scale: Vec3,
     area_center: Pos2,
-    #[cfg_attr(feature = "persistence", serde(skip))]
+    #[serde(skip)]
     pub(super) trajectory_buffer: Option<TrajectoryBuffer>,
     pub ui_integrations_window_is_open: bool,
 }

@@ -10,7 +10,6 @@ pub trait AccelerationField: Send + Sync + 'static {
         TypeId::of::<Self>().hash(state);
     }
 
-    #[cfg(feature = "persistence")]
     fn to_concrete_type(
         &self,
     ) -> crate::scenarios::serde_box_dyn_acceleration_field::AccelerationFieldSerDe;

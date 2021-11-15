@@ -11,18 +11,14 @@ use ::std::{
 /// A 3D-Vector, representing a specific physical quantity (like Velocity, Acceleration, or
 /// Position). `VQMulDuration` is the corresponding `VectorQuantity` that results from a
 /// multiplication by `Duration`.
-#[derive(Clone, Debug, PartialOrd)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Deserialize, ::serde::Serialize)
-)]
+#[derive(Clone, Debug, PartialOrd, ::serde::Deserialize, ::serde::Serialize)]
 pub struct VectorQuantity<Quantity, VQMulDuration> {
     vector: Vec3,
     // assuming `Quantity` is zero-sized, we would not even need `PhantomData` here, but with
     // `PhantomData` we are on the safe side:
-    #[cfg_attr(feature = "persistence", serde(skip))]
+    #[serde(skip)]
     _unit: PhantomData<Quantity>,
-    #[cfg_attr(feature = "persistence", serde(skip))]
+    #[serde(skip)]
     _unit_mul_time: PhantomData<VQMulDuration>,
 }
 

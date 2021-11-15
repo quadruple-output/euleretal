@@ -23,25 +23,19 @@ log = "0.4"
 simple_logger = "1"
 console_error_panic_hook = "0.1"
 
+[dependencies.serde] # serialization/deserialization framework
+version = "1"
+features = ["derive"]
+
+[dependencies.ron]
+version = "0.7"
+
 [dependencies.eframe] # gives us egui, epi and web+native backends
 version = "0.15"
 default-features = false
 #features = ["default_fonts", "egui_glow"] # for now (eframe 0.15), glow is not the default
-features = ["default_fonts", "egui_glium"] # for now (eframe 0.15), glow does not call `App::on_exit()`
-
-[dependencies.serde] # serialization/deserialization framework
-version = "1"
-features = ["derive"]
-optional = true 
-
-[dependencies.ron]
-version = "0.7"
-optional = true
+features = ["persistence", "default_fonts", "egui_glium"] # for now (eframe 0.15), glow does not call `App::on_exit()`
 
 [lib]
 # refer to https://doc.rust-lang.org/cargo/reference/cargo-targets.html#configuring-a-target
 crate-type = ["cdylib", "rlib"] # this setting has blindly been taken over from the egui template
-
-[features]
-default = []
-persistence = ["euleretal-core/persistence", "eframe/persistence", "ron", "serde"] # enable if you want to persist app state on shutdown

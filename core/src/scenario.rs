@@ -1,17 +1,10 @@
-#[cfg(feature = "persistence")]
 use super::scenarios;
 use super::{AccelerationField, Duration, Position, Samples, StartCondition, Step, Velocity};
 use ::std::{collections::hash_map::DefaultHasher, hash::Hash};
 
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Serialize, ::serde::Deserialize)
-)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
 pub struct Scenario {
-    #[cfg_attr(
-        feature = "persistence",
-        serde(with = "scenarios::serde_box_dyn_acceleration_field")
-    )]
+    #[serde(with = "scenarios::serde_box_dyn_acceleration_field")]
     pub acceleration: Box<dyn AccelerationField>,
     pub start_position: Position,
     pub start_velocity: Velocity,

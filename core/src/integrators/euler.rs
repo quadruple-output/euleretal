@@ -3,11 +3,7 @@ use crate::{
     Integrator,
 };
 
-#[derive(Clone, Copy, Debug)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Deserialize, ::serde::Serialize)
-)]
+#[derive(Clone, Copy, Debug, ::serde::Deserialize, ::serde::Serialize)]
 pub struct Broken;
 
 impl Integrator for Broken {
@@ -33,17 +29,12 @@ impl Integrator for Broken {
         step.compute(v + a * dt);
     }
 
-    #[cfg(feature = "persistence")]
     fn to_concrete_type(&self) -> crate::integrators::serde_box_dyn_integrator::IntegratorSerDe {
         crate::integrators::serde_box_dyn_integrator::IntegratorSerDe::BrokenEuler(*self)
     }
 }
 
-#[derive(Clone, Copy, Debug)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Deserialize, ::serde::Serialize)
-)]
+#[derive(Clone, Copy, Debug, ::serde::Deserialize, ::serde::Serialize)]
 pub struct Euler;
 
 impl Integrator for Euler {
@@ -70,7 +61,6 @@ impl Integrator for Euler {
         step.compute(s + v1 * dt);
     }
 
-    #[cfg(feature = "persistence")]
     fn to_concrete_type(&self) -> crate::integrators::serde_box_dyn_integrator::IntegratorSerDe {
         crate::integrators::serde_box_dyn_integrator::IntegratorSerDe::Euler(*self)
     }

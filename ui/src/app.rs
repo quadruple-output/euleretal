@@ -42,7 +42,6 @@ impl epi::App for Euleretal {
         }
     }
 
-    #[cfg(feature = "persistence")]
     fn save(&mut self, storage: &mut dyn epi::Storage) {
         log::debug!("Saving app state");
         // We don't want no silly newline escape characters in the save file.
@@ -174,12 +173,7 @@ impl Euleretal {
         ctx.set_style(style);
     }
 
-    #[cfg_attr(
-        not(feature = "persistence"),
-        allow(clippy::unused_self, unused_variables)
-    )]
     fn try_load_app_state(&mut self, storage: Option<&dyn epi::Storage>) -> Result<(), ()> {
-        #[cfg(feature = "persistence")]
         if let Some(storage) = storage {
             // ** shorter, but without error diagnostics:
             // if let Some(saved_world) = epi::get_value(storage, epi::APP_KEY) { self.world = saved_world; return; }

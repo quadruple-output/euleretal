@@ -3,11 +3,7 @@ use super::{
     Move,
 };
 
-#[derive(Clone, Copy, Debug)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Deserialize, ::serde::Serialize)
-)]
+#[derive(Clone, Copy, Debug, ::serde::Deserialize, ::serde::Serialize)]
 pub struct Position(Point3);
 
 impl From<Point3> for Position {

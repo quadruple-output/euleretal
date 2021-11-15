@@ -19,6 +19,5 @@ pub trait Integrator: Debug + Send + Sync + 'static {
         TypeId::of::<Self>().hash(state);
     }
 
-    #[cfg(feature = "persistence")]
     fn to_concrete_type(&self) -> super::integrators::serde_box_dyn_integrator::IntegratorSerDe;
 }

@@ -1,10 +1,6 @@
 use super::{core::Duration, misc::UserLabel, ui_import::egui};
 
-#[derive(Debug)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Deserialize, ::serde::Serialize)
-)]
+#[derive(Debug, ::serde::Deserialize, ::serde::Serialize)]
 pub struct StepSize {
     pub user_label: UserLabel,
     pub duration: Duration,

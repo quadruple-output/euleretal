@@ -4,7 +4,6 @@ mod constant_acceleration;
 pub use center_mass::CenterMass;
 pub use constant_acceleration::ConstantAcceleration;
 
-#[cfg(feature = "persistence")]
 /// Use this mod in `#[serde(with="<path_to_this_mod>")]` if you need to serialize an attribute of
 /// type `Box<dyn AccelerationField>`
 pub mod serde_box_dyn_acceleration_field {

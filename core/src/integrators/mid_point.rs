@@ -3,11 +3,7 @@ use crate::{
     Integrator,
 };
 
-#[derive(Clone, Copy, Debug)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Deserialize, ::serde::Serialize)
-)]
+#[derive(Clone, Copy, Debug, ::serde::Deserialize, ::serde::Serialize)]
 pub struct Euler;
 
 impl Integrator for Euler {
@@ -42,17 +38,12 @@ impl Integrator for Euler {
         step.compute(s0 + v1 * dt);
     }
 
-    #[cfg(feature = "persistence")]
     fn to_concrete_type(&self) -> crate::integrators::serde_box_dyn_integrator::IntegratorSerDe {
         crate::integrators::serde_box_dyn_integrator::IntegratorSerDe::MidPointEuler(*self)
     }
 }
 
-#[derive(Clone, Copy, Debug)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Deserialize, ::serde::Serialize)
-)]
+#[derive(Clone, Copy, Debug, ::serde::Deserialize, ::serde::Serialize)]
 pub struct SecondOrder;
 
 impl Integrator for SecondOrder {
@@ -83,7 +74,6 @@ impl Integrator for SecondOrder {
         step.compute(v0 + a_mid * dt);
     }
 
-    #[cfg(feature = "persistence")]
     fn to_concrete_type(&self) -> crate::integrators::serde_box_dyn_integrator::IntegratorSerDe {
         crate::integrators::serde_box_dyn_integrator::IntegratorSerDe::MidPointSecondOrder(*self)
     }

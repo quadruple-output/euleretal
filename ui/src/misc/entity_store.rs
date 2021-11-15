@@ -2,21 +2,13 @@ use ::std::{cell::RefCell, marker::PhantomData};
 
 /// A List that can only grow, but never shrink. This makes it possible to store indexes into the
 /// list without worrying about them becoming invalid.
-#[derive(Debug)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Deserialize, ::serde::Serialize)
-)]
+#[derive(Debug, ::serde::Deserialize, ::serde::Serialize)]
 pub struct List<T> {
     inner: Vec<RefCell<T>>,
 }
 
 /// an index into `AppendOnlyList<T>`
-#[derive(Debug)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Deserialize, ::serde::Serialize)
-)]
+#[derive(Debug, ::serde::Deserialize, ::serde::Serialize)]
 pub struct Index<T> {
     inner: usize,
     type_bound: PhantomData<T>,

@@ -1,10 +1,6 @@
 use ::std::{fmt::Display, ops::Deref};
 
-#[derive(Debug)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Serialize, ::serde::Deserialize)
-)]
+#[derive(Debug, ::serde::Serialize, ::serde::Deserialize)]
 pub struct UserLabel(pub String);
 
 impl Deref for UserLabel {

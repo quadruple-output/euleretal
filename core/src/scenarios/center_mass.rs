@@ -1,10 +1,6 @@
 use crate::{Acceleration, AccelerationField, Position};
 
-#[derive(Clone, Copy)]
-#[cfg_attr(
-    feature = "persistence",
-    derive(::serde::Deserialize, ::serde::Serialize)
-)]
+#[derive(Clone, Copy, ::serde::Deserialize, ::serde::Serialize)]
 pub struct CenterMass;
 
 impl AccelerationField for CenterMass {
@@ -17,7 +13,6 @@ impl AccelerationField for CenterMass {
         "Gravity".to_string()
     }
 
-    #[cfg(feature = "persistence")]
     fn to_concrete_type(
         &self,
     ) -> crate::scenarios::serde_box_dyn_acceleration_field::AccelerationFieldSerDe {

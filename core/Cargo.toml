@@ -15,23 +15,24 @@ edition = "2021"
 # more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-parry3d = "0.7" # geometric and collision detection libraries, including `nalgebra`
 log = "0.4"
 simple_logger = "1"
+
+[dependencies.serde] 
+# serialization/deserialization framework
+version = "1"
+features = ["derive"]
+
+[dependencies.parry3d]
+# geometric and collision detection libraries, including `nalgebra`
+version = "0.7" 
+features = ["serde-serialize"]
 
 [dependencies.ordered-float]
 # Total ordering (and more) for floating-point types
 version = "2"
-
-[dependencies.serde] # serialization/deserialization framework
-version = "1"
-features = ["derive"]
-optional = true 
+features = ["serde"]
 
 [lib]
 # refer to https://doc.rust-lang.org/cargo/reference/cargo-targets.html#configuring-a-target
 crate-type = ["cdylib", "rlib"] # this setting has blindly been taken over from the egui template
-
-[features]
-default = []
-persistence = ["ordered-float/serde", "parry3d/serde-serialize", "serde"]
