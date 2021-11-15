@@ -13,16 +13,9 @@ use ::std::rc::Rc;
 #[cfg(not(target_arch = "wasm32"))]
 use ::std::time::Instant;
 
+#[derive(Default)]
 pub struct Euleretal {
     world: World,
-}
-
-impl Default for Euleretal {
-    fn default() -> Self {
-        let mut default = Self::new();
-        default.initialize_scenario();
-        default
-    }
 }
 
 impl epi::App for Euleretal {
@@ -36,9 +29,13 @@ impl epi::App for Euleretal {
         _frame: &mut epi::Frame<'_>,
         storage: Option<&dyn epi::Storage>,
     ) {
-        // does not work (as of eframe 0.15): frame.set_window_title("Euler et al.");
+        Self::init_display_style(ctx);
+        /*
+            // does not work (as of eframe 0.15):
+            frame.set_window_title("Euler et al.");
+        */
         if self.try_load_app_state(storage).is_err() {
-            Self::init_display_style(ctx);
+            self.initialize_scenario();
         }
     }
 
@@ -69,7 +66,7 @@ impl epi::App for Euleretal {
     }
 
     fn auto_save_interval(&self) -> std::time::Duration {
-        std::time::Duration::from_secs(10)
+        std::time::Duration::from_secs(20)
     }
 
     fn clear_color(&self) -> egui::Rgba {
@@ -97,13 +94,6 @@ impl epi::App for Euleretal {
 }
 
 impl Euleretal {
-    #[must_use]
-    pub fn new() -> Self {
-        Self {
-            world: World::default(),
-        }
-    }
-
     fn initialize_scenario(&mut self) {
         let step_size = Rc::clone(self.world.add_step_size(StepSize {
             user_label: UserLabel("default".to_string()),
@@ -181,7 +171,7 @@ impl Euleretal {
                 match ::ron::from_str(&string) {
                     Ok(world) => {
                         self.world = world;
-                        log::debug!("Restored previous app state");
+                        log::debug!("Loaded app state");
                         // Note that the app can still dump late if the app
                         // state file was manipulated with invalid values for
                         // indexes into the World entity store.
