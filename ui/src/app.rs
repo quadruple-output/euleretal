@@ -102,29 +102,29 @@ impl Euleretal {
         }));
 
         let _exact_for_const = self.world.add_integrator(Integrator {
-            integrator: Box::new(integrators::exact_for_const::ExactForConst),
+            core: Box::new(integrators::exact_for_const::ExactForConst),
             stroke: Stroke::new(1., Hsva::from(Color32::BLUE)),
         });
 
         let _explicit_euler = self.world.add_integrator(Integrator {
-            integrator: Box::new(integrators::euler::Broken),
+            core: Box::new(integrators::euler::Broken),
             stroke: Stroke::new(1., Hsva::from(Color32::from_rgb(255, 0, 255))), // 255,0,255: magenta
         });
 
-        let mid_point_euler = Rc::clone(self.world.add_integrator(Integrator {
-            integrator: Box::new(integrators::mid_point::Euler),
+        let mid_point_euler = self.world.add_integrator(Integrator {
+            core: Box::new(integrators::mid_point::Euler),
             stroke: Stroke::new(1., Hsva::from(Color32::YELLOW)),
-        }));
+        });
 
         let _mid_point_second_order = self.world.add_integrator(Integrator {
-            integrator: Box::new(integrators::mid_point::SecondOrder),
+            core: Box::new(integrators::mid_point::SecondOrder),
             stroke: Stroke::new(1., Hsva::from(Color32::GREEN)),
         });
 
-        let _implicit_euler = Rc::clone(self.world.add_integrator(Integrator {
-            integrator: Box::new(integrators::euler::Euler),
+        let _implicit_euler = self.world.add_integrator(Integrator {
+            core: Box::new(integrators::euler::Euler),
             stroke: Stroke::new(1., Hsva::from(Color32::RED)),
-        }));
+        });
 
         let scenario_center_mass = self.world.add_scenario(Scenario {
             acceleration: Box::new(scenarios::CenterMass),

@@ -3,6 +3,7 @@ use super::{
     core::Obj,
     entities::{Canvas, Integration, Integrator, ObjExtras, StepSize},
     layers,
+    misc::entity_store,
     ui_import::{
         egui::{self, Layout},
         Pos2, Ui, Vec2,
@@ -19,7 +20,7 @@ enum IntegrationOperation {
     },
     SetIntegrator {
         integration: Obj<Integration>,
-        integrator: Obj<Integrator>,
+        integrator: entity_store::Index<Integrator>,
     },
     SetStepSize {
         integration: Obj<Integration>,
@@ -121,7 +122,7 @@ fn show_integration_selector(ui: &mut Ui, canvas: &RefCell<Canvas>, world: &Worl
     match operation {
         IntegrationOperation::Create => {
             canvas.borrow_mut().add_integration(Integration::new(
-                Rc::clone(world.integrators().next().unwrap()),
+                entity_store::Index::default(), // Index to the first entry in the list
                 Rc::clone(world.step_sizes().next().unwrap()),
             ));
         }
@@ -184,9 +185,11 @@ fn show_integrations_pop_up(
                         } else {
                             ui.label("");
                         }
+                        let integrator_stroke =
+                            world[integration.borrow().integrator_idx()].borrow().stroke;
                         super::misc::my_stroke_preview(
                             ui,
-                            integration.borrow().get_stroke(),
+                            integrator_stroke,
                             Some((
                                 &world.settings.point_formats.derived_position,
                                 integration.borrow().get_step_color(),
@@ -220,42 +223,36 @@ fn show_integrator_selector(
     ui: &mut Ui,
     integration: &Obj<Integration>,
     world: &World,
-) -> Option<Obj<Integrator>> {
-    let integration_ptr = integration.as_ptr();
-    let current_integrator = &integration.borrow().integrator;
-    let mut selected_integrator_ptr = current_integrator.as_ptr();
+) -> Option<entity_store::Index<Integrator>> {
+    let current_integrator_idx = integration.borrow().integrator_idx();
+    let current_integrator = &world[current_integrator_idx];
+    let mut selected_integrator_idx = current_integrator_idx;
 
     egui::ComboBox::from_id_source(
-        ui.make_persistent_id(format!("integrator_selector_{:?}", integration_ptr)),
+        ui.make_persistent_id(format!("integrator_selector_{:?}", integration.as_ptr())),
     )
-    .selected_text(current_integrator.borrow().integrator.label())
+    .selected_text(current_integrator.borrow().core.label())
     .show_ui(ui, |ui| {
-        world.integrators().for_each(|selectable_integrator| {
-            ui.selectable_value(
-                &mut selected_integrator_ptr,
-                selectable_integrator.as_ptr(),
-                selectable_integrator.borrow().integrator.label(),
-            )
-            .on_hover_text(selectable_integrator.borrow().integrator.description());
-        });
-    })
-    .response
-    .on_hover_text(
-        integration
-            .borrow()
-            .integrator
-            .borrow()
-            .integrator
-            .description(),
-    );
-
-    if selected_integrator_ptr == current_integrator.as_ptr() {
-        None
-    } else {
         world
             .integrators()
-            .find(|candidate| candidate.as_ptr() == selected_integrator_ptr)
-            .map(Rc::clone)
+            .enumerate()
+            .for_each(|(each_idx, each_integrator)| {
+                let each_core_integrator = &each_integrator.borrow().core;
+                ui.selectable_value(
+                    &mut selected_integrator_idx,
+                    each_idx,
+                    each_core_integrator.label(),
+                )
+                .on_hover_text(each_core_integrator.description());
+            });
+    })
+    .response
+    .on_hover_text(current_integrator.borrow().core.description());
+
+    if selected_integrator_idx == current_integrator_idx {
+        None
+    } else {
+        Some(selected_integrator_idx)
     }
 }
 

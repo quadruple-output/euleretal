@@ -19,7 +19,8 @@ pub fn render(canvas: &mut CanvasPainter, world: &World) {
             if first_time {
                 integration.reset();
             }
-            updated |= integration.update(&scenario);
+            let integrator = &*world[integration.integrator_idx()].borrow().core;
+            updated |= integration.update(&scenario, integrator);
         });
     }
 
@@ -37,7 +38,8 @@ pub fn render(canvas: &mut CanvasPainter, world: &World) {
     }
     canvas.draw_trajectory(world.settings.strokes.trajectory);
     canvas.for_each_integration(|integration| {
-        integration.draw_on(canvas, &world.settings);
+        let integrator_stroke = world[integration.integrator_idx()].borrow().stroke;
+        integration.draw_on(canvas, integrator_stroke, &world.settings);
     });
 
     #[cfg(not(target_arch = "wasm32"))]

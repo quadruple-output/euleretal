@@ -71,6 +71,15 @@ impl<T> Clone for Index<T> {
 
 impl<T> Copy for Index<T> {}
 
+impl<T> Default for Index<T> {
+    fn default() -> Self {
+        Self {
+            inner: 0,
+            type_bound: PhantomData::default(),
+        }
+    }
+}
+
 impl<T> PartialEq for Index<T> {
     fn eq(&self, other: &Self) -> bool {
         self.inner == other.inner
