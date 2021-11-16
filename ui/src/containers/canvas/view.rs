@@ -20,11 +20,11 @@ enum IntegrationOperation {
     },
     SetIntegrator {
         integration: Obj<Integration>,
-        integrator: entity_store::Index<Integrator>,
+        integrator_idx: entity_store::Index<Integrator>,
     },
     SetStepSize {
         integration: Obj<Integration>,
-        step_size: Obj<StepSize>,
+        step_size_idx: entity_store::Index<StepSize>,
     },
 }
 
@@ -122,8 +122,8 @@ fn show_integration_selector(ui: &mut Ui, canvas: &RefCell<Canvas>, world: &Worl
     match operation {
         IntegrationOperation::Create => {
             canvas.borrow_mut().add_integration(Integration::new(
-                entity_store::Index::default(), // Index to the first entry in the list
-                Rc::clone(world.step_sizes().next().unwrap()),
+                world.integrators().enumerate().next().unwrap().0,
+                world.step_sizes().enumerate().next().unwrap().0,
             ));
         }
         IntegrationOperation::Delete { integration } => {
@@ -131,13 +131,13 @@ fn show_integration_selector(ui: &mut Ui, canvas: &RefCell<Canvas>, world: &Worl
         }
         IntegrationOperation::SetIntegrator {
             integration,
-            integrator,
+            integrator_idx: integrator,
         } => {
             integration.borrow_mut().set_integrator(integrator);
         }
         IntegrationOperation::SetStepSize {
             integration,
-            step_size,
+            step_size_idx: step_size,
         } => {
             integration.borrow_mut().set_step_size(step_size);
         }
@@ -187,12 +187,14 @@ fn show_integrations_pop_up(
                         }
                         let integrator_stroke =
                             world[integration.borrow().integrator_idx()].borrow().stroke;
+                        let step_size_color =
+                            world[integration.borrow().step_size_idx()].borrow().color;
                         super::misc::my_stroke_preview(
                             ui,
                             integrator_stroke,
                             Some((
                                 &world.settings.point_formats.derived_position,
-                                integration.borrow().get_step_color(),
+                                step_size_color,
                             )),
                         );
                         // wrappind the combobox in a horizontal ui help aligning the grid
@@ -202,14 +204,15 @@ fn show_integrations_pop_up(
                             {
                                 operation = IntegrationOperation::SetIntegrator {
                                     integration: Rc::clone(integration),
-                                    integrator,
+                                    integrator_idx: integrator,
                                 };
                             }
                         });
-                        if let Some(step_size) = show_step_size_selector(ui, integration, world) {
+                        if let Some(step_size_idx) = show_step_size_selector(ui, integration, world)
+                        {
                             operation = IntegrationOperation::SetStepSize {
                                 integration: Rc::clone(integration),
-                                step_size,
+                                step_size_idx,
                             };
                         }
                         ui.end_row();
@@ -260,28 +263,29 @@ fn show_step_size_selector(
     ui: &mut Ui,
     integration: &Obj<Integration>,
     world: &World,
-) -> Option<Obj<StepSize>> {
-    let mut selected_step_size_ptr = integration.borrow().step_size.as_ptr();
+) -> Option<entity_store::Index<StepSize>> {
+    let integration_step_size_idx = integration.borrow().step_size_idx();
+    let mut selected_step_size_idx = integration_step_size_idx;
     egui::ComboBox::from_id_source(
         ui.make_persistent_id(format!("step_size_selector_{:?}", integration.as_ptr())),
     )
-    .selected_text(format!("{}", integration.borrow().step_size.borrow()))
+    .selected_text(format!("{}", world[integration_step_size_idx].borrow()))
     .show_ui(ui, |ui| {
-        world.step_sizes().for_each(|selectable_step_size| {
-            ui.selectable_value(
-                &mut selected_step_size_ptr,
-                selectable_step_size.as_ptr(),
-                format!("{}", selectable_step_size.borrow()),
-            );
-        });
-    });
-
-    if selected_step_size_ptr == integration.borrow().step_size.as_ptr() {
-        None
-    } else {
         world
             .step_sizes()
-            .find(|candidate| selected_step_size_ptr == candidate.as_ptr())
-            .map(Rc::clone)
+            .enumerate()
+            .for_each(|(each_idx, each_step_size)| {
+                ui.selectable_value(
+                    &mut selected_step_size_idx,
+                    each_idx,
+                    format!("{}", each_step_size.borrow()),
+                );
+            });
+    });
+
+    if selected_step_size_idx == integration_step_size_idx {
+        None
+    } else {
+        Some(selected_step_size_idx)
     }
 }

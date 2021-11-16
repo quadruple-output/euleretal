@@ -1,13 +1,11 @@
-use ::std::{cell::RefCell, marker::PhantomData};
+use ::std::{cell::RefCell, collections::BTreeMap, marker::PhantomData};
 
-/// A List that can only grow, but never shrink. This makes it possible to store indexes into the
-/// list without worrying about them becoming invalid.
 #[derive(Debug, ::serde::Deserialize, ::serde::Serialize)]
 pub struct List<T> {
-    inner: Vec<RefCell<T>>,
+    inner: BTreeMap<usize, RefCell<T>>,
+    next_key: usize,
 }
 
-/// an index into `AppendOnlyList<T>`
 #[derive(Debug, ::serde::Deserialize, ::serde::Serialize)]
 pub struct Index<T> {
     inner: usize,
@@ -16,24 +14,29 @@ pub struct Index<T> {
 
 impl<T> List<T> {
     pub fn new() -> Self {
-        Self { inner: Vec::new() }
+        Self {
+            inner: BTreeMap::new(),
+            next_key: 0,
+        }
     }
 
     pub fn push(&mut self, item: T) -> Index<T> {
-        let result = Index::new(self.inner.len());
-        self.inner.push(RefCell::new(item));
+        let result = Index::new(self.next_key);
+        self.inner.insert(self.next_key, RefCell::new(item));
+        self.next_key += 1;
         result
     }
 
+    pub fn delete(&mut self, idx: Index<T>) {
+        self.inner.remove(&idx.inner);
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = &RefCell<T>> {
-        self.inner.iter()
+        self.inner.values()
     }
 
     pub(crate) fn enumerate(&self) -> impl Iterator<Item = (Index<T>, &RefCell<T>)> {
-        self.inner
-            .iter()
-            .enumerate()
-            .map(|(i, t)| (Index::new(i), t))
+        self.inner.iter().map(|(&i, t)| (Index::new(i), t))
     }
 }
 
@@ -47,7 +50,7 @@ impl<T> ::std::ops::Index<self::Index<T>> for List<T> {
     type Output = RefCell<T>;
 
     fn index(&self, index: self::Index<T>) -> &Self::Output {
-        &self.inner[index.inner]
+        &self.inner[&index.inner]
     }
 }
 
@@ -70,15 +73,6 @@ impl<T> Clone for Index<T> {
 }
 
 impl<T> Copy for Index<T> {}
-
-impl<T> Default for Index<T> {
-    fn default() -> Self {
-        Self {
-            inner: 0,
-            type_bound: PhantomData::default(),
-        }
-    }
-}
 
 impl<T> PartialEq for Index<T> {
     fn eq(&self, other: &Self) -> bool {

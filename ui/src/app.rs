@@ -9,7 +9,6 @@ use super::{
     },
     World,
 };
-use ::std::rc::Rc;
 #[cfg(not(target_arch = "wasm32"))]
 use ::std::time::Instant;
 
@@ -95,11 +94,11 @@ impl epi::App for Euleretal {
 
 impl Euleretal {
     fn initialize_scenario(&mut self) {
-        let step_size = Rc::clone(self.world.add_step_size(StepSize {
+        let step_size = self.world.add_step_size(StepSize {
             user_label: UserLabel("default".to_string()),
             duration: 0.11.into(),
             color: Color32::YELLOW,
-        }));
+        });
 
         let _exact_for_const = self.world.add_integrator(Integrator {
             core: Box::new(integrators::exact_for_const::ExactForConst),

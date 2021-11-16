@@ -1,16 +1,16 @@
 use super::{
-    core::{Obj, Scenario},
+    core::Scenario,
     entities::{Canvas, Integrator, StepSize},
     misc::{entity_store, Settings},
 };
-use ::std::{cell::RefCell, rc::Rc, slice::Iter};
+use ::std::{cell::RefCell, slice::Iter};
 
 #[derive(Debug, Default, ::serde::Serialize, ::serde::Deserialize)]
 pub struct World {
     canvases: Vec<RefCell<Canvas>>,
     scenarios: entity_store::List<Scenario>,
     integrators: entity_store::List<Integrator>,
-    step_sizes: Vec<Obj<StepSize>>,
+    step_sizes: entity_store::List<StepSize>,
     pub settings: Settings,
 }
 
@@ -27,8 +27,8 @@ impl World {
         &self.integrators
     }
 
-    pub fn step_sizes(&self) -> Iter<Obj<StepSize>> {
-        self.step_sizes.iter()
+    pub fn step_sizes(&self) -> &entity_store::List<StepSize> {
+        &self.step_sizes
     }
 
     pub fn add_canvas(&mut self, canvas: Canvas) -> &RefCell<Canvas> {
@@ -40,9 +40,12 @@ impl World {
         self.scenarios.push(scenario)
     }
 
-    pub fn add_step_size(&mut self, step_size: StepSize) -> &Obj<StepSize> {
-        self.step_sizes.push(Rc::new(RefCell::new(step_size)));
-        self.step_sizes.last().unwrap()
+    pub fn add_step_size(&mut self, step_size: StepSize) -> entity_store::Index<StepSize> {
+        self.step_sizes.push(step_size)
+    }
+
+    pub fn remove_step_size(&mut self, step_size_idx: entity_store::Index<StepSize>) {
+        self.step_sizes.delete(step_size_idx);
     }
 
     pub fn add_integrator(&mut self, integrator: Integrator) -> entity_store::Index<Integrator> {
@@ -53,12 +56,6 @@ impl World {
     pub fn remove_canvas(&mut self, canvas: *const RefCell<Canvas>) {
         self.canvases
             .retain(|candidate| !::std::ptr::eq(canvas, candidate));
-    }
-
-    #[allow(clippy::needless_pass_by_value)]
-    pub fn remove_step_size(&mut self, step_size: Obj<StepSize>) {
-        self.step_sizes
-            .retain(|candidate| !Rc::ptr_eq(&step_size, candidate));
     }
 }
 
@@ -75,5 +72,13 @@ impl ::std::ops::Index<entity_store::Index<Scenario>> for World {
 
     fn index(&self, index: entity_store::Index<Scenario>) -> &Self::Output {
         &self.scenarios[index]
+    }
+}
+
+impl ::std::ops::Index<entity_store::Index<StepSize>> for World {
+    type Output = RefCell<StepSize>;
+
+    fn index(&self, index: entity_store::Index<StepSize>) -> &Self::Output {
+        &self.step_sizes[index]
     }
 }

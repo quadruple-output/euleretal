@@ -7,7 +7,7 @@ pub fn render(canvas: &mut CanvasPainter, world: &World) {
     let mut updated = false;
 
     let min_dt = canvas
-        .map_integrations(|integration| integration.step_size.borrow().duration)
+        .map_integrations(|integration| integration.fetch_step_duration(world))
         .min() // this crate depends on R32 just to be able to use this min() function
         .unwrap_or_else(|| 0.1.into());
 
@@ -20,7 +20,8 @@ pub fn render(canvas: &mut CanvasPainter, world: &World) {
                 integration.reset();
             }
             let integrator = &*world[integration.integrator_idx()].borrow().core;
-            updated |= integration.update(&scenario, integrator);
+            let step_duration = world[integration.step_size_idx()].borrow().duration;
+            updated |= integration.update(&scenario, integrator, step_duration);
         });
     }
 
@@ -39,7 +40,7 @@ pub fn render(canvas: &mut CanvasPainter, world: &World) {
     canvas.draw_trajectory(world.settings.strokes.trajectory);
     canvas.for_each_integration(|integration| {
         let integrator_stroke = world[integration.integrator_idx()].borrow().stroke;
-        integration.draw_on(canvas, integrator_stroke, &world.settings);
+        integration.draw_on(canvas, integrator_stroke, world);
     });
 
     #[cfg(not(target_arch = "wasm32"))]

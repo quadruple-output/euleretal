@@ -1,18 +1,17 @@
 use super::{
-    core::{self, Obj, Position, Scenario, Step},
-    misc::{BoundingBox, Settings},
-    ui_import::{Color32, Stroke},
-    Integrator, StepSize,
+    core::{self, Duration, Position, Scenario, Step},
+    misc::BoundingBox,
+    ui_import::Stroke,
+    Integrator, StepSize, World,
 };
 use crate::misc::entity_store;
-use ::std::rc::Rc;
 
 #[derive(::serde::Deserialize, ::serde::Serialize)]
 pub struct Integration {
     #[serde(skip)]
     pub core: self::core::Integration,
     integrator_idx: entity_store::Index<Integrator>,
-    pub step_size: Obj<StepSize>,
+    step_size_idx: entity_store::Index<StepSize>,
     current_sample_index: Option<usize>,
 }
 
@@ -21,7 +20,7 @@ impl ::std::fmt::Debug for Integration {
         f.debug_struct("Integration")
             //.field("core_integration", &self.core_integration)
             .field("integrator", &self.integrator_idx)
-            .field("step_size", &self.step_size)
+            .field("step_size", &self.step_size_idx)
             .field("current_sample_index", &self.current_sample_index)
             .finish()
     }
@@ -29,16 +28,19 @@ impl ::std::fmt::Debug for Integration {
 
 impl Clone for Integration {
     fn clone(&self) -> Self {
-        Self::new(self.integrator_idx, Rc::clone(&self.step_size))
+        Self::new(self.integrator_idx, self.step_size_idx)
     }
 }
 
 impl Integration {
-    pub fn new(integrator: entity_store::Index<Integrator>, step_size: Obj<StepSize>) -> Self {
+    pub fn new(
+        integrator: entity_store::Index<Integrator>,
+        step_size: entity_store::Index<StepSize>,
+    ) -> Self {
         Self {
             core: self::core::Integration::new(),
             integrator_idx: integrator,
-            step_size,
+            step_size_idx: step_size,
             current_sample_index: None,
         }
     }
@@ -51,18 +53,22 @@ impl Integration {
         self.integrator_idx
     }
 
+    pub fn step_size_idx(&self) -> entity_store::Index<StepSize> {
+        self.step_size_idx
+    }
+
     pub fn set_integrator(&mut self, integrator_idx: entity_store::Index<Integrator>) {
         self.integrator_idx = integrator_idx;
         self.reset();
     }
 
-    pub fn set_step_size(&mut self, step_size: Obj<StepSize>) {
-        self.step_size = step_size;
+    pub fn set_step_size(&mut self, step_size_idx: entity_store::Index<StepSize>) {
+        self.step_size_idx = step_size_idx;
         self.reset();
     }
 
-    pub fn get_step_color(&self) -> Color32 {
-        self.step_size.borrow().color
+    pub fn fetch_step_duration(&self, world: &World) -> Duration {
+        world[self.step_size_idx].borrow().duration
     }
 
     pub fn stretch_bbox(&self, bbox: &mut BoundingBox) {
@@ -92,11 +98,13 @@ impl Integration {
         })
     }
 
-    pub fn update(&mut self, scenario: &Scenario, integrator: &dyn core::Integrator) -> bool {
-        if self
-            .core
-            .update(scenario, integrator, self.step_size.borrow().duration)
-        {
+    pub fn update(
+        &mut self,
+        scenario: &Scenario,
+        integrator: &dyn core::Integrator,
+        step_duration: Duration,
+    ) -> bool {
+        if self.core.update(scenario, integrator, step_duration) {
             self.adjust_focussed_sample();
             true
         } else {
@@ -121,8 +129,8 @@ impl Integration {
         }
     }
 
-    pub fn draw_on(&self, canvas: &super::CanvasPainter, stroke: Stroke, settings: &Settings) {
-        let sample_color = self.step_size.borrow().color;
+    pub fn draw_on(&self, canvas: &super::CanvasPainter, stroke: Stroke, world: &World) {
+        let sample_color = world[self.step_size_idx].borrow().color;
         if let Some(samples) = self.core.samples() {
             canvas.draw_sample_trajectory(samples, stroke);
         }
@@ -130,14 +138,14 @@ impl Integration {
             canvas.draw_sample_dots(
                 ref_samples,
                 sample_color,
-                &settings.point_formats.reference_position,
+                &world.settings.point_formats.reference_position,
             );
         }
         if let Some(samples) = self.core.samples() {
             canvas.draw_sample_dots(
                 samples,
                 sample_color,
-                &settings.point_formats.derived_position,
+                &world.settings.point_formats.derived_position,
             );
         }
     }
