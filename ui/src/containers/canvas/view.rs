@@ -2,14 +2,14 @@ use super::{
     constants,
     entities::{Canvas, Integration, Integrator, ObjExtras, StepSize},
     layers,
-    misc::entity_store,
+    misc::{entity_store, my_stroke_preview},
     ui_import::{
         egui::{self, Layout},
         Pos2, Ui, Vec2,
     },
     World,
 };
-use ::std::cell::{Ref, RefCell};
+use ::std::cell::RefCell;
 
 enum IntegrationOperation {
     Noop,
@@ -191,21 +191,18 @@ fn show_integrations_pop_up(
                         } else {
                             ui.label("");
                         }
-                        let integration = integration.borrow();
-                        let integrator_stroke = world[integration.integrator_idx()].borrow().stroke;
-                        let step_size_color = world[integration.step_size_idx()].borrow().color;
-                        super::misc::my_stroke_preview(
+                        my_stroke_preview(
                             ui,
-                            integrator_stroke,
+                            world[integration.borrow().integrator_idx()].borrow().stroke,
                             Some((
                                 &world.settings.point_formats.derived_position,
-                                step_size_color,
+                                world[integration.borrow().step_size_idx()].borrow().color,
                             )),
                         );
                         // wrappind the combobox in a horizontal ui help aligning the grid
                         ui.horizontal(|ui| {
                             if let Some(integrator_idx) =
-                                show_integrator_selector(ui, &integration, world)
+                                show_integrator_selector(ui, integration, world)
                             {
                                 operation = IntegrationOperation::SetIntegrator {
                                     integration_idx,
@@ -213,8 +210,7 @@ fn show_integrations_pop_up(
                                 };
                             }
                         });
-                        if let Some(step_size_idx) =
-                            show_step_size_selector(ui, &integration, world)
+                        if let Some(step_size_idx) = show_step_size_selector(ui, integration, world)
                         {
                             operation = IntegrationOperation::SetStepSize {
                                 integration_idx,
@@ -230,14 +226,15 @@ fn show_integrations_pop_up(
 
 fn show_integrator_selector(
     ui: &mut Ui,
-    integration: &Ref<Integration>,
+    integration: &RefCell<Integration>,
     world: &World,
 ) -> Option<entity_store::Index<Integrator>> {
+    let integration = integration.borrow();
     let current_integrator_idx = integration.integrator_idx();
     let current_integrator = &world[current_integrator_idx];
     let mut selected_integrator_idx = current_integrator_idx;
 
-    let integration_ptr: *const Integration = &**integration;
+    let integration_ptr: *const Integration = &*integration;
     egui::ComboBox::from_id_source(
         ui.make_persistent_id(format!("integrator_selector_{:?}", integration_ptr)),
     )
@@ -268,12 +265,13 @@ fn show_integrator_selector(
 
 fn show_step_size_selector(
     ui: &mut Ui,
-    integration: &Ref<Integration>,
+    integration: &RefCell<Integration>,
     world: &World,
 ) -> Option<entity_store::Index<StepSize>> {
+    let integration = integration.borrow();
     let integration_step_size_idx = integration.step_size_idx();
     let mut selected_step_size_idx = integration_step_size_idx;
-    let integration_ptr: *const Integration = &**integration;
+    let integration_ptr: *const Integration = &*integration;
     egui::ComboBox::from_id_source(
         ui.make_persistent_id(format!("step_size_selector_{:?}", integration_ptr)),
     )
