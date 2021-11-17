@@ -1,6 +1,6 @@
 use crate::{Acceleration, AccelerationField, Position};
 
-#[derive(Clone, Copy, ::serde::Deserialize, ::serde::Serialize)]
+#[derive(Clone, Copy, Default, ::serde::Deserialize, ::serde::Serialize)]
 pub struct CenterMass;
 
 impl AccelerationField for CenterMass {

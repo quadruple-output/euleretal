@@ -3,7 +3,7 @@ use crate::{
     Integrator,
 };
 
-#[derive(Clone, Copy, Debug, ::serde::Deserialize, ::serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, ::serde::Deserialize, ::serde::Serialize)]
 pub struct Euler;
 
 impl Integrator for Euler {
@@ -43,7 +43,7 @@ impl Integrator for Euler {
     }
 }
 
-#[derive(Clone, Copy, Debug, ::serde::Deserialize, ::serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, ::serde::Deserialize, ::serde::Serialize)]
 pub struct SecondOrder;
 
 impl Integrator for SecondOrder {

@@ -1,14 +1,22 @@
 use ::std::{cell::RefCell, collections::BTreeMap, marker::PhantomData};
 
+/// All references to contents of this list are based on Indexes (not `::std::rc::Rc`), because
+/// otherwise deserialization would duplicate instances which where just one before serialization.
 #[derive(Debug, ::serde::Deserialize, ::serde::Serialize)]
+#[serde(transparent)]
 pub struct List<T> {
+    // I use a BTreeMap instead of a Vec because I can add and remove new entries without
+    // invalidating any Indexes.
     inner: BTreeMap<usize, RefCell<T>>,
+    #[serde(skip)]
     next_key: usize,
 }
 
 #[derive(Debug, ::serde::Deserialize, ::serde::Serialize)]
+#[serde(transparent)]
 pub struct Index<T> {
     inner: usize,
+    #[serde(skip)]
     type_bound: PhantomData<T>,
 }
 
@@ -21,10 +29,22 @@ impl<T> List<T> {
     }
 
     pub fn push(&mut self, item: T) -> Index<T> {
-        let result = Index::new(self.next_key);
-        self.inner.insert(self.next_key, RefCell::new(item));
-        self.next_key += 1;
-        result
+        self.provide_next_unused_key();
+        debug_assert!(self
+            .inner
+            .insert(self.next_key, RefCell::new(item))
+            .is_none());
+        let index_for_pushed = Index::new(self.next_key);
+        self.next_key = self.next_key.wrapping_add(1);
+        index_for_pushed
+    }
+
+    fn provide_next_unused_key(&mut self) {
+        let search_start = self.next_key;
+        while self.inner.contains_key(&self.next_key) {
+            self.next_key = self.next_key.wrapping_add(1);
+            assert!(search_start != self.next_key, "List is full. (seriously?)");
+        }
     }
 
     pub fn delete(&mut self, idx: Index<T>) {

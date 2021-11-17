@@ -13,8 +13,8 @@ pub mod serde_box_dyn_acceleration_field {
 
     #[derive(Deserialize, Serialize)]
     pub enum AccelerationFieldSerDe {
-        CenterMass(CenterMass),
-        ConstantAcceleration(ConstantAcceleration),
+        CenterMass(#[serde(skip)] CenterMass),
+        ConstantAcceleration(#[serde(skip)] ConstantAcceleration),
     }
 
     #[allow(clippy::borrowed_box)]

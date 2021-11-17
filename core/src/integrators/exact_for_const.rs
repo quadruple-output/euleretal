@@ -3,7 +3,7 @@ use crate::{
     Integrator,
 };
 
-#[derive(Clone, Copy, Debug, ::serde::Deserialize, ::serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, ::serde::Deserialize, ::serde::Serialize)]
 pub struct ExactForConst;
 
 impl Integrator for ExactForConst {

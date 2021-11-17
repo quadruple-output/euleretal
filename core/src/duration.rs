@@ -17,6 +17,7 @@ use ::std::{
     ::serde::Deserialize,
     ::serde::Serialize,
 )]
+#[serde(transparent)]
 pub struct Duration {
     inner: OrderedF32,
 }

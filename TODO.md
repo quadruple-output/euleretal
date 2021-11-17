@@ -47,6 +47,9 @@
 - Save/load state in/from file.
 
 ## Clean Code
+- make code robust against invalid values of `entity_store::Index`. They can be
+  caused by manipulation of the save file, or even by loading an old save file
+  with a new app version.
 - write more unit tests for specific Integrators
 
 ## Performance

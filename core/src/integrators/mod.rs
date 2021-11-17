@@ -13,11 +13,11 @@ pub mod serde_box_dyn_integrator {
 
     #[derive(Deserialize, Serialize)]
     pub enum IntegratorSerDe {
-        BrokenEuler(euler::Broken),
-        Euler(euler::Euler),
-        ExactForConst(exact_for_const::ExactForConst),
-        MidPointEuler(mid_point::Euler),
-        MidPointSecondOrder(mid_point::SecondOrder),
+        BrokenEuler(#[serde(skip)] euler::Broken),
+        Euler(#[serde(skip)] euler::Euler),
+        ExactForConst(#[serde(skip)] exact_for_const::ExactForConst),
+        MidPointEuler(#[serde(skip)] mid_point::Euler),
+        MidPointSecondOrder(#[serde(skip)] mid_point::SecondOrder),
     }
 
     #[allow(clippy::borrowed_box)]

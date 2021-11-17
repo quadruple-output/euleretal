@@ -4,6 +4,7 @@ use super::{
 };
 
 #[derive(Clone, Copy, Debug, ::serde::Deserialize, ::serde::Serialize)]
+#[serde(transparent)]
 pub struct Position(Point3);
 
 impl From<Point3> for Position {

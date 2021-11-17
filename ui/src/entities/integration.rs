@@ -10,7 +10,9 @@ use crate::misc::entity_store;
 pub struct Integration {
     #[serde(skip)]
     pub core: self::core::Integration,
+    #[serde(rename = "integrator")]
     integrator_idx: entity_store::Index<Integrator>,
+    #[serde(rename = "step_size")]
     step_size_idx: entity_store::Index<StepSize>,
     current_sample_index: Option<usize>,
 }
@@ -92,7 +94,7 @@ impl Integration {
     pub fn focussed_sample(&self) -> Option<(&Step, &Step)> {
         self.current_sample_index.map(|idx| {
             (
-                self.core.reference_samples().unwrap().at(idx),
+                self.core.reference_samples().unwrap().at(idx), // todo : idx could be invalid (by loading from incompatible save file)
                 self.core.samples().unwrap().at(idx),
             )
         })

@@ -12,6 +12,7 @@ use ::std::{
 /// Position). `VQMulDuration` is the corresponding `VectorQuantity` that results from a
 /// multiplication by `Duration`.
 #[derive(Clone, Debug, PartialOrd, ::serde::Deserialize, ::serde::Serialize)]
+#[serde(transparent)]
 pub struct VectorQuantity<Quantity, VQMulDuration> {
     vector: Vec3,
     // assuming `Quantity` is zero-sized, we would not even need `PhantomData` here, but with
