@@ -10,6 +10,7 @@
 - Description tool tips sometimes break text too early → increase width.
 
 ## UI features
+- do not auto-zoom after loading app state
 - For position contributions of `½a dt^2`, draw a curved trajectory.
 - Layer 'Acceleration Field' should draw scaled vectors at each sampling point
   of a Step (transparent color, so they can be distinguished from
