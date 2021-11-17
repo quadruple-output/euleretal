@@ -34,7 +34,7 @@ impl<'c> Painter<'c> {
         self.canvas
             .integrations
             .iter()
-            .map(|integration_obj| integration_obj.borrow())
+            .map(RefCell::borrow)
             .for_each(f);
     }
 
@@ -42,7 +42,7 @@ impl<'c> Painter<'c> {
         self.canvas
             .integrations
             .iter()
-            .map(|integration_obj| integration_obj.borrow_mut())
+            .map(RefCell::borrow_mut)
             .for_each(f);
     }
 
@@ -54,7 +54,7 @@ impl<'c> Painter<'c> {
         self.canvas
             .integrations
             .iter()
-            .map(|integration_obj| integration_obj.borrow_mut())
+            .map(RefCell::borrow_mut)
             .map(f)
             .collect::<Vec<_>>()
             .into_iter()

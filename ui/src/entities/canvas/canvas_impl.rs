@@ -1,17 +1,17 @@
 use super::{
-    core::{Duration, Obj, Scenario},
+    core::{Duration, Scenario},
     import::{Point3, Vec3},
     misc::{entity_store, BoundingBox},
     trajectory_buffer::TrajectoryBuffer,
     ui_import::{egui, Pos2, Ui, Vec2},
     Integration, Painter,
 };
-use ::std::{cell::RefCell, rc::Rc};
+use ::std::cell::RefCell;
 
 #[derive(::serde::Deserialize, ::serde::Serialize)]
 pub struct Canvas {
     scenario: entity_store::Index<Scenario>,
-    pub(super) integrations: Vec<Obj<Integration>>,
+    pub(super) integrations: Vec<RefCell<Integration>>,
     pub(super) visible_units: f32,
     pub(super) focus: Point3,
     scale: Vec3,
@@ -73,18 +73,21 @@ impl Canvas {
         self.trajectory_buffer = None;
     }
 
-    pub fn integrations(&self) -> ::core::slice::Iter<Obj<Integration>> {
+    pub fn integrations(&self) -> ::core::slice::Iter<RefCell<Integration>> {
         self.integrations.iter()
     }
 
     pub fn add_integration(&mut self, integration: Integration) {
-        self.integrations.push(Rc::new(RefCell::new(integration)));
+        self.integrations.push(RefCell::new(integration));
     }
 
     #[allow(clippy::needless_pass_by_value)]
-    pub fn remove_integration(&mut self, integration: Obj<Integration>) {
-        self.integrations
-            .retain(|candidate| !Rc::ptr_eq(candidate, &integration));
+    pub fn remove_integration(&mut self, integration_idx: usize) {
+        self.integrations.remove(integration_idx);
+    }
+
+    pub fn integration_at(&self, integration_idx: usize) -> &RefCell<Integration> {
+        &self.integrations[integration_idx]
     }
 
     pub fn update_trajectory(&mut self, scenario: &Scenario, min_dt: Duration) {

@@ -1,6 +1,5 @@
 use super::{
     constants,
-    core::Obj,
     entities::{Canvas, Integration, Integrator, ObjExtras, StepSize},
     layers,
     misc::entity_store,
@@ -10,20 +9,20 @@ use super::{
     },
     World,
 };
-use ::std::{cell::RefCell, rc::Rc};
+use ::std::cell::{Ref, RefCell};
 
 enum IntegrationOperation {
     Noop,
     Create,
     Delete {
-        integration: Obj<Integration>,
+        integration_idx: usize,
     },
     SetIntegrator {
-        integration: Obj<Integration>,
+        integration_idx: usize,
         integrator_idx: entity_store::Index<Integrator>,
     },
     SetStepSize {
-        integration: Obj<Integration>,
+        integration_idx: usize,
         step_size_idx: entity_store::Index<StepSize>,
     },
 }
@@ -126,20 +125,28 @@ fn show_integration_selector(ui: &mut Ui, canvas: &RefCell<Canvas>, world: &Worl
                 world.step_sizes().enumerate().next().unwrap().0,
             ));
         }
-        IntegrationOperation::Delete { integration } => {
-            canvas.borrow_mut().remove_integration(integration);
+        IntegrationOperation::Delete { integration_idx } => {
+            canvas.borrow_mut().remove_integration(integration_idx);
         }
         IntegrationOperation::SetIntegrator {
-            integration,
-            integrator_idx: integrator,
+            integration_idx,
+            integrator_idx,
         } => {
-            integration.borrow_mut().set_integrator(integrator);
+            canvas
+                .borrow()
+                .integration_at(integration_idx)
+                .borrow_mut()
+                .set_integrator(integrator_idx);
         }
         IntegrationOperation::SetStepSize {
-            integration,
-            step_size_idx: step_size,
+            integration_idx,
+            step_size_idx,
         } => {
-            integration.borrow_mut().set_step_size(step_size);
+            canvas
+                .borrow()
+                .integration_at(integration_idx)
+                .borrow_mut()
+                .set_step_size(step_size_idx);
         }
         IntegrationOperation::Noop => (),
     }
@@ -175,20 +182,18 @@ fn show_integrations_pop_up(
 
                     // table body:
                     let num_integrations = canvas.borrow().integrations().len();
-                    canvas.borrow().integrations().for_each(|integration| {
+                    for (integration_idx, integration) in canvas.borrow().integrations().enumerate()
+                    {
                         if num_integrations > 1 {
                             if ui.small_button(constants::BUTTON_GLYPH_DELETE).clicked() {
-                                operation = IntegrationOperation::Delete {
-                                    integration: Rc::clone(integration),
-                                };
+                                operation = IntegrationOperation::Delete { integration_idx };
                             }
                         } else {
                             ui.label("");
                         }
-                        let integrator_stroke =
-                            world[integration.borrow().integrator_idx()].borrow().stroke;
-                        let step_size_color =
-                            world[integration.borrow().step_size_idx()].borrow().color;
+                        let integration = integration.borrow();
+                        let integrator_stroke = world[integration.integrator_idx()].borrow().stroke;
+                        let step_size_color = world[integration.step_size_idx()].borrow().color;
                         super::misc::my_stroke_preview(
                             ui,
                             integrator_stroke,
@@ -199,24 +204,25 @@ fn show_integrations_pop_up(
                         );
                         // wrappind the combobox in a horizontal ui help aligning the grid
                         ui.horizontal(|ui| {
-                            if let Some(integrator) =
-                                show_integrator_selector(ui, integration, world)
+                            if let Some(integrator_idx) =
+                                show_integrator_selector(ui, &integration, world)
                             {
                                 operation = IntegrationOperation::SetIntegrator {
-                                    integration: Rc::clone(integration),
-                                    integrator_idx: integrator,
+                                    integration_idx,
+                                    integrator_idx,
                                 };
                             }
                         });
-                        if let Some(step_size_idx) = show_step_size_selector(ui, integration, world)
+                        if let Some(step_size_idx) =
+                            show_step_size_selector(ui, &integration, world)
                         {
                             operation = IntegrationOperation::SetStepSize {
-                                integration: Rc::clone(integration),
+                                integration_idx,
                                 step_size_idx,
                             };
                         }
                         ui.end_row();
-                    });
+                    }
                 });
         });
     operation
@@ -224,15 +230,16 @@ fn show_integrations_pop_up(
 
 fn show_integrator_selector(
     ui: &mut Ui,
-    integration: &Obj<Integration>,
+    integration: &Ref<Integration>,
     world: &World,
 ) -> Option<entity_store::Index<Integrator>> {
-    let current_integrator_idx = integration.borrow().integrator_idx();
+    let current_integrator_idx = integration.integrator_idx();
     let current_integrator = &world[current_integrator_idx];
     let mut selected_integrator_idx = current_integrator_idx;
 
+    let integration_ptr: *const Integration = &**integration;
     egui::ComboBox::from_id_source(
-        ui.make_persistent_id(format!("integrator_selector_{:?}", integration.as_ptr())),
+        ui.make_persistent_id(format!("integrator_selector_{:?}", integration_ptr)),
     )
     .selected_text(current_integrator.borrow().core.label())
     .show_ui(ui, |ui| {
@@ -261,13 +268,14 @@ fn show_integrator_selector(
 
 fn show_step_size_selector(
     ui: &mut Ui,
-    integration: &Obj<Integration>,
+    integration: &Ref<Integration>,
     world: &World,
 ) -> Option<entity_store::Index<StepSize>> {
-    let integration_step_size_idx = integration.borrow().step_size_idx();
+    let integration_step_size_idx = integration.step_size_idx();
     let mut selected_step_size_idx = integration_step_size_idx;
+    let integration_ptr: *const Integration = &**integration;
     egui::ComboBox::from_id_source(
-        ui.make_persistent_id(format!("step_size_selector_{:?}", integration.as_ptr())),
+        ui.make_persistent_id(format!("step_size_selector_{:?}", integration_ptr)),
     )
     .selected_text(format!("{}", world[integration_step_size_idx].borrow()))
     .show_ui(ui, |ui| {
