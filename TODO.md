@@ -1,16 +1,12 @@
 # Euleretal TODO list
 
 ## UI Bugs
-- When the app state is restored from a previous run, changing colors of an
-  Integrator has no effect on an existing integration.  Root cause is that
-  deserialization multiplies reference-counted instances.
 - "Integrations" Pop-Up should be restricted to be placed inside its parent
   canvas.
 - Drop-Downs (Combo boxes) in "Integrations" Pop-Up are sometimes clipped away.
 - Description tool tips sometimes break text too early → increase width.
 
 ## UI features
-- do not auto-zoom after loading app state
 - For position contributions of `½a dt^2`, draw a curved trajectory.
 - Layer 'Acceleration Field' should draw scaled vectors at each sampling point
   of a Step (transparent color, so they can be distinguished from

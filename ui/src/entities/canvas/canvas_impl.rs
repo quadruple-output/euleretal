@@ -11,14 +11,15 @@ use ::std::cell::RefCell;
 #[derive(::serde::Deserialize, ::serde::Serialize)]
 pub struct Canvas {
     scenario: entity_store::Index<Scenario>,
+    scenario_is_new: bool,
     pub(super) integrations: Vec<RefCell<Integration>>,
-    pub(super) visible_units: f32,
-    pub(super) focus: Point3,
+    visible_units: f32,
+    focus: Point3,
     scale: Vec3,
     area_center: Pos2,
+    pub ui_integrations_window_is_open: bool,
     #[serde(skip)]
     pub(super) trajectory_buffer: Option<TrajectoryBuffer>,
-    pub ui_integrations_window_is_open: bool,
 }
 
 impl ::std::fmt::Debug for Canvas {
@@ -54,6 +55,7 @@ impl Canvas {
     pub fn new(scenario_idx: entity_store::Index<Scenario>) -> Self {
         Self {
             scenario: scenario_idx,
+            scenario_is_new: true,
             integrations: Vec::default(),
             visible_units: 1.,
             focus: Point3::origin(),
@@ -70,6 +72,7 @@ impl Canvas {
 
     pub fn set_scenario(&mut self, new_scenario: entity_store::Index<Scenario>) {
         self.scenario = new_scenario;
+        self.scenario_is_new = true;
         self.trajectory_buffer = None;
     }
 
@@ -98,8 +101,10 @@ impl Canvas {
         }
     }
 
-    pub fn has_trajectory(&self) -> bool {
-        self.trajectory_buffer.is_some()
+    pub fn scenario_is_new_once(&mut self) -> bool {
+        let result = self.scenario_is_new;
+        self.scenario_is_new = false;
+        result
     }
 
     pub fn bbox(&self) -> Option<BoundingBox> {
@@ -113,9 +118,14 @@ impl Canvas {
         })
     }
 
+    pub fn set_viewport(&mut self, focus: Point3, visible_units: f32) {
+        log::debug!("canvas.set_viewport({},{})", focus, visible_units);
+        self.focus = focus;
+        self.visible_units = visible_units;
+    }
+
     pub fn set_visible_bbox(&mut self, bbox: &BoundingBox) {
-        self.focus = bbox.center();
-        self.visible_units = bbox.diameter() * 1.2;
+        self.set_viewport(bbox.center(), bbox.diameter() * 1.2);
     }
 
     pub fn adjust_scale_and_center(&mut self, paint_area: &egui::Rect) {
@@ -137,6 +147,14 @@ impl Canvas {
             + (pos - self.area_center.to_vec2())
                 .to_vec3()
                 .component_div(&self.scale)
+    }
+
+    pub fn visible_units(&self) -> f32 {
+        self.visible_units
+    }
+
+    pub fn focus(&self) -> Point3 {
+        self.focus
     }
 }
 

@@ -98,10 +98,10 @@ impl<'c> Painter<'c> {
 
             #[allow(clippy::float_cmp)]
             if zoom != 1. || translation != Vec2::ZERO {
-                self.canvas.visible_units /= zoom;
-                let screen_focus = self.canvas.user_to_screen(self.canvas.focus);
-                self.canvas.focus = self.canvas.screen_to_user(screen_focus - translation);
-
+                let screen_focus = self.canvas.user_to_screen(self.canvas.focus());
+                let new_focus = self.canvas.screen_to_user(screen_focus - translation);
+                let new_visible_units = self.canvas.visible_units() / zoom;
+                self.canvas.set_viewport(new_focus, new_visible_units);
                 self.canvas.adjust_scale_and_center(&self.response.rect);
             }
         }
@@ -219,10 +219,6 @@ impl<'c> Painter<'c> {
         }
     }
 
-    pub fn has_trajectory(&self) -> bool {
-        self.canvas.has_trajectory()
-    }
-
     pub fn update_trajectory(&mut self, scenario: &Scenario, min_dt: Duration) {
         self.canvas.update_trajectory(scenario, min_dt);
     }
@@ -269,6 +265,10 @@ impl<'c> Painter<'c> {
                 .for_each(|integration| integration.borrow().stretch_bbox(&mut bbox));
             self.canvas.set_visible_bbox(&bbox);
         }
+    }
+
+    pub fn scenario_is_new_once(&mut self) -> bool {
+        self.canvas.scenario_is_new_once()
     }
 }
 

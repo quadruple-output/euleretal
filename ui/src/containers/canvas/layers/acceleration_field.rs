@@ -3,6 +3,7 @@ use super::{core::Position, entities::CanvasPainter, import::Vec3, World};
 pub fn render(canvas: &CanvasPainter, world: &World) {
     #![allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)]
 
+    log::debug!("render accelerationfield");
     let acceleration = &world.scenarios()[canvas.scenario_idx()]
         .borrow()
         .acceleration;
