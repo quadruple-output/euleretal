@@ -1,6 +1,6 @@
 use super::{entities::CanvasPainter, import::Point3, misc::settings};
 
-pub fn render(strokes: &settings::Strokes, canvas: &CanvasPainter) {
+pub fn render(canvas: &CanvasPainter, strokes: &settings::Strokes) {
     #![allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)]
     canvas.draw_hline(0., strokes.coordinates);
     canvas.draw_vline(0., strokes.coordinates);

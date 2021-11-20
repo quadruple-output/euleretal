@@ -4,7 +4,7 @@ use super::{
     misc::{entity_store, BoundingBox},
     trajectory_buffer::TrajectoryBuffer,
     ui_import::{egui, Pos2, Ui, Vec2},
-    Integration, Painter,
+    Integration, Painter, World,
 };
 use ::std::cell::RefCell;
 
@@ -118,6 +118,14 @@ impl Canvas {
         })
     }
 
+    pub fn visible_units(&self) -> f32 {
+        self.visible_units
+    }
+
+    pub fn focus(&self) -> Point3 {
+        self.focus
+    }
+
     pub fn set_viewport(&mut self, focus: Point3, visible_units: f32) {
         log::debug!("canvas.set_viewport({},{})", focus, visible_units);
         self.focus = focus;
@@ -149,12 +157,51 @@ impl Canvas {
                 .component_div(&self.scale)
     }
 
-    pub fn visible_units(&self) -> f32 {
-        self.visible_units
+    pub fn update_model(&mut self, world: &World) {
+        #[cfg(not(target_arch = "wasm32"))]
+        let start_time = ::std::time::Instant::now();
+
+        let mut updated = false;
+        let min_dt = self
+            .integrations
+            .iter()
+            .map(|integration| integration.borrow().fetch_step_duration(world))
+            .min() // this crate depends on R32 just to be able to use this min() function
+            .unwrap_or_else(|| 0.1.into());
+
+        let scenario_is_new = self.scenario_is_new_once(); //todo: method not needed
+        let scenario = world.scenarios()[self.scenario_idx()].borrow();
+        self.update_trajectory(&scenario, min_dt);
+        self.integrations.iter().for_each(|integration| {
+            let mut integration = integration.borrow_mut();
+            if scenario_is_new {
+                integration.reset();
+            }
+            let integrator = &*world[integration.integrator_idx()].borrow().core;
+            let step_duration = world[integration.step_size_idx()].borrow().duration;
+            updated |= integration.update(&scenario, integrator, step_duration);
+        });
+
+        #[cfg(not(target_arch = "wasm32"))]
+        if updated {
+            log::debug!(
+                "Render Canvas: integrate: {}µs",
+                start_time.elapsed().as_micros()
+            );
+        }
+
+        if scenario_is_new {
+            log::debug!("updating bounding box");
+            self.update_bounding_box();
+        }
     }
 
-    pub fn focus(&self) -> Point3 {
-        self.focus
+    pub fn update_bounding_box(&mut self) {
+        if let Some(mut bbox) = self.bbox() {
+            self.integrations()
+                .for_each(|integration| integration.borrow().stretch_bbox(&mut bbox));
+            self.set_visible_bbox(&bbox);
+        }
     }
 }
 

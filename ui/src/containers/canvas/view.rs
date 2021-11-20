@@ -34,11 +34,11 @@ pub enum CanvasOperation<'a> {
 }
 
 pub fn show_canvas(ui: &mut Ui, canvas: &RefCell<Canvas>, size: Vec2, world: &World) {
+    canvas.borrow_mut().update_model(world);
     let mut canvas_painter = canvas.allocate_painter(ui, size);
-
     canvas_painter.pan_and_zoom();
     if world.settings.layerflags.coordinates {
-        layers::coordinates::render(&world.settings.strokes, &canvas_painter);
+        layers::coordinates::render(&canvas_painter, &world.settings.strokes);
     }
     if world.settings.layerflags.acceleration_field {
         layers::acceleration_field::render(&canvas_painter, world);

@@ -1,5 +1,5 @@
 use super::{
-    core::{Duration, Position, Samples, Scenario},
+    core::{Position, Samples, Scenario},
     import::{Point3, Vec3},
     misc::{entity_store, PointFormat},
     ui_import::{egui, Color32, Pos2, Vec2},
@@ -44,20 +44,6 @@ impl<'c> Painter<'c> {
             .iter()
             .map(RefCell::borrow_mut)
             .for_each(f);
-    }
-
-    pub fn map_integrations<B, F>(&self, f: F) -> ::std::vec::IntoIter<B>
-    where
-        Self: Sized,
-        F: FnMut(RefMut<Integration>) -> B,
-    {
-        self.canvas
-            .integrations
-            .iter()
-            .map(RefCell::borrow_mut)
-            .map(f)
-            .collect::<Vec<_>>()
-            .into_iter()
     }
 
     pub fn scenario_idx(&self) -> entity_store::Index<Scenario> {
@@ -219,10 +205,6 @@ impl<'c> Painter<'c> {
         }
     }
 
-    pub fn update_trajectory(&mut self, scenario: &Scenario, min_dt: Duration) {
-        self.canvas.update_trajectory(scenario, min_dt);
-    }
-
     pub fn draw_trajectory(&self, stroke: egui::Stroke) {
         if let Some(ref buffer) = &self.canvas.trajectory_buffer {
             self.draw_connected_samples(buffer.iter().copied(), stroke);
@@ -256,19 +238,6 @@ impl<'c> Painter<'c> {
                     u0
                 }
             });
-    }
-
-    pub fn update_bounding_box(&mut self) {
-        if let Some(mut bbox) = self.canvas.bbox() {
-            self.canvas
-                .integrations()
-                .for_each(|integration| integration.borrow().stretch_bbox(&mut bbox));
-            self.canvas.set_visible_bbox(&bbox);
-        }
-    }
-
-    pub fn scenario_is_new_once(&mut self) -> bool {
-        self.canvas.scenario_is_new_once()
     }
 }
 

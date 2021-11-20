@@ -3,5 +3,5 @@ mod painter;
 mod trajectory_buffer;
 
 pub use self::painter::Painter;
-use super::{core, import, misc, ui_import, Integration};
+use super::{core, import, misc, ui_import, Integration, World};
 pub use canvas_impl::{Canvas, ObjExtras};

@@ -1,7 +1,6 @@
 use super::{
     core::{self, Duration, Position, Scenario, Step},
     misc::BoundingBox,
-    ui_import::Stroke,
     Integrator, StepSize, World,
 };
 use crate::misc::entity_store;
@@ -9,7 +8,7 @@ use crate::misc::entity_store;
 #[derive(::serde::Deserialize, ::serde::Serialize)]
 pub struct Integration {
     #[serde(skip)]
-    pub core: self::core::Integration,
+    core: self::core::Integration,
     #[serde(rename = "integrator")]
     integrator_idx: entity_store::Index<Integrator>,
     #[serde(rename = "step_size")]
@@ -131,19 +130,17 @@ impl Integration {
         }
     }
 
-    pub fn draw_on(&self, canvas: &super::CanvasPainter, stroke: Stroke, world: &World) {
+    pub fn draw_on(&self, canvas: &super::CanvasPainter, world: &World) {
         let sample_color = world[self.step_size_idx].borrow().color;
-        if let Some(samples) = self.core.samples() {
-            canvas.draw_sample_trajectory(samples, stroke);
-        }
-        if let Some(ref_samples) = self.core.reference_samples() {
+        if let Some(reference_samples) = self.core.reference_samples() {
             canvas.draw_sample_dots(
-                ref_samples,
+                reference_samples,
                 sample_color,
                 &world.settings.point_formats.reference_position,
             );
         }
         if let Some(samples) = self.core.samples() {
+            canvas.draw_sample_trajectory(samples, world[self.integrator_idx].borrow().stroke);
             canvas.draw_sample_dots(
                 samples,
                 sample_color,
