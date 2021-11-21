@@ -57,6 +57,16 @@ impl World {
         self.canvases
             .retain(|candidate| !::std::ptr::eq(canvas, candidate));
     }
+
+    pub fn check_references(self) -> Result<World, String> {
+        for (n, canvas) in self.canvases.iter().enumerate() {
+            canvas
+                .borrow()
+                .check_references(&self)
+                .map_err(|err| format!("Canvas #{}: {}", n + 1, err))?;
+        }
+        Ok(self)
+    }
 }
 
 impl ::std::ops::Index<entity_store::Index<Integrator>> for World {

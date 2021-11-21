@@ -163,26 +163,20 @@ impl Euleretal {
     }
 
     fn try_load_app_state(&mut self, storage: Option<&dyn epi::Storage>) -> Result<(), ()> {
-        if let Some(storage) = storage {
-            // ** shorter, but without error diagnostics:
-            // if let Some(saved_world) = epi::get_value(storage, epi::APP_KEY) { self.world = saved_world; return; }
-            if let Some(string) = storage.get_string(epi::APP_KEY) {
-                match ::ron::from_str(&string) {
-                    Ok(world) => {
-                        self.world = world;
-                        log::debug!("Loaded app state");
-                        // Note that the app can still dump late if the app
-                        // state file was manipulated with invalid values for
-                        // indexes into the World entity store.
-                        return Ok(());
-                    }
-                    Err(err) => {
-                        log::error!("Cannot restore previous app state: {}", err);
-                    }
-                }
-            }
-        }
-        Err(())
+        // ** shorter, but without error diagnostics:
+        // if let Some(saved_world) = epi::get_value(storage, epi::APP_KEY) { self.world = saved_world; return; }
+
+        // fail silently in case no saved state exists
+        let serialized_world = &storage.ok_or(())?.get_string(epi::APP_KEY).ok_or(())?;
+        // otherwise fail with error message
+        ::ron::from_str(serialized_world)
+            .map_err(|err| err.to_string())
+            .and_then(World::check_references)
+            .map(|world| {
+                self.world = world;
+                log::debug!("Restored app state");
+            })
+            .map_err(|err| log::error!("Cannot restore app state: {}", err))
     }
 
     fn log_frame_rate(draw: impl FnOnce()) {

@@ -39,14 +39,10 @@
 - Interactively change scenario start conditions (velocity&direction).
 - Add more Integrators.
 - Make canvas grid more flexible.
-- Save&restore state automatically.
 - Customizable Integrators.
-- Save/load state in/from file.
+- Save/load state ('project') in/from any file.
 
 ## Clean Code
-- make code robust against invalid values of `entity_store::Index`. They can be
-  caused by manipulation of the save file, or even by loading an old save file
-  with a new app version.
 - write more unit tests for specific Integrators
 
 ## Performance

@@ -60,6 +60,16 @@ impl<T> List<T> {
     }
 }
 
+impl<'a, T> IntoIterator for &'a List<T> {
+    type Item = &'a RefCell<T>;
+
+    type IntoIter = ::std::collections::btree_map::Values<'a, usize, RefCell<T>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner.values()
+    }
+}
+
 impl<T> Default for List<T> {
     fn default() -> Self {
         Self::new()
@@ -79,6 +89,14 @@ impl<T> Index<T> {
         Self {
             inner: n,
             type_bound: PhantomData::default(),
+        }
+    }
+
+    pub fn check_reference(self, list: &List<T>) -> Result<(), String> {
+        if list.inner.contains_key(&self.inner) {
+            Ok(())
+        } else {
+            Err(format!("'{}' does not exist", self.inner))
         }
     }
 }

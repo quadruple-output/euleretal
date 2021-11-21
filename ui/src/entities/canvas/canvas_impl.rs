@@ -12,14 +12,14 @@ use ::std::cell::RefCell;
 pub struct Canvas {
     scenario: entity_store::Index<Scenario>,
     scenario_is_new: bool,
-    pub(super) integrations: Vec<RefCell<Integration>>,
+    pub(super) integrations: Vec<RefCell<Integration>>, // todo: should not be public (or explained)
     visible_units: f32,
     focus: Point3,
     scale: Vec3,
     area_center: Pos2,
     pub ui_integrations_window_is_open: bool,
     #[serde(skip)]
-    pub(super) trajectory_buffer: Option<TrajectoryBuffer>,
+    pub(super) trajectory_buffer: Option<TrajectoryBuffer>, // todo: should not be public (or explained)
 }
 
 impl ::std::fmt::Debug for Canvas {
@@ -202,6 +202,19 @@ impl Canvas {
                 .for_each(|integration| integration.borrow().stretch_bbox(&mut bbox));
             self.set_visible_bbox(&bbox);
         }
+    }
+
+    pub fn check_references(&self, world: &World) -> Result<(), String> {
+        self.scenario
+            .check_reference(world.scenarios())
+            .map_err(|err| format!("scenario: {}", err))?;
+        for (n, integration) in self.integrations.iter().enumerate() {
+            integration
+                .borrow()
+                .check_references(world)
+                .map_err(|err| format!("integration #{}: {}", n + 1, err))?;
+        }
+        Ok(())
     }
 }
 

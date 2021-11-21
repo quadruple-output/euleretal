@@ -148,4 +148,14 @@ impl Integration {
             );
         }
     }
+
+    pub fn check_references(&self, world: &World) -> Result<(), String> {
+        self.integrator_idx
+            .check_reference(world.integrators())
+            .map_err(|err| format!("integrator: {}", err))?;
+        self.step_size_idx
+            .check_reference(world.step_sizes())
+            .map_err(|err| format!("step size: {}", err))?;
+        Ok(())
+    }
 }
