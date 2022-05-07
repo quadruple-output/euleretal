@@ -15,7 +15,7 @@ edition = "2021"
 # more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-euleretal-core = { path = "../core" }
+euleretal-core = { path = "../euleretal-core" }
 ordered-float = "2" # Total ordering (and more) for floating-point types
 nalgebra = "0.29"
 #fraction = { version = "0.9", default-features = false }
